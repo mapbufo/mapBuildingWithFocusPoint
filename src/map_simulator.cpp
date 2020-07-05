@@ -8,8 +8,8 @@ mapSim::mapSim(std::string path_to_map) {
   infile.open(path_to_map);
 
   // fill the map data into the 2d array
-  for (int i = 0; i < 1000; i++) {
-    for (int j = 0; j < 1000; j++) {
+  for (int i = 0; i < 10; i++) {
+    for (int j = 0; j < 10; j++) {
       infile >> map_array_[i][j];
     }
   }
@@ -24,8 +24,8 @@ status mapSim::LoadMap(std::string path_to_map) {
   infile.open(path_to_map);
 
   // fill the map data into the 2d array
-  for (int i = 0; i < 1000; i++) {
-    for (int j = 0; j < 1000; j++) {
+  for (int i = 0; i < 10; i++) {
+    for (int j = 0; j < 10; j++) {
       infile >> map_array_[i][j];
     }
   }

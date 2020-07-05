@@ -15,7 +15,7 @@ public:
   status LoadMap(std::string path_to_map);
 
 protected:
-  int map_array_[1000][1000];
+  int map_array_[10][10];
 };
 
 } // namespace simulation
