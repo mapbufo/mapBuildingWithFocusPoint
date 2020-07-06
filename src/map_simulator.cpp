@@ -3,7 +3,7 @@
 namespace simulation {
 
 status::status LoadMap(std::string path_to_map,
-                       std::vector<std::vector<int>> map) {
+                       std::vector<std::vector<int>> &map) {
   // open the map file
   std::ifstream infile;
   infile.open(path_to_map.c_str());
