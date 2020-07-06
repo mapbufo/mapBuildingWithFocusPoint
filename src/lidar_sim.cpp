@@ -9,20 +9,6 @@ bool LidarSim::pointInRange(int pt_x, int pt_y) {
 
   int dist_x = pt_x - x_;
   int dist_y = pt_y - y_;
-  float min_view_angle = heading_ - max_angle_;
-  while (min_view_angle > 2 * PI || min_view_angle < -2 * PI) {
-    if (min_view_angle > 2 * PI)
-      min_view_angle -= 2 * PI;
-    if (min_view_angle < -2 * PI)
-      min_view_angle += 2 * PI;
-  }
-  float max_view_angle = heading_ + max_angle_;
-  while (max_view_angle > 2 * PI || max_view_angle < -2 * PI) {
-    if (max_view_angle > 2 * PI)
-      max_view_angle -= 2 * PI;
-    if (max_view_angle < -2 * PI)
-      max_view_angle += 2 * PI;
-  }
 
   // 1. check distance
   float pt_dist = std::sqrt(std::pow(dist_x, 2) + std::pow(dist_y, 2));
@@ -31,7 +17,7 @@ bool LidarSim::pointInRange(int pt_x, int pt_y) {
 
   // 2. check angle
   float pt_angle = std::atan2(dist_y * 1.0, dist_x * 1.0);
-  if (pt_angle < min_view_angle || pt_angle > max_view_angle)
+  if (std::abs(pt_angle - heading_) >= max_angle_)
     return false;
 
   return true;
