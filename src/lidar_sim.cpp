@@ -17,7 +17,7 @@ bool LidarSim::pointInRange(int pt_x, int pt_y) {
 
   // 2. check angle
   float pt_angle = std::atan2(dist_y * 1.0, dist_x * 1.0);
-  if (std::abs(pt_angle - heading_) >= max_angle_)
+  if (std::abs(pt_angle - heading_) > max_angle_)
     return false;
 
   return true;
