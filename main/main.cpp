@@ -14,11 +14,11 @@ bool ptObserved(std::vector<simulation::LaserPoint> pt_list, int i, int j) {
 
 int main() {
   std::vector<std::vector<int>> map;
-  if (status::Error == simulation::LoadMap("../../maps/scenario_01.txt", map)) {
+  if (status::Error == simulation::LoadMap("../../maps/scenario_03.txt", map)) {
     std::cerr << "Invalid map data!" << std::endl;
   }
 
-  simulation::LidarSim lidar_sim(5, 2, 2.0, -PI / 2.0, PI / 4.0);
+  simulation::LidarSim lidar_sim(5, 3, 2.0, M_PI / 4.0, M_PI / 4.0);
 
   std::vector<simulation::LaserPoint> observed_point_list;
   observed_point_list = lidar_sim.collectObservedLaserPoints(map);

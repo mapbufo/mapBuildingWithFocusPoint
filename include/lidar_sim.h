@@ -4,12 +4,11 @@
 /*
  * coordinate system:
  *
- *
- * ^ y
- * |  /
- * | /
- * |/heading (from x axis)
- * o ------- > x
+ * o ------- y (heading = 90 deg)
+ * |
+ * |
+ * |
+ * x (heading = 0 deg)
  *
  */
 
@@ -61,7 +60,7 @@ public:
   LidarSim() {
     x_ = y_ = 0;
     max_dist_ = 1.0;
-    max_angle_ = PI / 2.0;
+    max_angle_ = M_PI / 2.0;
     heading_ = 0.0;
   }
 
