@@ -28,4 +28,6 @@ jobs:
     - name: Run a multi-line script
       run: |
         cd ..
+        pwd
+        ls
         ./build.sh
