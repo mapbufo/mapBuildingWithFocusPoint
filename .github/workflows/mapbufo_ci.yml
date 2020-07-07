@@ -29,4 +29,5 @@ jobs:
       run: |
         cd ..
         pwd
-        ls -l
+        ls
+        cd build/
