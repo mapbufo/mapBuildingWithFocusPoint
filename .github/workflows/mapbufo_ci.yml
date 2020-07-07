@@ -29,5 +29,4 @@ jobs:
       run: |
         cd ..
         pwd
-        ls
-        ./build.sh
+        ls -l
