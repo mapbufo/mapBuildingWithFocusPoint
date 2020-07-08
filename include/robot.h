@@ -1,20 +1,20 @@
 #ifndef ROBOT_H
 #define ROBOT_H
 
-#include "point.h"
+#include <math.h>
 #include <algorithm>
 #include <iostream>
-#include <math.h>
 #include <memory>
 #include <vector>
+#include "point.h"
 
 class Robot {
-private:
-  int x_;           // x coordinate of the lidar
-  int y_;           // y coordinate of the lidar
-  float max_dist_;  // maximum detection range
-  float max_angle_; // maximum detection angle in radius
-  float heading_;   // lidar direction:
+ private:
+  int x_;            // x coordinate of the lidar
+  int y_;            // y coordinate of the lidar
+  float max_dist_;   // maximum detection range
+  float max_angle_;  // maximum detection angle in radius
+  float heading_;    // lidar direction:
   // heading = 0 if the center of the lidar is aligned with the x+ axis;
   // heading = PI/2 if aligned with the y+ axis
   // heading = -PI/2 if aligned with the y- axis
@@ -22,7 +22,7 @@ private:
 
   Point2D next_pos_;
 
-public:
+ public:
   Robot() {
     x_ = y_ = 0;
     max_dist_ = 1.0;
@@ -76,4 +76,4 @@ public:
   void move();
 };
 
-#endif // ROBOT_H
+#endif  // ROBOT_H

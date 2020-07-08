@@ -11,19 +11,17 @@ bool Robot::pointInRange(int pt_x, int pt_y) {
 
   // 1. check distance
   float pt_dist = std::sqrt(std::pow(dist_x, 2) + std::pow(dist_y, 2));
-  if (pt_dist > max_dist_)
-    return false;
+  if (pt_dist > max_dist_) return false;
 
   // 2. check angle
   float pt_angle = std::atan2(dist_y * 1.0, dist_x * 1.0);
-  if (std::abs(pt_angle - heading_) > max_angle_)
-    return false;
+  if (std::abs(pt_angle - heading_) > max_angle_) return false;
 
   return true;
 }
 // get all observable laser points
-std::vector<Point2D>
-Robot::createInputScan(std::vector<std::vector<int>> map_data) {
+std::vector<Point2D> Robot::createInputScan(
+    std::vector<std::vector<int>> map_data) {
   std::vector<Point2D> observed_point_list;
   // report error if the map is empty
   if (map_data.size() == 0) {
@@ -83,7 +81,6 @@ Robot::createInputScan(std::vector<std::vector<int>> map_data) {
 
 void Robot::estimateNextStep(std::vector<Point2D> scan_data,
                              float suggested_heading) {
-
   // if not facing the best direction then turn to that direction
   if (heading_ != suggested_heading) {
     heading_ = suggested_heading;
@@ -94,31 +91,31 @@ void Robot::estimateNextStep(std::vector<Point2D> scan_data,
   // move as far as the robot can in that direction (needs better algo., but
   // enough for now)
   // --> find the farthest, empty scan point in that direction
-  Point2D nextPos;               // initialization
-  float nextPosAngle = 2 * M_PI; // init with some big number
+  Point2D next_pos;                 // initialization
+  float next_pos_angle = 2 * M_PI;  // init with some big number
   bool init = false;
   for (auto pt : scan_data) {
-    if (pt.getValue() != 0) // obstacle, can't move there!
+    if (pt.getValue() != 0)  // obstacle, can't move there!
       continue;
 
-    if (!init) { // init next pos with an empty point
-      nextPos.setPositionX(pt.getPositionX());
-      nextPos.setPositionY(pt.getPositionY());
-      int dist_x = nextPos.x_ - x_;
-      int dist_y = nextPos.y_ - y_;
-      nextPosAngle = std::atan2(dist_y * 1.0, dist_x * 1.0);
+    if (!init) {  // init next pos with an empty point
+      next_pos.setPositionX(pt.getPositionX());
+      next_pos.setPositionY(pt.getPositionY());
+      int dist_x = next_pos.x_ - x_;
+      int dist_y = next_pos.y_ - y_;
+      next_pos_angle = std::atan2(dist_y * 1.0, dist_x * 1.0);
     }
 
     // find the point in the suggested direction
     int dist_x = pt.getPositionX() - x_;
     int dist_y = pt.getPositionY() - y_;
     float pt_angle = std::atan2(dist_y * 1.0, dist_x * 1.0);
-    if (pt_angle < nextPosAngle) {
-      nextPos = pt;
-      nextPosAngle = pt_angle;
+    if (pt_angle < next_pos_angle) {
+      next_pos = pt;
+      next_pos_angle = pt_angle;
     }
   }
-  next_pos_ = nextPos;
+  next_pos_ = next_pos;
 }
 
 void Robot::move() {

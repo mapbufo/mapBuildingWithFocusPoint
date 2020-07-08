@@ -1,6 +1,6 @@
+#include <iostream>
 #include "lidar_sim.h"
 #include "map_simulator.h"
-#include <iostream>
 
 bool ptObserved(std::vector<simulation::LaserPoint> pt_list, int i, int j) {
   for (int k = 0; k < pt_list.size(); k++) {
@@ -28,7 +28,6 @@ int main() {
 
   for (int i = 0; i < map_length; i++) {
     for (int j = 0; j < map_width; j++) {
-
       if (ptObserved(observed_point_list, i, j)) {
         map[i][j] = 2;
       }

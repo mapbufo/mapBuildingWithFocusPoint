@@ -1,21 +1,21 @@
 #ifndef POINT_H
 #define POINT_H
 
+#include <math.h>
 #include <algorithm>
 #include <iostream>
-#include <math.h>
 #include <memory>
 #include <vector>
 
 class Point2D {
-public:
+ public:
   typedef std::shared_ptr<Point2D> Ptr;
 
   int x_;
   int y_;
   int value_;
 
-public:
+ public:
   Point2D() {
     x_ = 0;
     y_ = 0;
@@ -37,4 +37,4 @@ public:
   int getValue() { return value_; }
 };
 
-#endif // POINT_H
+#endif  // POINT_H
