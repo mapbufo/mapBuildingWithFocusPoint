@@ -1,34 +1,31 @@
 #ifndef ROBOT_H
 #define ROBOT_H
 
-#include <math.h>
+#include "point.h"
 #include <algorithm>
 #include <iostream>
+#include <math.h>
 #include <memory>
 #include <vector>
-#include "point.h"
 
 class Robot {
- private:
-  int x_;            // x coordinate of the lidar
-  int y_;            // y coordinate of the lidar
-  float max_dist_;   // maximum detection range
-  float max_angle_;  // maximum detection angle in radius
-  float heading_;    // lidar direction:
+private:
+  int x_;           // x coordinate of the lidar
+  int y_;           // y coordinate of the lidar
+  float max_dist_;  // maximum detection range
+  float max_angle_; // maximum detection angle in radius
+  float heading_;   // lidar direction:
   // heading = 0 if the center of the lidar is aligned with the x+ axis;
   // heading = PI/2 if aligned with the y+ axis
   // heading = -PI/2 if aligned with the y- axis
   // heading = +-PI if aligned with the x- axis
 
-  Point2D next_pos_;
-
- public:
+public:
   Robot() {
     x_ = y_ = 0;
     max_dist_ = 1.0;
     max_angle_ = M_PI / 2.0;
     heading_ = 0.0;
-    next_pos_ = Point2D();
   }
 
   Robot(int x, int y, float dist, float angle, float heading) {
@@ -37,7 +34,6 @@ class Robot {
     max_dist_ = dist;
     max_angle_ = angle;
     heading_ = heading;
-    next_pos_ = Point2D();
   }
   ~Robot() {}
 
@@ -47,7 +43,6 @@ class Robot {
   float getMaxDist() { return max_dist_; }
   float getMaxAngle() { return max_angle_; }
   float getHeading() { return heading_; }
-  Point2D getNextMove() { return next_pos_; }
 
   void setPosX(int x) { x_ = x; }
   void setPosY(int y) { y_ = y; }
@@ -68,12 +63,13 @@ class Robot {
   // 2) else if obstacle exists, then check the scan data from heading to +- max
   // angle and see if there're gaps elsewhere. In this case, turn to that
   // direction with step_size_ = 0.
-  void estimateNextStep(std::vector<Point2D> scan_data,
-                        float suggested_heading);
+
+  // return value: 0 - just direction; 1 - next pos estimated
+  Point2D estimateNextStep(std::vector<Point2D> scan_data);
 
   // *************** move ***************
   // update robot states according to next pos
-  void move();
+  void move(Point2D next_pos);
 };
 
-#endif  // ROBOT_H
+#endif // ROBOT_H
