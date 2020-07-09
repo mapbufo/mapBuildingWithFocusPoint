@@ -78,5 +78,6 @@ class LidarSim {
   std::vector<LaserPoint> collectObservedLaserPoints(
       std::vector<std::vector<int>> map_data);
 };
-}
+}  // namespace simulation
+
 #endif  // LIDAR_SIM_H

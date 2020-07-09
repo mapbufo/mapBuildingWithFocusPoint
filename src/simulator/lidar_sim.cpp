@@ -55,4 +55,4 @@ std::vector<LaserPoint> LidarSim::collectObservedLaserPoints(
   }
   return observed_point_list;
 }
-}
+}  // namespace simulation

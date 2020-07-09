@@ -5,9 +5,8 @@
 #include <string>
 #include <vector>
 
-namespace status {
-enum status { Error = 0, Ok = 1, Undifined = 2 };
-}
+#include "common.h"
+
 namespace simulation {
 status::status LoadMap(std::string path_to_map,
                        std::vector<std::vector<int>> &map);

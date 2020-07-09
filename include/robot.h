@@ -1,13 +1,12 @@
 #ifndef ROBOT_H
 #define ROBOT_H
 
-#include "point.h"
+#include "map.h"
 #include <algorithm>
 #include <iostream>
 #include <math.h>
 #include <memory>
 #include <vector>
-
 class Robot {
 private:
   int x_;           // x coordinate of the lidar
@@ -53,7 +52,7 @@ public:
 
   // *************** get input frame ***************
   // get all observable laser points
-  std::vector<Point2D> createInputScan(std::vector<std::vector<int>> map_data);
+  Map createInputScan(Map map_data);
   // check if a laser point is in the field of view (FoV)
   bool pointInRange(int pt_x, int pt_y);
 
@@ -65,11 +64,11 @@ public:
   // direction with step_size_ = 0.
 
   // return value: 0 - just direction; 1 - next pos estimated
-  Point2D estimateNextStep(std::vector<Point2D> scan_data);
+  std::pair<int, int> estimateNextStep(Map scan_data);
 
   // *************** move ***************
   // update robot states according to next pos
-  void move(Point2D next_pos);
+  void move(std::pair<int, int> next_pos);
 };
 
 #endif // ROBOT_H
