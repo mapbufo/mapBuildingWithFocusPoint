@@ -3,7 +3,8 @@
 cd build
 cmake ..
 make
-find ./ -iname *.h -o -iname *.cpp | xargs clang-format -i -style=Google
 cd main
 ./mapbufo
+cd ../..
+find ./ -iname *.h -o -iname *.cpp | xargs clang-format -i -style=Google
 

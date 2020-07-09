@@ -12,19 +12,17 @@ bool LidarSim::pointInRange(int pt_x, int pt_y) {
 
   // 1. check distance
   float pt_dist = std::sqrt(std::pow(dist_x, 2) + std::pow(dist_y, 2));
-  if (pt_dist > max_dist_)
-    return false;
+  if (pt_dist > max_dist_) return false;
 
   // 2. check angle
   float pt_angle = std::atan2(dist_y * 1.0, dist_x * 1.0);
-  if (std::abs(pt_angle - heading_) > max_angle_)
-    return false;
+  if (std::abs(pt_angle - heading_) > max_angle_) return false;
 
   return true;
 }
 // get all observable laser points
-std::vector<LaserPoint>
-LidarSim::collectObservedLaserPoints(std::vector<std::vector<int>> map_data) {
+std::vector<LaserPoint> LidarSim::collectObservedLaserPoints(
+    std::vector<std::vector<int>> map_data) {
   std::vector<LaserPoint> observed_point_list;
   // report error if the map is empty
   if (map_data.size() == 0) {
@@ -57,4 +55,4 @@ LidarSim::collectObservedLaserPoints(std::vector<std::vector<int>> map_data) {
   }
   return observed_point_list;
 }
-}
+}  // namespace simulation

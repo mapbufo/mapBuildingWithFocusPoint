@@ -22,4 +22,4 @@ status::status LoadMap(std::string path_to_map,
   infile.close();
   return status::Ok;
 }
-} // namespace simulation
+}  // namespace simulation
