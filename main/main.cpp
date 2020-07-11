@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "lidar_sim.h"
+#include "map.h"
 #include "map_simulator.h"
 
 bool ptObserved(std::vector<simulation::LaserPoint> pt_list, int i, int j) {

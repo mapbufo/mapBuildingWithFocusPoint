@@ -2,20 +2,25 @@
 #define MAP_H
 
 #include <boost/unordered_map.hpp>
+#include <fstream>
 #include <iostream>
 
 #include "common.h"
 
-enum CellOccupied { empty = 0, occupied = 1, unknown = 2 };
+enum CellOccupied { empty = 0, occupied = 1, unknown = 2, robot_pos = 5 };
 
 class Map {
  public:
   Map() : size_of_map_(10){};
-  ~Map();
+  ~Map(){};
 
   boost::unordered_map<std::pair<int, int>, CellOccupied> GetMap();
   CellOccupied GetCell(int x, int y);
   status::status Update(int x, int y, CellOccupied occupied);
+  void PrintMap();
+
+  // only for simulation
+  status::status Load(std::string path_to_map);
 
  private:
   boost::unordered_map<std::pair<int, int>, CellOccupied> map_;
