@@ -1,25 +1,25 @@
 #ifndef ROBOT_H
 #define ROBOT_H
 
-#include "map.h"
+#include <math.h>
 #include <algorithm>
 #include <iostream>
-#include <math.h>
 #include <memory>
 #include <vector>
+#include "map.h"
 class Robot {
-private:
-  int x_;           // x coordinate of the lidar
-  int y_;           // y coordinate of the lidar
-  float max_dist_;  // maximum detection range
-  float max_angle_; // maximum detection angle in radius
-  float heading_;   // lidar direction:
+ private:
+  int x_;            // x coordinate of the lidar
+  int y_;            // y coordinate of the lidar
+  float max_dist_;   // maximum detection range
+  float max_angle_;  // maximum detection angle in radius
+  float heading_;    // lidar direction:
   // heading = 0 if the center of the lidar is aligned with the x+ axis;
   // heading = PI/2 if aligned with the y+ axis
   // heading = -PI/2 if aligned with the y- axis
   // heading = +-PI if aligned with the x- axis
 
-public:
+ public:
   Robot() {
     x_ = y_ = 0;
     max_dist_ = 1.0;
@@ -64,11 +64,12 @@ public:
   // direction with step_size_ = 0.
 
   // return value: 0 - just direction; 1 - next pos estimated
-  std::pair<int, int> estimateNextStep(Map scan_data);
+  std::pair<int, int> estimateNextStep(Map scan_data,
+                                       std::pair<int, int> end_pos);
 
   // *************** move ***************
   // update robot states according to next pos
   void move(std::pair<int, int> next_pos);
 };
 
-#endif // ROBOT_H
+#endif  // ROBOT_H

@@ -4,4 +4,5 @@
 namespace status {
 enum status { Error = 0, Ok = 1, Undifined = 2 };
 }
-#endif // COMMON_H
+
+#endif  // !COMMON_H
