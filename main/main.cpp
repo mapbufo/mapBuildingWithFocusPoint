@@ -52,10 +52,10 @@ int main() {
     std::pair<int, int> estimated_next_pos =
         my_robot.estimateNextStep(local_map, end_pos, lidar_sim.getMaxDist());
 
-    my_robot.move(estimated_next_pos);
-    lidar_sim.updatePose(my_robot.getPosX(), my_robot.getPosY(),
-                         my_robot.getHeading());
-    estimated_next_pos_list.push_back(estimated_next_pos);
+    //    my_robot.move(estimated_next_pos);
+    //    lidar_sim.updatePose(my_robot.getPosX(), my_robot.getPosY(),
+    //                         my_robot.getHeading());
+    //    estimated_next_pos_list.push_back(estimated_next_pos);
     step_counter++;
 
     // plotting
