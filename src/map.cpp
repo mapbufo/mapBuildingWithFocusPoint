@@ -1,6 +1,6 @@
 #include "map.h"
 
-boost::unordered_map<std::pair<int, int>, CellOccupied> Map::GetMap() {
+boost::unordered_map<std::pair<int, int>, CellOccupied> &Map::GetMap() {
   return map_;
 }
 
@@ -12,10 +12,10 @@ CellOccupied Map::GetCell(int x, int y) {
 }
 
 status::status Map::Update(int x, int y, CellOccupied occupied) {
-  if (x >= size_of_map_ || y >= size_of_map_) {
-    std::cerr << "The position is over the size of map!" << std::endl;
-    return status::Error;
-  }
+  //  if (x >= size_of_map_ || y >= size_of_map_) {
+  //    std::cerr << "The position is over the size of map!" << std::endl;
+  //    return status::Error;
+  //  }
   map_[{x, y}] = occupied;
   return status::Ok;
 }
@@ -40,18 +40,18 @@ status::status Map::Load(std::string path_to_map) {
     for (int j = 0; j < size_of_map_; j++) {
       infile >> tmp;
       switch (tmp) {
-        case 0:
-          map_[{i, j}] = CellOccupied::empty;
-          break;
-        case 1:
-          map_[{i, j}] = CellOccupied::occupied;
-          break;
-        case 5:
-          map_[{i, j}] = CellOccupied::robot_pos;
-          break;
-        default:
-          map_[{i, j}] = CellOccupied::unknown;
-          break;
+      case 0:
+        map_[{i, j}] = CellOccupied::empty;
+        break;
+      case 1:
+        map_[{i, j}] = CellOccupied::occupied;
+        break;
+      case 5:
+        map_[{i, j}] = CellOccupied::robot_pos;
+        break;
+      default:
+        map_[{i, j}] = CellOccupied::unknown;
+        break;
       }
     }
   }

@@ -10,7 +10,7 @@
 enum CellOccupied { empty = 0, occupied = 1, unknown = 2, robot_pos = 5 };
 
 class Map {
- public:
+public:
   // used to create global map
   Map(int size_of_map) { size_of_map_ = size_of_map; };
   // used to create local scan point map (not likely to be a square so size of
@@ -19,7 +19,7 @@ class Map {
 
   ~Map(){};
 
-  boost::unordered_map<std::pair<int, int>, CellOccupied> GetMap();
+  boost::unordered_map<std::pair<int, int>, CellOccupied> &GetMap();
   CellOccupied GetCell(int x, int y);
   status::status Update(int x, int y, CellOccupied occupied);
 
@@ -31,10 +31,10 @@ class Map {
   // only for simulation
   status::status Load(std::string path_to_map);
 
- private:
+private:
   boost::unordered_map<std::pair<int, int>, CellOccupied> map_;
 
   int size_of_map_;
 };
 
-#endif  // MAP_H
+#endif // MAP_H
