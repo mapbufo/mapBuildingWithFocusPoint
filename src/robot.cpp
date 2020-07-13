@@ -1,70 +1,5 @@
 #include "robot.h"
 
-// check if a laser point is in the field of view (FoV)
-bool Robot::pointInRange(int pt_x, int pt_y) {
-  // the point must be in the observable range
-  // 1. (0, dist)
-  // 2. (heading - angle, heading + angle)
-  int dist_x = pt_x - x_;
-  int dist_y = pt_y - y_;
-
-  // 0. exclude robot pos
-  if (dist_x == 0 && dist_y == 0) return false;
-  // 1. check distance
-  float pt_dist = std::sqrt(std::pow(dist_x, 2) + std::pow(dist_y, 2));
-  if (pt_dist > max_dist_) return false;
-
-  // 2. check angle
-  float pt_angle = std::atan2(dist_y * 1.0, dist_x * 1.0);
-  float angle_diff = pt_angle - heading_;
-  while (std::abs(angle_diff) >= M_PI) {
-    if (angle_diff > 0) {
-      angle_diff -= 2 * M_PI;
-    } else {
-      angle_diff += 2 * M_PI;
-    }
-  }
-  if (std::abs(angle_diff) - max_angle_ > 10e-2) {
-    return false;
-  }
-  return true;
-}
-// get all observable laser points
-Map Robot::createInputScan(Map map_data) {
-  Map observed_point_list;
-  boost::unordered_map<std::pair<int, int>, CellOccupied> map =
-      map_data.GetMap();
-  // report error if the map is empty
-  if (map.size() == 0) {
-    std::cerr << "Invalid map data!" << std::endl;
-    return observed_point_list;
-  }
-
-  // get map size
-  int map_size = map.size();
-
-  // get the min & max range in x and y axis
-  int min_x = std::max(int(std::floor(x_ - max_dist_)), 0);
-  int max_x = std::min(int(std::ceil(x_ + max_dist_)), map_size - 1);
-  int min_y = std::max(int(std::floor(y_ - max_dist_)), 0);
-  int max_y = std::min(int(std::ceil(y_ + max_dist_)), map_size - 1);
-
-  // check which points are within the detection range
-
-  for (int i = min_x; i <= max_x; i++) {
-    for (int j = min_y; j <= max_y; j++) {
-      // check if the laser point lies in the field of view (dist, angle
-      // heading)
-
-      if (pointInRange(i, j)) {
-        std::pair<int, int> laser_point(i, j);
-        observed_point_list.AddPoint(laser_point, map[laser_point]);
-      }
-    }
-  }
-  return observed_point_list;
-}
-
 /*
  *
  * ^ max empty dist
@@ -89,7 +24,8 @@ Map Robot::createInputScan(Map map_data) {
  */
 
 std::pair<int, int> Robot::estimateNextStep(Map scan_data,
-                                            std::pair<int, int> end_pos) {
+                                            std::pair<int, int> end_pos,
+                                            float max_dist) {
   boost::unordered_map<std::pair<int, int>, CellOccupied> scan =
       scan_data.GetMap();
 
@@ -106,8 +42,8 @@ std::pair<int, int> Robot::estimateNextStep(Map scan_data,
   // move as far as the robot can in that direction (needs better algo., but
   // enough for now)
   // --> find the farthest, empty scan point in that direction
-  std::pair<int, int> best_pos;  // initialization
-  float best_heading;            // init with some big number
+  std::pair<int, int> best_pos; // initialization
+  float best_heading;           // init with some big number
   float heading_diff;
   bool init = false;
 
@@ -120,7 +56,7 @@ std::pair<int, int> Robot::estimateNextStep(Map scan_data,
   }
 
   int grid_size = 1;
-  int num_steps = int(max_dist_ / grid_size);  // value on x axis
+  int num_steps = int(max_dist / grid_size); // value on x axis
 
   std::set<std::pair<int, int>> line_point_vec;
   // go in x / y direction
@@ -138,7 +74,7 @@ std::pair<int, int> Robot::estimateNextStep(Map scan_data,
       } else if (std::abs(heading_) - M_PI / 2.0 > 10e-2) {
         x = float(x_ - i);
         y = (x - x_) * ratio + float(y_);
-      } else  // heading == +- M_PI
+      } else // heading == +- M_PI
       {
         x = x_;
         if (heading_ > 0)
@@ -158,19 +94,19 @@ std::pair<int, int> Robot::estimateNextStep(Map scan_data,
         float y;
         float x;
         if (heading_ > 10e-2 &&
-            heading_ - M_PI / 2.0 < -10e-2) {  // 1st quadrant
+            heading_ - M_PI / 2.0 < -10e-2) { // 1st quadrant
           y = float(y_ + i);
           x = (y - y_) / ratio + float(x_);
           line_point_vec.insert({floor(x), y});
           line_point_vec.insert({ceil(x), y});
         } else if (heading_ < -10e-2 &&
-                   heading_ + M_PI / 2.0 < -10e-2) {  // 4th quadrant
+                   heading_ + M_PI / 2.0 < -10e-2) { // 4th quadrant
           y = float(y_ - i);
           x = (y - y_) / ratio + float(x_);
           line_point_vec.insert({floor(x), y});
           line_point_vec.insert({ceil(x), y});
         } else if (M_PI - heading_ > 10e-2 &&
-                   heading_ - M_PI / 2.0 > 10e-2) {  // 2nd quadrant
+                   heading_ - M_PI / 2.0 > 10e-2) { // 2nd quadrant
           y = float(y_ + i);
           x = (y - y_) / ratio + float(x_);
 
@@ -184,7 +120,7 @@ std::pair<int, int> Robot::estimateNextStep(Map scan_data,
           line_point_vec.insert({ceil(x), y});
 
         } else if (std::abs(std::abs(heading_) - M_PI / 2.0) <
-                   10e-2)  // heading == +- M_PI
+                   10e-2) // heading == +- M_PI
         {
           x = x_;
           if (heading_ > 0)
@@ -193,7 +129,7 @@ std::pair<int, int> Robot::estimateNextStep(Map scan_data,
             y = float(y_ - i);
           line_point_vec.insert({x, floor(y)});
           line_point_vec.insert({x, ceil(y)});
-        } else  // heading == 0 / M_PI
+        } else // heading == 0 / M_PI
         {
           y = y_;
           if (std::abs(heading_) < 10e-2) {
@@ -212,7 +148,8 @@ std::pair<int, int> Robot::estimateNextStep(Map scan_data,
     for (auto pt : line_point_vec) {
       int pt_x = pt.first;
       int pt_y = pt.second;
-      if (pt_x < 0 || pt_y < 0) continue;
+      if (pt_x < 0 || pt_y < 0)
+        continue;
 
       if (scan.find({pt_x, pt_y}) != scan.end()) {
         // if this point is not occupied
@@ -225,17 +162,17 @@ std::pair<int, int> Robot::estimateNextStep(Map scan_data,
             best_pos.first = pt_x;
             best_pos.second = pt_y;
 
-          } else if (cur_heading_diff < heading_diff) {  // choose the one with
-                                                         // smaller angle
-                                                         // difference
+          } else if (cur_heading_diff < heading_diff) { // choose the one with
+                                                        // smaller angle
+                                                        // difference
             best_heading = cur_heading;
             heading_diff = cur_heading_diff;
             best_pos.first = pt_x;
             best_pos.second = pt_y;
           } else if (cur_heading_diff ==
-                     heading_diff)  // choose the farther point
-                                    // when angle differences
-                                    // are the same
+                     heading_diff) // choose the farther point
+                                   // when angle differences
+                                   // are the same
           {
             float best_dist =
                 std::sqrt(pow(best_pos.first, 2) + pow(best_pos.second, 2));

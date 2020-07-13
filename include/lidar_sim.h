@@ -12,22 +12,21 @@
  *
  */
 
-#include <math.h>
+#include "map.h"
 #include <algorithm>
 #include <iostream>
+#include <math.h>
 #include <memory>
 #include <vector>
-
-const float PI = 3.14159;
 namespace simulation {
 class LaserPoint {
- public:
+public:
   typedef std::shared_ptr<LaserPoint> Ptr;
 
   int x_;
   int y_;
 
- public:
+public:
   LaserPoint() {
     x_ = 0;
     y_ = 0;
@@ -44,14 +43,14 @@ class LaserPoint {
 };
 
 class LidarSim {
- public:
+public:
   typedef std::shared_ptr<LidarSim> Ptr;
 
-  int x_;            // x coordinate of the lidar
-  int y_;            // y coordinate of the lidar
-  float max_dist_;   // maximum detection range
-  float max_angle_;  // maximum detection angle in radius
-  float heading_;    // lidar direction:
+  int x_;           // x coordinate of the lidar
+  int y_;           // y coordinate of the lidar
+  float max_dist_;  // maximum detection range
+  float max_angle_; // maximum detection angle in radius
+  float heading_;   // lidar direction:
   // heading = 0 if the center of the lidar is aligned with the x+ axis;
   // heading = PI/2 if aligned with the y+ axis
   // heading = -PI/2 if aligned with the y- axis
@@ -73,11 +72,30 @@ class LidarSim {
   }
   ~LidarSim() {}
   // check if a laser point is in the field of view (FoV)
-  bool pointInRange(int pt_x, int pt_y);
-  // get all observable laser points
-  std::vector<LaserPoint> collectObservedLaserPoints(
-      std::vector<std::vector<int>> map_data);
-};
-}  // namespace simulation
 
-#endif  // LIDAR_SIM_H
+  void setPosX(int x) { x_ = x; }
+  void setPosY(int y) { y_ = y; }
+  void setHeading(float heading) { heading_ = heading; }
+  void setMaxDist(float max_dist) { max_dist_ = max_dist; }
+  void setMaxAngle(float max_angle) { max_angle_ = max_angle; }
+
+  int getPosX() { return x_; }
+  int getPosY() { return y_; }
+  float getHeading() { return heading_; }
+  float getMaxDist() { return max_dist_; }
+  float getMaxAngle() { return max_angle_; }
+
+  void updatePose(int x, int y, int heading) {
+    setPosX(x);
+    setPosY(y);
+    setHeading(heading);
+  }
+  // get all observable laser points
+  Map createInputScan(Map map_data);
+
+  // check if a laser point is in the field of view (FoV)
+  bool pointInRange(int pt_x, int pt_y);
+};
+} // namespace simulation
+
+#endif // LIDAR_SIM_H
