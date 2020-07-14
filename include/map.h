@@ -7,7 +7,17 @@
 
 #include "common.h"
 
-enum CellOccupied { empty = 0, occupied = 1, unknown = 2, robot_pos = 5 };
+enum CellOccupied {
+  empty = 0,
+  occupied = 1,
+  unknown = 2,
+  out_of_map = 3,
+  path = 4,
+  robot_pos = 5,
+  target_pos = 6
+};
+
+typedef std::pair<int, int> Point2D;
 
 class Map {
  public:
@@ -16,7 +26,9 @@ class Map {
 
   boost::unordered_map<std::pair<int, int>, CellOccupied> GetMap();
   CellOccupied GetCell(int x, int y);
+  CellOccupied GetCell(Point2D pos);
   status::status Update(int x, int y, CellOccupied occupied);
+  status::status Update(Point2D pos, CellOccupied occupied);
   void PrintMap();
 
   // only for simulation
