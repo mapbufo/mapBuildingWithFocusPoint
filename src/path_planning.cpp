@@ -1,5 +1,5 @@
 #include "path_planning.h"
-
+namespace PathPlanning {
 // 4 points in left, right, up and down
 std::vector<Point2D> GetNeighbors(Point2D current, Map map) {
   std::vector<Point2D> neighbors;
@@ -143,3 +143,4 @@ std::vector<Point2D> PathPlanning(Point2D start_pos, Point2D end_pos,
   OptimizePath(path, start_pos);
   return path;
 }
+}  // namespace PathPlanning

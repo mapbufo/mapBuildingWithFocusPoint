@@ -3,8 +3,7 @@
 
 #include <map.h>
 #include <math.h>
-
-typedef std::pair<int, int> Point2D;
+namespace PathPlanning {
 struct Point2DWithFloat {
   Point2D point;
   float value;
@@ -20,5 +19,6 @@ void OptimizePath(std::vector<Point2D> &path, Point2D start_pos);
 
 std::vector<Point2D> PathPlanning(Point2D start_pos, Point2D end_pos,
                                   const Map &map);
+}  // namespace PathPlanning
 
 #endif  // !PATH_PLANNING_H

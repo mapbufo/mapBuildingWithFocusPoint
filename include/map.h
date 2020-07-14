@@ -17,8 +17,6 @@ enum CellOccupied {
   target_pos = 6
 };
 
-typedef std::pair<int, int> Point2D;
-
 class Map {
  public:
   Map() : size_of_map_(10){};
