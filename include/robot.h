@@ -50,9 +50,11 @@ public:
   // direction with step_size_ = 0.
 
   // return value: 0 - just direction; 1 - next pos estimated
-  std::pair<int, int> estimateNextStep(ScanData scan_data, Point2D end_pos,
-                                       float max_dist);
+  Point2D estimateNextStep(ScanData scan_data, Point2D end_pos, float max_dist,
+                           bool &call_help);
 
+  void findBestPos(ScanData scan, Point2D candidate_pt, Point2D &best_pos,
+                   float &best_heading, bool only_empty);
   // *************** move ***************
   // update robot states according to next pos
   void move(Point2D next_pos);
