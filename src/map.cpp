@@ -5,10 +5,17 @@ boost::unordered_map<std::pair<int, int>, CellOccupied> &Map::GetMap() {
 }
 
 CellOccupied Map::GetCell(int x, int y) {
+  if (x >= size_of_map_ || x < 0 || y >= size_of_map_ || y < 0) {
+    return CellOccupied::out_of_map;
+  }
   if (map_.count({x, y}) == 0) {
     return CellOccupied::unknown;
   }
   return map_[{x, y}];
+}
+
+CellOccupied Map::GetCell(Point2D pos) {
+  return GetCell(pos.first, pos.second);
 }
 
 status::status Map::Update(int x, int y, CellOccupied occupied) {
@@ -18,6 +25,10 @@ status::status Map::Update(int x, int y, CellOccupied occupied) {
   //  }
   map_[{x, y}] = occupied;
   return status::Ok;
+}
+
+status::status Map::Update(Point2D pos, CellOccupied occupied) {
+  return Update(pos.first, pos.second, occupied);
 }
 
 void Map::PrintMap() {

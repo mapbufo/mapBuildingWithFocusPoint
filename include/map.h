@@ -7,8 +7,6 @@
 
 #include "common.h"
 
-enum CellOccupied { empty = 0, occupied = 1, unknown = 2, robot_pos = 5 };
-
 class Map {
 public:
   // used to create global map
@@ -21,8 +19,9 @@ public:
 
   boost::unordered_map<std::pair<int, int>, CellOccupied> &GetMap();
   CellOccupied GetCell(int x, int y);
+  CellOccupied GetCell(Point2D pos);
   status::status Update(int x, int y, CellOccupied occupied);
-
+  status::status Update(Point2D pos, CellOccupied occupied);
   void PrintMap();
   status::status AddPoint(std::pair<int, int> pos, CellOccupied cellOccupied) {
     map_.insert({pos, cellOccupied});

@@ -1,6 +1,7 @@
 #ifndef ROBOT_H
 #define ROBOT_H
 
+#include "common.h"
 #include "map.h"
 #include <algorithm>
 #include <iostream>
@@ -49,12 +50,12 @@ public:
   // direction with step_size_ = 0.
 
   // return value: 0 - just direction; 1 - next pos estimated
-  std::pair<int, int>
-  estimateNextStep(Map scan_data, std::pair<int, int> end_pos, float max_dist);
+  std::pair<int, int> estimateNextStep(ScanData scan_data, Point2D end_pos,
+                                       float max_dist);
 
   // *************** move ***************
   // update robot states according to next pos
-  void move(std::pair<int, int> next_pos);
+  void move(Point2D next_pos);
 };
 
 #endif // ROBOT_H

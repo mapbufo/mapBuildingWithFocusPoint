@@ -34,15 +34,14 @@ bool LidarSim::pointInRange(int pt_x, int pt_y) {
   return true;
 }
 // get all observable laser points
-Map LidarSim::createInputScan(Map map_data) {
+ScanData LidarSim::createInputScan(Map map_data) {
 
-  typedef std::pair<int, int> POINT2D;
-  Map local_map;
-  boost::unordered_map<POINT2D, CellOccupied> map = map_data.GetMap();
+  ScanData scan_points_list;
+  boost::unordered_map<Point2D, CellOccupied> map = map_data.GetMap();
   // report error if the map is empty
   if (map.size() == 0) {
     std::cerr << "Invalid map data!" << std::endl;
-    return local_map;
+    return scan_points_list;
   }
 
   // get map size
@@ -56,26 +55,24 @@ Map LidarSim::createInputScan(Map map_data) {
 
   // 1. check which points are within the detection range
 
-  std::set<POINT2D> obstacle_list;
+  std::set<Point2D> obstacle_list;
   for (int i = min_x; i <= max_x; i++) {
     for (int j = min_y; j <= max_y; j++) {
       // check if the laser point lies in the field of view (dist, angle
       // heading)
 
       if (pointInRange(i, j)) {
-        POINT2D laser_point(i, j);
-        local_map.AddPoint(laser_point, map[laser_point]);
+        Point2D laser_point(i, j);
+        scan_points_list.insert({laser_point, map[laser_point]});
 
         if (map[laser_point] == CellOccupied::occupied)
           obstacle_list.insert(laser_point);
       }
     }
   }
-  boost::unordered_map<POINT2D, CellOccupied> local_map_info =
-      local_map.GetMap();
 
   // 2. points on the line of obstacles could be blocked
-  for (auto pt : local_map_info) {
+  for (auto pt : scan_points_list) {
 
     int pt_type = pt.second;
     if (pt_type == CellOccupied::empty) {
@@ -91,15 +88,7 @@ Map LidarSim::createInputScan(Map map_data) {
               sqrt(pow(obstacle.first - x_, 2) + pow(obstacle.second - y_, 2));
           if (pt_dist - obstacle_dist > 10e-5) {
 
-            local_map.Update(pt.first.first, pt.first.second,
-                             CellOccupied::unknown);
-            //            std::cout << "pt: " << pt.first.first << " " <<
-            //            pt.first.second
-            //                      << " " << pt_angle - obstacle_angle <<
-            //                      std::endl;
-            //            std::cout << "obs: " << obstacle.first << " " <<
-            //            obstacle.second
-            //                      << std::endl;
+            scan_points_list[pt.first] = CellOccupied::unknown;
           }
         }
       }
@@ -107,42 +96,42 @@ Map LidarSim::createInputScan(Map map_data) {
   }
 
   // 3. get all obstacle point pairs
-  std::vector<std::pair<POINT2D, POINT2D>> obstacle_pair_list;
+  std::vector<std::pair<Point2D, Point2D>> obstacle_pair_list;
   for (auto obstacle_iter = obstacle_list.begin();
        obstacle_iter != obstacle_list.end(); obstacle_iter++) {
     // check up, down, left, right if there's an obstacle there
     int pos_x = obstacle_iter->first;
     int pos_y = obstacle_iter->second;
 
-    POINT2D point_up(pos_x - 1, pos_y);
-    POINT2D point_down(pos_x + 1, pos_y);
-    POINT2D point_left(pos_x, pos_y - 1);
-    POINT2D point_right(pos_x, pos_y + 1);
+    Point2D point_up(pos_x - 1, pos_y);
+    Point2D point_down(pos_x + 1, pos_y);
+    Point2D point_left(pos_x, pos_y - 1);
+    Point2D point_right(pos_x, pos_y + 1);
 
     if (obstacle_list.find(point_up) != obstacle_list.end()) {
       obstacle_pair_list.push_back(
-          std::pair<POINT2D, POINT2D>(*obstacle_iter, point_up));
+          std::pair<Point2D, Point2D>(*obstacle_iter, point_up));
     }
 
     if (obstacle_list.find(point_down) != obstacle_list.end()) {
       obstacle_pair_list.push_back(
-          std::pair<POINT2D, POINT2D>(*obstacle_iter, point_down));
+          std::pair<Point2D, Point2D>(*obstacle_iter, point_down));
     }
 
     if (obstacle_list.find(point_left) != obstacle_list.end()) {
       obstacle_pair_list.push_back(
-          std::pair<POINT2D, POINT2D>(*obstacle_iter, point_left));
+          std::pair<Point2D, Point2D>(*obstacle_iter, point_left));
     }
 
     if (obstacle_list.find(point_right) != obstacle_list.end()) {
       obstacle_pair_list.push_back(
-          std::pair<POINT2D, POINT2D>(*obstacle_iter, point_right));
+          std::pair<Point2D, Point2D>(*obstacle_iter, point_right));
     }
     obstacle_list.erase(obstacle_iter);
   }
 
   // 4. filter out points that are blocked
-  for (auto pt : local_map_info) {
+  for (auto pt : scan_points_list) {
 
     // check all obstacle pairs by min and max blocked angle
     // if a point's angle lies in the range, check distance -
@@ -154,14 +143,14 @@ Map LidarSim::createInputScan(Map map_data) {
     if (pt_type != CellOccupied::unknown &&
         pt_type != CellOccupied::robot_pos) {
       for (auto obstacle_pair : obstacle_pair_list) {
-        if (local_map_info[obstacle_pair.first] == CellOccupied::unknown ||
-            local_map_info[obstacle_pair.second] == CellOccupied::unknown)
+        if (scan_points_list[obstacle_pair.first] == CellOccupied::unknown ||
+            scan_points_list[obstacle_pair.second] == CellOccupied::unknown)
         // already overwritten
         {
           continue;
         }
-        POINT2D obstacle_1 = obstacle_pair.first;
-        POINT2D obstacle_2 = obstacle_pair.second;
+        Point2D obstacle_1 = obstacle_pair.first;
+        Point2D obstacle_2 = obstacle_pair.second;
         if (pt.first == obstacle_1 || pt.first == obstacle_2)
           continue;
         float obstacle_angle_1 =
@@ -178,8 +167,7 @@ Map LidarSim::createInputScan(Map map_data) {
           float obstacle_2_dist = sqrt(pow(obstacle_2.first - x_, 2) +
                                        pow(obstacle_2.second - y_, 2));
           if (pt_dist >= std::min(obstacle_1_dist, obstacle_2_dist)) {
-            local_map.Update(pt.first.first, pt.first.second,
-                             CellOccupied::unknown);
+            scan_points_list[pt.first] = CellOccupied::unknown;
             break;
           }
         }
@@ -187,7 +175,7 @@ Map LidarSim::createInputScan(Map map_data) {
     }
   }
 
-  return local_map;
+  return scan_points_list;
 }
 
 } // namespace simulation

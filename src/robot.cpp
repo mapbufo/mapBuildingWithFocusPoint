@@ -23,11 +23,8 @@
  * #: --> here in this function, this point is selected as the next move.
  */
 
-std::pair<int, int> Robot::estimateNextStep(Map scan_data,
-                                            std::pair<int, int> end_pos,
+std::pair<int, int> Robot::estimateNextStep(ScanData scan, Point2D end_pos,
                                             float max_dist) {
-  boost::unordered_map<std::pair<int, int>, CellOccupied> scan =
-      scan_data.GetMap();
 
   //  for (auto sc : scan) {
   //    std::cout << sc.first.first << " " << sc.first.second << std::endl;
@@ -42,8 +39,8 @@ std::pair<int, int> Robot::estimateNextStep(Map scan_data,
   // move as far as the robot can in that direction (needs better algo., but
   // enough for now)
   // --> find the farthest, empty scan point in that direction
-  std::pair<int, int> best_pos; // initialization
-  float best_heading;           // init with some big number
+  std::pair<int, int> best_pos(-100, -100); // initialization
+  float best_heading;                       // init with some big number
   float heading_diff;
   bool init = false;
 
@@ -189,6 +186,10 @@ std::pair<int, int> Robot::estimateNextStep(Map scan_data,
     }
   }
 
+  if (best_pos.first == -100 && best_pos.second == -100) {
+    best_pos.first = x_;
+    best_pos.second = y_;
+  }
   return best_pos;
 }
 

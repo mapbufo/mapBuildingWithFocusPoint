@@ -91,7 +91,7 @@ public:
     setHeading(heading);
   }
   // get all observable laser points
-  Map createInputScan(Map map_data);
+  ScanData createInputScan(Map map_data);
 
   // check if a laser point is in the field of view (FoV)
   bool pointInRange(int pt_x, int pt_y);
