@@ -10,7 +10,6 @@ enum CellOccupied {
   empty = 0,
   occupied = 1,
   unknown = 2,
-  out_of_map = 3,
   path = 4,
   robot_pos = 5,
   target_pos = 6
