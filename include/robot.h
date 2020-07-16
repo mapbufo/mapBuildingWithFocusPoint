@@ -1,25 +1,21 @@
 #ifndef ROBOT_H
 #define ROBOT_H
 
-#include "common.h"
-#include "map.h"
+#include <math.h>
 #include <algorithm>
 #include <iostream>
-#include <math.h>
 #include <memory>
 #include <vector>
+#include "common.h"
+#include "map.h"
 class Robot {
-private:
-  int x_; // x coordinate of the lidar
-  int y_; // y coordinate of the lidar
+ private:
+  int x_;  // x coordinate of the lidar
+  int y_;  // y coordinate of the lidar
 
-  float heading_; // lidar direction:
-  // heading = 0 if the center of the lidar is aligned with the x+ axis;
-  // heading = PI/2 if aligned with the y+ axis
-  // heading = -PI/2 if aligned with the y- axis
-  // heading = +-PI if aligned with the x- axis
+  float heading_;  // lidar direction
 
-public:
+ public:
   Robot() {
     x_ = y_ = 0;
     heading_ = 0.0;
@@ -43,21 +39,14 @@ public:
   void setHeading(float heading) { heading_ = heading; }
 
   // *************** estimate next step ***************
-  // 1) if no obstacle in sight (in the direction of target) then go straight in
-  // that direction with step size = max_dist_;
-  // 2) else if obstacle exists, then check the scan data from heading to +- max
-  // angle and see if there're gaps elsewhere. In this case, turn to that
-  // direction with step_size_ = 0.
-
-  // return value: 0 - just direction; 1 - next pos estimated
-  Point2D estimateNextStep(ScanData scan_data, Point2D end_pos, float max_dist,
-                           bool &call_help);
-
   void findBestPos(ScanData scan, Point2D candidate_pt, Point2D &best_pos,
                    float &best_heading, bool only_empty);
+
+  Point2D estimateNextStep(ScanData scan_data, Point2D end_pos, float max_dist,
+                           bool &call_help);
   // *************** move ***************
   // update robot states according to next pos
   void move(Point2D next_pos);
 };
 
-#endif // ROBOT_H
+#endif  // ROBOT_H

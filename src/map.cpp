@@ -51,18 +51,18 @@ status::status Map::Load(std::string path_to_map) {
     for (int j = 0; j < size_of_map_; j++) {
       infile >> tmp;
       switch (tmp) {
-      case 0:
-        map_[{i, j}] = CellOccupied::empty;
-        break;
-      case 1:
-        map_[{i, j}] = CellOccupied::occupied;
-        break;
-      case 5:
-        map_[{i, j}] = CellOccupied::robot_pos;
-        break;
-      default:
-        map_[{i, j}] = CellOccupied::unknown;
-        break;
+        case 0:
+          map_[{i, j}] = CellOccupied::empty;
+          break;
+        case 1:
+          map_[{i, j}] = CellOccupied::occupied;
+          break;
+        case 5:
+          map_[{i, j}] = CellOccupied::robot_pos;
+          break;
+        default:
+          map_[{i, j}] = CellOccupied::unknown;
+          break;
       }
     }
   }

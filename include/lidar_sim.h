@@ -12,21 +12,21 @@
  *
  */
 
-#include "map.h"
+#include <math.h>
 #include <algorithm>
 #include <iostream>
-#include <math.h>
 #include <memory>
 #include <vector>
+#include "map.h"
 namespace simulation {
 class LaserPoint {
-public:
+ public:
   typedef std::shared_ptr<LaserPoint> Ptr;
 
   int x_;
   int y_;
 
-public:
+ public:
   LaserPoint() {
     x_ = 0;
     y_ = 0;
@@ -43,14 +43,14 @@ public:
 };
 
 class LidarSim {
-public:
+ public:
   typedef std::shared_ptr<LidarSim> Ptr;
 
-  int x_;           // x coordinate of the lidar
-  int y_;           // y coordinate of the lidar
-  float max_dist_;  // maximum detection range
-  float max_angle_; // maximum detection angle in radius
-  float heading_;   // lidar direction:
+  int x_;            // x coordinate of the lidar
+  int y_;            // y coordinate of the lidar
+  float max_dist_;   // maximum detection range
+  float max_angle_;  // maximum detection angle in radius
+  float heading_;    // lidar direction:
   // heading = 0 if the center of the lidar is aligned with the x+ axis;
   // heading = PI/2 if aligned with the y+ axis
   // heading = -PI/2 if aligned with the y- axis
@@ -96,6 +96,6 @@ public:
   // check if a laser point is in the field of view (FoV)
   bool pointInRange(int pt_x, int pt_y);
 };
-} // namespace simulation
+}  // namespace simulation
 
-#endif // LIDAR_SIM_H
+#endif  // LIDAR_SIM_H

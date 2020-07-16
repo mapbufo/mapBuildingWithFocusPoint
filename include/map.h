@@ -8,7 +8,7 @@
 #include "common.h"
 
 class Map {
-public:
+ public:
   // used to create global map
   Map(int size_of_map) { size_of_map_ = size_of_map; };
   // used to create local scan point map (not likely to be a square so size of
@@ -30,10 +30,10 @@ public:
   // only for simulation
   status::status Load(std::string path_to_map);
 
-private:
+ private:
   boost::unordered_map<std::pair<int, int>, CellOccupied> map_;
 
   int size_of_map_;
 };
 
-#endif // MAP_H
+#endif  // MAP_H

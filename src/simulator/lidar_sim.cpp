@@ -11,12 +11,10 @@ bool LidarSim::pointInRange(int pt_x, int pt_y) {
   int dist_y = pt_y - y_;
 
   // 0. exclude robot pos
-  if (dist_x == 0 && dist_y == 0)
-    return false;
+  if (dist_x == 0 && dist_y == 0) return false;
   // 1. check distance
   float pt_dist = std::sqrt(std::pow(dist_x, 2) + std::pow(dist_y, 2));
-  if (pt_dist > max_dist_)
-    return false;
+  if (pt_dist > max_dist_) return false;
 
   // 2. check angle
   float pt_angle = std::atan2(dist_y * 1.0, dist_x * 1.0);
@@ -35,7 +33,6 @@ bool LidarSim::pointInRange(int pt_x, int pt_y) {
 }
 // get all observable laser points
 ScanData LidarSim::createInputScan(Map map_data) {
-
   ScanData scan_points_list;
   boost::unordered_map<Point2D, CellOccupied> map = map_data.GetMap();
   // report error if the map is empty
@@ -73,21 +70,18 @@ ScanData LidarSim::createInputScan(Map map_data) {
 
   // 2. points on the line of obstacles could be blocked
   for (auto pt : scan_points_list) {
-
     int pt_type = pt.second;
     if (pt_type == CellOccupied::empty) {
       float pt_angle = atan2(pt.first.second - y_, pt.first.first - x_);
       for (auto obstacle : obstacle_list) {
         float obstacle_angle = atan2(obstacle.second - y_, obstacle.first - x_);
         if (std::abs(pt_angle - obstacle_angle) < 10e-5) {
-
           // if so, check distance
           float pt_dist =
               sqrt(pow(pt.first.first - x_, 2) + pow(pt.first.second - y_, 2));
           float obstacle_dist =
               sqrt(pow(obstacle.first - x_, 2) + pow(obstacle.second - y_, 2));
           if (pt_dist - obstacle_dist > 10e-5) {
-
             scan_points_list[pt.first] = CellOccupied::unknown;
           }
         }
@@ -132,7 +126,6 @@ ScanData LidarSim::createInputScan(Map map_data) {
 
   // 4. filter out points that are blocked
   for (auto pt : scan_points_list) {
-
     // check all obstacle pairs by min and max blocked angle
     // if a point's angle lies in the range, check distance -
     //    if shorter than the obstacle, then set to empty
@@ -151,8 +144,7 @@ ScanData LidarSim::createInputScan(Map map_data) {
         }
         Point2D obstacle_1 = obstacle_pair.first;
         Point2D obstacle_2 = obstacle_pair.second;
-        if (pt.first == obstacle_1 || pt.first == obstacle_2)
-          continue;
+        if (pt.first == obstacle_1 || pt.first == obstacle_2) continue;
         float obstacle_angle_1 =
             atan2(obstacle_1.second - y_, obstacle_1.first - x_);
         float obstacle_angle_2 =
@@ -178,4 +170,4 @@ ScanData LidarSim::createInputScan(Map map_data) {
   return scan_points_list;
 }
 
-} // namespace simulation
+}  // namespace simulation

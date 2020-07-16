@@ -18,4 +18,4 @@ enum CellOccupied {
 typedef std::pair<int, int> Point2D;
 typedef boost::unordered_map<Point2D, CellOccupied> ScanData;
 
-#endif // !COMMON_H
+#endif  // !COMMON_H
