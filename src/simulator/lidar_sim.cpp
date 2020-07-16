@@ -34,21 +34,23 @@ bool LidarSim::pointInRange(int pt_x, int pt_y) {
 // get all observable laser points
 ScanData LidarSim::createInputScan(Map map_data) {
   ScanData scan_points_list;
-  boost::unordered_map<Point2D, CellOccupied> map = map_data.GetMap();
   // report error if the map is empty
-  if (map.size() == 0) {
+  if (map_data.GetMap().size() == 0) {
     std::cerr << "Invalid map data!" << std::endl;
     return scan_points_list;
   }
 
   // get map size
-  int map_size = map.size();
+  int map_size_x_min = map_data.GetMapSizeXMin();
+  int map_size_x_max = map_data.GetMapSizeXMax();
+  int map_size_y_min = map_data.GetMapSizeYMin();
+  int map_size_y_max = map_data.GetMapSizeYMax();
 
   // get the min & max range in x and y axis
-  int min_x = std::max(int(std::floor(x_ - max_dist_)), 0);
-  int max_x = std::min(int(std::ceil(x_ + max_dist_)), map_size - 1);
-  int min_y = std::max(int(std::floor(y_ - max_dist_)), 0);
-  int max_y = std::min(int(std::ceil(y_ + max_dist_)), map_size - 1);
+  int min_x = std::max(int(std::floor(x_ - max_dist_)), map_size_x_min);
+  int max_x = std::min(int(std::ceil(x_ + max_dist_)), map_size_x_max);
+  int min_y = std::max(int(std::floor(y_ - max_dist_)), map_size_y_min);
+  int max_y = std::min(int(std::ceil(y_ + max_dist_)), map_size_y_max);
 
   // 1. check which points are within the detection range
 
@@ -60,9 +62,9 @@ ScanData LidarSim::createInputScan(Map map_data) {
 
       if (pointInRange(i, j)) {
         Point2D laser_point(i, j);
-        scan_points_list.insert({laser_point, map[laser_point]});
+        scan_points_list.insert({laser_point, map_data[laser_point]});
 
-        if (map[laser_point] == CellOccupied::occupied)
+        if (map_data[laser_point] == CellOccupied::occupied)
           obstacle_list.insert(laser_point);
       }
     }

@@ -6,26 +6,22 @@ std::vector<Point2D> GetNeighbors(Point2D current, Map map) {
   Point2D point_neigh;
   point_neigh.first = current.first - 1;
   point_neigh.second = current.second;
-  if (map.GetCell(point_neigh) != CellOccupied::out_of_map &&
-      map.GetCell(point_neigh) != CellOccupied::occupied) {
+  if (map.GetCell(point_neigh) != CellOccupied::occupied) {
     neighbors.push_back(point_neigh);
   }
   point_neigh.first = current.first + 1;
   point_neigh.second = current.second;
-  if (map.GetCell(point_neigh) != CellOccupied::out_of_map &&
-      map.GetCell(point_neigh) != CellOccupied::occupied) {
+  if (map.GetCell(point_neigh) != CellOccupied::occupied) {
     neighbors.push_back(point_neigh);
   }
   point_neigh.first = current.first;
   point_neigh.second = current.second - 1;
-  if (map.GetCell(point_neigh) != CellOccupied::out_of_map &&
-      map.GetCell(point_neigh) != CellOccupied::occupied) {
+  if (map.GetCell(point_neigh) != CellOccupied::occupied) {
     neighbors.push_back(point_neigh);
   }
   point_neigh.first = current.first;
   point_neigh.second = current.second + 1;
-  if (map.GetCell(point_neigh) != CellOccupied::out_of_map &&
-      map.GetCell(point_neigh) != CellOccupied::occupied) {
+  if (map.GetCell(point_neigh) != CellOccupied::occupied) {
     neighbors.push_back(point_neigh);
   }
   return neighbors;

@@ -10,30 +10,44 @@
 class Map {
  public:
   // used to create global map
-  Map(int size_of_map) { size_of_map_ = size_of_map; };
+  Map(std::pair<int, int> size_of_map) {
+    size_of_map_ = size_of_map;
+    map_x_min_ = 0;
+    map_x_max_ = size_of_map_.first;
+    map_y_min_ = 0;
+    map_y_max_ = size_of_map_.second;
+  };
   // used to create local scan point map (not likely to be a square so size of
   // map does not make any sense :))
-  Map() { size_of_map_ = -1; };
+  Map() { size_of_map_ = {-1, -1}; };
 
   ~Map(){};
+
+  CellOccupied operator[](Point2D point) { return GetCell(point); };
 
   boost::unordered_map<std::pair<int, int>, CellOccupied> &GetMap();
   CellOccupied GetCell(int x, int y);
   CellOccupied GetCell(Point2D pos);
   status::status Update(int x, int y, CellOccupied occupied);
   status::status Update(Point2D pos, CellOccupied occupied);
+  int GetMapSizeXMin() { return map_x_min_; }
+  int GetMapSizeXMax() { return map_x_max_; }
+  int GetMapSizeYMin() { return map_y_min_; }
+  int GetMapSizeYMax() { return map_y_max_; }
+  std::pair<int, int> GetMapSize() { return size_of_map_; }
   void PrintMap();
-  status::status AddPoint(std::pair<int, int> pos, CellOccupied cellOccupied) {
-    map_.insert({pos, cellOccupied});
-    return status::Ok;
-  };
   // only for simulation
   status::status Load(std::string path_to_map);
+  status::status LoadGlobalMap(std::string path_to_map);
 
  private:
   boost::unordered_map<std::pair<int, int>, CellOccupied> map_;
 
-  int size_of_map_;
+  std::pair<int, int> size_of_map_;
+  int map_x_min_;
+  int map_x_max_;
+  int map_y_min_;
+  int map_y_max_;
 };
 
 #endif  // MAP_H
