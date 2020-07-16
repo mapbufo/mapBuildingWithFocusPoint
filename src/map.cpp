@@ -1,6 +1,6 @@
 #include "map.h"
 
-boost::unordered_map<std::pair<int, int>, CellOccupied> Map::GetMap() {
+boost::unordered_map<std::pair<int, int>, CellOccupied> &Map::GetMap() {
   return map_;
 }
 
@@ -19,10 +19,10 @@ CellOccupied Map::GetCell(Point2D pos) {
 }
 
 status::status Map::Update(int x, int y, CellOccupied occupied) {
-  if (x >= size_of_map_ || y >= size_of_map_) {
-    std::cerr << "The position is over the size of map!" << std::endl;
-    return status::Error;
-  }
+  //  if (x >= size_of_map_ || y >= size_of_map_) {
+  //    std::cerr << "The position is over the size of map!" << std::endl;
+  //    return status::Error;
+  //  }
   map_[{x, y}] = occupied;
   return status::Ok;
 }

@@ -13,13 +13,11 @@
  */
 
 #include <math.h>
-
 #include <algorithm>
 #include <iostream>
 #include <memory>
 #include <vector>
-
-const float PI = 3.14159;
+#include "map.h"
 namespace simulation {
 class LaserPoint {
  public:
@@ -74,10 +72,30 @@ class LidarSim {
   }
   ~LidarSim() {}
   // check if a laser point is in the field of view (FoV)
-  bool pointInRange(int pt_x, int pt_y);
+
+  void setPosX(int x) { x_ = x; }
+  void setPosY(int y) { y_ = y; }
+  void setHeading(float heading) { heading_ = heading; }
+  void setMaxDist(float max_dist) { max_dist_ = max_dist; }
+  void setMaxAngle(float max_angle) { max_angle_ = max_angle; }
+
+  int getPosX() { return x_; }
+  int getPosY() { return y_; }
+  float getHeading() { return heading_; }
+  float getMaxDist() { return max_dist_; }
+  float getMaxAngle() { return max_angle_; }
+
+  void updatePose(int x, int y, int heading) {
+    setPosX(x);
+    setPosY(y);
+    setHeading(heading);
+  }
   // get all observable laser points
-  std::vector<LaserPoint> collectObservedLaserPoints(
-      std::vector<std::vector<int>> map_data);
+  ScanData createInputScan(Map map_data);
+
+  // check if a laser point is in the field of view (FoV)
+  bool pointInRange(int pt_x, int pt_y);
 };
 }  // namespace simulation
+
 #endif  // LIDAR_SIM_H
