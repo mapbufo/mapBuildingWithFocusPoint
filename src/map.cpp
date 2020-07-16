@@ -90,3 +90,44 @@ status::status Map::Load(std::string path_to_map) {
   infile.close();
   return status::Ok;
 }
+
+
+// TODO(YiLuo) : should not load by the size of map, but by the values in map
+status::status Map::LoadGlobalMap(std::string path_to_map) {
+  // open the map file
+  std::ifstream infile;
+  infile.open(path_to_map.c_str());
+
+  // fill the map data into the map_
+  int tmp;
+  for (int i = - size_of_map_.first / 2; i < size_of_map_.first / 2; i++) {
+    for (int j = - size_of_map_.second / 2; j < size_of_map_.second / 2; j++) {
+      infile >> tmp;
+      switch (tmp) {
+        case 0:
+          map_[{i, j}] = CellOccupied::empty;
+          break;
+        case 1:
+          map_[{i, j}] = CellOccupied::occupied;
+          break;
+        case 2:
+          map_[{i, j}] = CellOccupied::unknown;
+          break;
+        case 4:
+          map_[{i, j}] = CellOccupied::path;
+          break;
+        case 5:
+          map_[{i, j}] = CellOccupied::robot_pos;
+          break;
+        case 6:
+          map_[{i, j}] = CellOccupied::target_pos;
+          break;
+        default:
+          map_[{i, j}] = CellOccupied::unknown;
+          break;
+      }
+    }
+  }
+  infile.close();
+  return status::Ok;
+}

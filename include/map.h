@@ -38,6 +38,7 @@ class Map {
   void PrintMap();
   // only for simulation
   status::status Load(std::string path_to_map);
+  status::status LoadGlobalMap(std::string path_to_map);
 
  private:
   boost::unordered_map<std::pair<int, int>, CellOccupied> map_;

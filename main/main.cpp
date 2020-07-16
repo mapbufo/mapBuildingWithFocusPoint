@@ -11,9 +11,9 @@ int main() {
 
   // global map: the map used to generate scan points and as the reference for
   // comparison
-  Map global_map({10, 10});
+  Map global_map({20, 20});
 
-  if (status::Error == global_map.Load("../../maps/scenario_03.txt")) {
+  if (status::Error == global_map.LoadGlobalMap("../../maps/scenario_03.txt")) {
     std::cerr << "Invalid map data!" << std::endl;
   }
   // empty map: the map created/filled by scans. Used for path planning
