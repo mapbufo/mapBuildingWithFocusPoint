@@ -13,10 +13,12 @@
  */
 
 #include <math.h>
+
 #include <algorithm>
 #include <iostream>
 #include <memory>
 #include <vector>
+
 #include "map.h"
 namespace simulation {
 class LaserPoint {
