@@ -8,7 +8,7 @@
 #include "common.h"
 
 class Map {
-public:
+ public:
   // used to create global map
   Map(std::pair<int, int> size_of_map) {
     size_of_map_ = size_of_map;
@@ -38,7 +38,7 @@ public:
   status::status Load(std::string path_to_map);
   status::status LoadGlobalMap(std::string path_to_map);
 
-private:
+ private:
   boost::unordered_map<std::pair<int, int>, CellOccupied> map_;
 
   std::pair<int, int> size_of_map_;
@@ -50,4 +50,4 @@ private:
   void computeMapSize();
 };
 
-#endif // MAP_H
+#endif  // MAP_H

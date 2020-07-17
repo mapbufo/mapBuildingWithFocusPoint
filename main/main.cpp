@@ -24,8 +24,8 @@ int main() {
   }
 
   // set start and end position
-  Point2D start_pos(9, 0);
-  Point2D end_pos(6, 9);
+  Point2D start_pos(8, 0);
+  Point2D end_pos(6, 8);
 
   // initialize robot and lidar
   // since the lidar is mounted on the robot, they share the same position and
@@ -56,8 +56,7 @@ int main() {
   /// 4.
   while (!target_pos_list.empty()) {
     // safety: exit loop
-    if (num_loop > num_max_loop)
-      break;
+    if (num_loop > num_max_loop) break;
 
     // get the next target pos where the robot is supposed to go
     Point2D next_target_pos = *target_pos_list.begin();

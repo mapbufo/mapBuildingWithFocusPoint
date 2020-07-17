@@ -43,8 +43,8 @@ status::status Map::Update(Point2D pos, CellOccupied occupied) {
 void Map::PrintMap() {
   // Actually this should iterates through map_, not by size_of_map_, but right
   // now this is used because this is needed for printing in Terminal.
-  for (int i = map_x_min_; i < map_x_max_; i++) {
-    for (int j = map_y_min_; j < map_y_max_; j++) {
+  for (int i = map_x_min_; i <= map_x_max_; i++) {
+    for (int j = map_y_min_; j <= map_y_max_; j++) {
       std::cerr << GetCell(i, j) << " ";
     }
     std::cerr << std::endl;
@@ -63,27 +63,27 @@ status::status Map::Load(std::string path_to_map) {
     for (int j = 0; j < size_of_map_.second; j++) {
       infile >> tmp;
       switch (tmp) {
-      case 0:
-        map_[{i, j}] = CellOccupied::empty;
-        break;
-      case 1:
-        map_[{i, j}] = CellOccupied::occupied;
-        break;
-      case 2:
-        map_[{i, j}] = CellOccupied::unknown;
-        break;
-      case 4:
-        map_[{i, j}] = CellOccupied::path;
-        break;
-      case 5:
-        map_[{i, j}] = CellOccupied::robot_pos;
-        break;
-      case 6:
-        map_[{i, j}] = CellOccupied::target_pos;
-        break;
-      default:
-        map_[{i, j}] = CellOccupied::unknown;
-        break;
+        case 0:
+          map_[{i, j}] = CellOccupied::empty;
+          break;
+        case 1:
+          map_[{i, j}] = CellOccupied::occupied;
+          break;
+        case 2:
+          map_[{i, j}] = CellOccupied::unknown;
+          break;
+        case 4:
+          map_[{i, j}] = CellOccupied::path;
+          break;
+        case 5:
+          map_[{i, j}] = CellOccupied::robot_pos;
+          break;
+        case 6:
+          map_[{i, j}] = CellOccupied::target_pos;
+          break;
+        default:
+          map_[{i, j}] = CellOccupied::unknown;
+          break;
       }
     }
   }
@@ -104,27 +104,27 @@ status::status Map::LoadGlobalMap(std::string path_to_map) {
     for (int j = -size_of_map_.second / 2; j < size_of_map_.second / 2; j++) {
       infile >> tmp;
       switch (tmp) {
-      case 0:
-        map_[{i, j}] = CellOccupied::empty;
-        break;
-      case 1:
-        map_[{i, j}] = CellOccupied::occupied;
-        break;
-      case 2:
-        map_[{i, j}] = CellOccupied::unknown;
-        break;
-      case 4:
-        map_[{i, j}] = CellOccupied::path;
-        break;
-      case 5:
-        map_[{i, j}] = CellOccupied::robot_pos;
-        break;
-      case 6:
-        map_[{i, j}] = CellOccupied::target_pos;
-        break;
-      default:
-        map_[{i, j}] = CellOccupied::unknown;
-        break;
+        case 0:
+          map_[{i, j}] = CellOccupied::empty;
+          break;
+        case 1:
+          map_[{i, j}] = CellOccupied::occupied;
+          break;
+        case 2:
+          map_[{i, j}] = CellOccupied::unknown;
+          break;
+        case 4:
+          map_[{i, j}] = CellOccupied::path;
+          break;
+        case 5:
+          map_[{i, j}] = CellOccupied::robot_pos;
+          break;
+        case 6:
+          map_[{i, j}] = CellOccupied::target_pos;
+          break;
+        default:
+          map_[{i, j}] = CellOccupied::unknown;
+          break;
       }
     }
   }
