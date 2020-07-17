@@ -85,7 +85,9 @@ void Robot::findBestPos(ScanData scan, Point2D candidate_pt, Point2D &best_pos,
 Point2D Robot::estimateNextStep(ScanData scan, Point2D end_pos, float max_dist,
                                 bool &call_help) {
   //  for (auto sc : scan) {
-  //    std::cout << sc.first.first << " " << sc.first.second << std::endl;
+  //    std::cerr << sc.first.first << " " << sc.first.second << " " <<
+  //    sc.second
+  //              << std::endl;
   //  }
 
   // first check if the end pos is in reach
@@ -201,9 +203,9 @@ Point2D Robot::estimateNextStep(ScanData scan, Point2D end_pos, float max_dist,
 
     // scan point exists:
     for (auto pt : line_point_vec) {
-      int pt_x = pt.first;
-      int pt_y = pt.second;
-      if (pt_x < 0 || pt_y < 0) continue;
+      //      int pt_x = pt.first;
+      //      int pt_y = pt.second;
+      //      if (pt_x < 0 || pt_y < 0) continue;
       findBestPos(scan, pt, best_pos, best_heading, true);
       findBestPos(scan, pt, farthest_pos, farthest_pos_heading, false);
     }

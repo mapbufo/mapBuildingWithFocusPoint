@@ -1,7 +1,6 @@
 #include <iostream>
-
-#include <iostream>
 #include <iterator>
+
 #include "lidar_sim.h"
 #include "map.h"
 #include "map_simulator.h"
@@ -12,22 +11,21 @@ int main() {
 
   // global map: the map used to generate scan points and as the reference for
   // comparison
-  Map global_map(10);
+  Map global_map({20, 20});
 
-  if (status::Error == global_map.Load("../../maps/scenario_03.txt")) {
+  if (status::Error == global_map.LoadGlobalMap("../../maps/scenario_03.txt")) {
     std::cerr << "Invalid map data!" << std::endl;
   }
-
   // empty map: the map created/filled by scans. Used for path planning
-  Map empty_map(10);
+  Map empty_map({10, 10});
 
   if (status::Error == empty_map.Load("../../maps/scenario_04.txt")) {
     std::cerr << "Invalid map data!" << std::endl;
   }
 
   // set start and end position
-  Point2D start_pos(5, 2);
-  Point2D end_pos(0, 9);
+  Point2D start_pos(8, 0);
+  Point2D end_pos(6, 8);
 
   // initialize robot and lidar
   // since the lidar is mounted on the robot, they share the same position and
@@ -72,6 +70,7 @@ int main() {
       // need to adjust heading first
       my_robot.setHeading(suggested_heading);
       lidar_sim.setHeading(my_robot.getHeading());
+      num_loop++;
       continue;
     }
 
@@ -129,7 +128,7 @@ int main() {
                       CellOccupied::robot_pos);
 
       temp_map.PrintMap();
-
+      num_loop++;
       continue;
     }
 

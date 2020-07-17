@@ -2,6 +2,7 @@
 #define POINT_H
 
 #include <math.h>
+
 #include <algorithm>
 #include <iostream>
 #include <memory>

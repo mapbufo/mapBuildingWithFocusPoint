@@ -2,10 +2,12 @@
 #define ROBOT_H
 
 #include <math.h>
+
 #include <algorithm>
 #include <iostream>
 #include <memory>
 #include <vector>
+
 #include "common.h"
 #include "map.h"
 class Robot {
