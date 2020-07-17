@@ -24,8 +24,8 @@ int main() {
   }
 
   // set start and end position
-  Point2D start_pos(5, 2);
-  Point2D end_pos(0, 9);
+  Point2D start_pos(9, 0);
+  Point2D end_pos(6, 9);
 
   // initialize robot and lidar
   // since the lidar is mounted on the robot, they share the same position and
@@ -56,7 +56,8 @@ int main() {
   /// 4.
   while (!target_pos_list.empty()) {
     // safety: exit loop
-    if (num_loop > num_max_loop) break;
+    if (num_loop > num_max_loop)
+      break;
 
     // get the next target pos where the robot is supposed to go
     Point2D next_target_pos = *target_pos_list.begin();
@@ -70,6 +71,7 @@ int main() {
       // need to adjust heading first
       my_robot.setHeading(suggested_heading);
       lidar_sim.setHeading(my_robot.getHeading());
+      num_loop++;
       continue;
     }
 
@@ -127,7 +129,7 @@ int main() {
                       CellOccupied::robot_pos);
 
       temp_map.PrintMap();
-
+      num_loop++;
       continue;
     }
 

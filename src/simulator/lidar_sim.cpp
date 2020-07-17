@@ -11,10 +11,12 @@ bool LidarSim::pointInRange(int pt_x, int pt_y) {
   int dist_y = pt_y - y_;
 
   // 0. exclude robot pos
-  if (dist_x == 0 && dist_y == 0) return false;
+  if (dist_x == 0 && dist_y == 0)
+    return false;
   // 1. check distance
   float pt_dist = std::sqrt(std::pow(dist_x, 2) + std::pow(dist_y, 2));
-  if (pt_dist > max_dist_) return false;
+  if (pt_dist > max_dist_)
+    return false;
 
   // 2. check angle
   float pt_angle = std::atan2(dist_y * 1.0, dist_x * 1.0);
@@ -51,6 +53,8 @@ ScanData LidarSim::createInputScan(Map map_data) {
   int max_x = std::min(int(std::ceil(x_ + max_dist_)), map_size_x_max);
   int min_y = std::max(int(std::floor(y_ - max_dist_)), map_size_y_min);
   int max_y = std::min(int(std::ceil(y_ + max_dist_)), map_size_y_max);
+  //  std::cerr << min_x << " " << min_y << " " << max_x << " " << max_y
+  //            << std::endl;
 
   // 1. check which points are within the detection range
 
@@ -146,7 +150,8 @@ ScanData LidarSim::createInputScan(Map map_data) {
         }
         Point2D obstacle_1 = obstacle_pair.first;
         Point2D obstacle_2 = obstacle_pair.second;
-        if (pt.first == obstacle_1 || pt.first == obstacle_2) continue;
+        if (pt.first == obstacle_1 || pt.first == obstacle_2)
+          continue;
         float obstacle_angle_1 =
             atan2(obstacle_1.second - y_, obstacle_1.first - x_);
         float obstacle_angle_2 =
@@ -172,4 +177,4 @@ ScanData LidarSim::createInputScan(Map map_data) {
   return scan_points_list;
 }
 
-}  // namespace simulation
+} // namespace simulation

@@ -8,7 +8,7 @@
 #include "common.h"
 
 class Map {
- public:
+public:
   // used to create global map
   Map(std::pair<int, int> size_of_map) {
     size_of_map_ = size_of_map;
@@ -17,9 +17,6 @@ class Map {
     map_y_min_ = 0;
     map_y_max_ = size_of_map_.second;
   };
-  // used to create local scan point map (not likely to be a square so size of
-  // map does not make any sense :))
-  Map() { size_of_map_ = {-1, -1}; };
 
   ~Map(){};
 
@@ -34,13 +31,14 @@ class Map {
   int GetMapSizeXMax() { return map_x_max_; }
   int GetMapSizeYMin() { return map_y_min_; }
   int GetMapSizeYMax() { return map_y_max_; }
+
   std::pair<int, int> GetMapSize() { return size_of_map_; }
   void PrintMap();
   // only for simulation
   status::status Load(std::string path_to_map);
   status::status LoadGlobalMap(std::string path_to_map);
 
- private:
+private:
   boost::unordered_map<std::pair<int, int>, CellOccupied> map_;
 
   std::pair<int, int> size_of_map_;
@@ -48,6 +46,8 @@ class Map {
   int map_x_max_;
   int map_y_min_;
   int map_y_max_;
+
+  void computeMapSize();
 };
 
-#endif  // MAP_H
+#endif // MAP_H
