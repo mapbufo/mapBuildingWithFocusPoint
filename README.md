@@ -37,3 +37,5 @@ There is a detailed example. Assuming that we have a robot with lidar at the dow
 ## Some features nice to have
 - GTest
 - use `semantic-map`
+- use CNN to the object-detection and semantic-segmentation
+- consider the moving object, use maybe KF
