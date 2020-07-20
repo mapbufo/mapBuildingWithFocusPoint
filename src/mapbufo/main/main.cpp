@@ -6,6 +6,7 @@
 #include "map_simulator.h"
 #include "path_planning.h"
 #include "robot.h"
+
 int main() {
   // ************************ initialization ************************ //
 
@@ -13,13 +14,13 @@ int main() {
   // comparison
   Map global_map({20, 20});
 
-  if (status::Error == global_map.LoadGlobalMap("../../maps/scenario_03.txt")) {
+  if (status::Error == global_map.LoadGlobalMap("./src/mapbufo/maps/scenario_03.txt")) {
     std::cerr << "Invalid map data!" << std::endl;
   }
   // empty map: the map created/filled by scans. Used for path planning
   Map empty_map({10, 10});
 
-  if (status::Error == empty_map.Load("../../maps/scenario_04.txt")) {
+  if (status::Error == empty_map.Load("./src/mapbufo/maps/scenario_04.txt")) {
     std::cerr << "Invalid map data!" << std::endl;
   }
 
