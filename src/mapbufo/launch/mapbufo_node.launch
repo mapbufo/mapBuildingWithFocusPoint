@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<launch>
+
+  <node pkg="mapbufo" type="mapbufo_node" name="mapbufo_node">
+  </node>
+
+  <node pkg="mapbufo" type="transform_support" name="transform_support">
+  </node>
+</launch>

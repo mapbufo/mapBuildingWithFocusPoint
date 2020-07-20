@@ -13,6 +13,8 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   sensor_msgs
   std_msgs
+  tf
+  roslib
 )
 
 catkin_package(
@@ -33,6 +35,7 @@ add_library( map src/map.cpp)
 add_library( librobot src/robot.cpp)
 add_library( path_planning src/path_planning.cpp)
 
+# main function
 add_executable(${PROJECT_NAME}_node main/main.cpp)
 
 add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
@@ -44,6 +47,13 @@ target_link_libraries(${PROJECT_NAME}_node
   map
   librobot
   path_planning
+)
+
+# send the coordinate-transform
+add_executable(transform_support src/transform_support.cpp)
+
+target_link_libraries(transform_support
+  ${catkin_LIBRARIES}
 )
 
 #############
