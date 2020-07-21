@@ -1,30 +1,72 @@
 #include <iostream>
 #include <iterator>
 
+#include <geometry_msgs/Twist.h>
+#include <ros/package.h>
+#include <ros/ros.h>
+#include <sensor_msgs/LaserScan.h>
 #include "lidar_sim.h"
 #include "map.h"
 #include "map_simulator.h"
 #include "path_planning.h"
 #include "robot.h"
-#include <ros/ros.h>
-#include <ros/package.h>
+class CommunicationInterface
+{
+public:
+  CommunicationInterface()
+  {
+    // Topic you want to publish
+    pos_publisher_ = nh_.advertise<geometry_msgs::Twist>("/cmd_vel_mux/input/teleop", 1);
 
-int main(int argc, char **argv) {
+    // Topic you want to subscribe
+    scan_subscriber_ = nh_.subscribe("/scan", 1000, &CommunicationInterface::scanCallback, this);
+  }
+
+  void scanCallback(const sensor_msgs::LaserScan::ConstPtr &scan)
+  {
+    ROS_INFO("scan received");
+    geometry_msgs::Twist twist;
+    twist.linear.x = 0.1;
+    twist.linear.y = 0.0;
+    twist.linear.z = 0.0;
+    twist.angular.x = 0.0;
+    twist.angular.y = 0.0;
+    twist.angular.z = 0.0;
+
+    pos_publisher_.publish(twist);
+  }
+
+private:
+  ros::NodeHandle nh_;
+  ros::Publisher pos_publisher_;
+  ros::Subscriber scan_subscriber_;
+};
+
+int main(int argc, char **argv)
+{
   ros::init(argc, argv, "main");
-  ros::NodeHandle nh;
+  // ros::NodeHandle nh;
+
+  // subscriber for scan and publisher for next pos
+  CommunicationInterface CIObject;
+
+  ros::spin();
+  return 0;
   // ************************ initialization ************************ //
 
   // global map: the map used to generate scan points and as the reference for
   // comparison
   Map global_map({20, 20});
 
-  if (status::Error == global_map.LoadGlobalMap(ros::package::getPath("mapbufo") + "/maps/scenario_03.txt")) {
+  if (status::Error == global_map.LoadGlobalMap(ros::package::getPath("mapbufo") + "/maps/scenario_03.txt"))
+  {
     std::cerr << "Invalid map data!" << std::endl;
   }
   // empty map: the map created/filled by scans. Used for path planning
   Map empty_map({10, 10});
 
-  if (status::Error == empty_map.Load(ros::package::getPath("mapbufo") + "/maps/scenario_04.txt")) {
+  if (status::Error == empty_map.Load(ros::package::getPath("mapbufo") + "/maps/scenario_04.txt"))
+  {
     std::cerr << "Invalid map data!" << std::endl;
   }
 
@@ -36,16 +78,14 @@ int main(int argc, char **argv) {
   // since the lidar is mounted on the robot, they share the same position and
   // heading
   Robot my_robot(start_pos.first, start_pos.second, M_PI / 4.0);
-  simulation::LidarSim lidar_sim(my_robot.getPosX(), my_robot.getPosY(), 5.0,
-                                 M_PI / 4.0, my_robot.getHeading());
+  simulation::LidarSim lidar_sim(my_robot.getPosX(), my_robot.getPosY(), 5.0, M_PI / 4.0, my_robot.getHeading());
 
   // list for robot movement
   std::vector<std::pair<int, int>> estimated_next_pos_list;
   estimated_next_pos_list.push_back(start_pos);
 
   // get initial target position list from path planning
-  std::vector<Point2D> target_pos_list =
-      PathPlanning::PathPlanning(start_pos, end_pos, empty_map);
+  std::vector<Point2D> target_pos_list = PathPlanning::PathPlanning(start_pos, end_pos, empty_map);
 
   // ************************ robot movement ************************ //
 
@@ -59,9 +99,11 @@ int main(int argc, char **argv) {
   /// occupied, etc.) from the global map
   /// 3. update the empty map with scan points
   /// 4.
-  while (!target_pos_list.empty()) {
+  while (!target_pos_list.empty())
+  {
     // safety: exit loop
-    if (num_loop > num_max_loop) break;
+    if (num_loop > num_max_loop)
+      break;
 
     // get the next target pos where the robot is supposed to go
     Point2D next_target_pos = *target_pos_list.begin();
@@ -71,7 +113,8 @@ int main(int argc, char **argv) {
     float dist_x = float(next_target_pos.first - my_robot.getPosX());
     float dist_y = float(next_target_pos.second - my_robot.getPosY());
     float suggested_heading = std::atan2(dist_y, dist_x);
-    if (std::abs(suggested_heading - my_robot.getHeading()) > 10e-2) {
+    if (std::abs(suggested_heading - my_robot.getHeading()) > 10e-2)
+    {
       // need to adjust heading first
       my_robot.setHeading(suggested_heading);
       lidar_sim.setHeading(my_robot.getHeading());
@@ -84,15 +127,14 @@ int main(int argc, char **argv) {
 
     std::cerr << "====== current map =======" << std::endl;
     Map curr_map(empty_map);
-    curr_map.Update(my_robot.getPosX(), my_robot.getPosY(),
-                    CellOccupied::robot_pos);
-    curr_map.Update(next_target_pos.first, next_target_pos.second,
-                    CellOccupied::path);
+    curr_map.Update(my_robot.getPosX(), my_robot.getPosY(), CellOccupied::robot_pos);
+    curr_map.Update(next_target_pos.first, next_target_pos.second, CellOccupied::path);
     curr_map.PrintMap();
 
     std::cerr << "====== map with planned path =======" << std::endl;
     Map temp_map(empty_map);
-    for (auto target_pos : target_pos_list) {
+    for (auto target_pos : target_pos_list)
+    {
       temp_map.Update(target_pos.first, target_pos.second, CellOccupied::path);
     }
     temp_map.PrintMap();
@@ -104,9 +146,10 @@ int main(int argc, char **argv) {
     // update the empty map with scan points:
     /// here, points registered as empty and occupied are used for map update;
     /// unknown points have no influence on map update because they are unknown
-    for (auto cell : scan_point_list) {
-      if (cell.second == CellOccupied::empty ||
-          cell.second == CellOccupied::occupied) {
+    for (auto cell : scan_point_list)
+    {
+      if (cell.second == CellOccupied::empty || cell.second == CellOccupied::occupied)
+      {
         empty_map.Update(cell.first.first, cell.first.second, cell.second);
       }
     }
@@ -116,21 +159,20 @@ int main(int argc, char **argv) {
     /// obstacles),
     /// a new path planning is required, so the robot calls help.
     bool call_help = false;
-    Point2D estimated_next_pos = my_robot.estimateNextStep(
-        scan_point_list, next_target_pos, lidar_sim.getMaxDist(), call_help);
-    if (call_help) {
+    Point2D estimated_next_pos =
+        my_robot.estimateNextStep(scan_point_list, next_target_pos, lidar_sim.getMaxDist(), call_help);
+    if (call_help)
+    {
       std::cerr << "Robot calls help; target path re-planned." << std::endl;
-      target_pos_list =
-          PathPlanning::PathPlanning(estimated_next_pos, end_pos, empty_map);
+      target_pos_list = PathPlanning::PathPlanning(estimated_next_pos, end_pos, empty_map);
 
       std::cerr << "====== map with new planned path =======" << std::endl;
       Map temp_map(empty_map);
-      for (auto target_pos : target_pos_list) {
-        temp_map.Update(target_pos.first, target_pos.second,
-                        CellOccupied::path);
+      for (auto target_pos : target_pos_list)
+      {
+        temp_map.Update(target_pos.first, target_pos.second, CellOccupied::path);
       }
-      temp_map.Update(my_robot.getPosX(), my_robot.getPosY(),
-                      CellOccupied::robot_pos);
+      temp_map.Update(my_robot.getPosX(), my_robot.getPosY(), CellOccupied::robot_pos);
 
       temp_map.PrintMap();
       num_loop++;
@@ -139,8 +181,7 @@ int main(int argc, char **argv) {
 
     // the robot will moves to the target pos
     my_robot.move(estimated_next_pos);
-    lidar_sim.updatePose(my_robot.getPosX(), my_robot.getPosY(),
-                         my_robot.getHeading());
+    lidar_sim.updatePose(my_robot.getPosX(), my_robot.getPosY(), my_robot.getHeading());
     estimated_next_pos_list.push_back(estimated_next_pos);
 
     num_loop++;
@@ -150,15 +191,15 @@ int main(int argc, char **argv) {
   }
 
   // check if robot reached end pos
-  if (my_robot.getPosX() == end_pos.first &&
-      my_robot.getPosY() == end_pos.second)
+  if (my_robot.getPosX() == end_pos.first && my_robot.getPosY() == end_pos.second)
     std::cerr << "succeeded!" << std::endl;
   else
     std::cerr << "failed!" << std::endl;
 
   // plotting
   std::cerr << "==================== Global ====================" << std::endl;
-  for (auto next_pos : estimated_next_pos_list) {
+  for (auto next_pos : estimated_next_pos_list)
+  {
     global_map.Update(next_pos.first, next_pos.second, CellOccupied::robot_pos);
     global_map.Update(end_pos.first, end_pos.second, CellOccupied::target_pos);
   }

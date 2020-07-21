@@ -53,5 +53,8 @@
         "utility": "cpp",
         "typeindex": "cpp",
         "typeinfo": "cpp"
-    }
+    },
+    "python.autoComplete.extraPaths": [
+        "/usr/lib/python2.7/dist-packages"
+    ]
 }
