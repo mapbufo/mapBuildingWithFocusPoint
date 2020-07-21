@@ -33,6 +33,10 @@
 
 # Folders
 /build
+/devel
+
+# catkin workspace
+.catkin_workspace
 
 # qtcreator
 CMakeLists.txt.user
