@@ -33,6 +33,21 @@ public:
   Map(uint32_t width, uint32_t height) {
     map_.info.width = width;
     map_.info.height = height;
+    // set the frame as default "world"
+    map_.header.frame_id = "world";
+    // 10m x 10m, with resolution 10cm
+    map_.info.resolution = 0.1;
+    map_.info.origin.position.x = 0.0;
+    map_.info.origin.position.y = 0.0;
+    map_.info.origin.position.z = 0.0;
+    map_.info.origin.orientation.x = 0.0;
+    map_.info.origin.orientation.y = 0.0;
+    map_.info.origin.orientation.z = 0.0;
+    map_.info.origin.orientation.w = 1.0;
+
+    // initialize map_data to -1
+    // use row-major to save the data, index = y*width + x
+    map_.data.insert(begin(map_.data), map_.info.width * map_.info.height, -1);
   };
 
   ~Map(){};
