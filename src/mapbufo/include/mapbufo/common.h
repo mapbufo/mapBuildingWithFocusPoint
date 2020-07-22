@@ -2,11 +2,20 @@
 #define COMMON_H
 #include <boost/unordered_map.hpp>
 #include <utility>
-namespace status {
-enum status { Error = 0, Ok = 1, Undifined = 2 };
+#include <math.h>
+#include <algorithm>
+namespace status
+{
+enum status
+{
+  Error = 0,
+  Ok = 1,
+  Undifined = 2
+};
 }
 
-enum CellOccupied {
+enum CellOccupied
+{
   empty = 0,
   occupied = 1,
   unknown = 2,
@@ -17,4 +26,4 @@ enum CellOccupied {
 typedef std::pair<int, int> Point2D;
 typedef boost::unordered_map<Point2D, CellOccupied> ScanData;
 
-#endif  // !COMMON_H
+#endif // !COMMON_H
