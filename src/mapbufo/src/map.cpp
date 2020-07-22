@@ -1,57 +1,165 @@
 #include "map.h"
 
-boost::unordered_map<std::pair<int, int>, CellOccupied> &Map::GetMap() {
-  return map_;
-}
+nav_msgs::OccupancyGrid &Map::GetMap() { return map_; }
 
 CellOccupied Map::GetCell(int x, int y) {
-  if (map_.count({x, y}) == 0) {
+  int index = y * map_.info.width + x;
+  int value = map_.data[index];
+  if (value == -1) {
     return CellOccupied::unknown;
   }
-  return map_[{x, y}];
+  if (value >= occupied_bound) {
+    return CellOccupied::occupied;
+  }
+  if (value <= empty_bound) {
+    return CellOccupied::empty;
+  }
+  return CellOccupied::grey;
 }
 
 CellOccupied Map::GetCell(Point2D pos) {
   return GetCell(pos.first, pos.second);
 }
 
-status::status Map::Update(int x, int y, CellOccupied occupied) {
-  map_[{x, y}] = occupied;
+status::status Map::Update(int x, int y, int update_value) {
+  // check if new point pos is not in the old map
+  if (x >= static_cast<int>(map_.info.width)) {
+    for (int i = map_.info.height; i >= 1; i--) {
+      map_.data.insert(begin(map_.data) + i * map_.info.width,
+                       x - map_.info.width + 1, -1);
+    }
+    map_.info.width = x + 1;
+  }
+  if (y >= static_cast<int>(map_.info.height)) {
+    map_.data.insert(end(map_.data),
+                     (y - map_.info.height + 1) * map_.info.width, -1);
+    map_.info.height = y + 1;
+  }
+  if (x < 0) {
+    for (int i = map_.info.height - 1; i >= 0; i--) {
+      map_.data.insert(begin(map_.data) + i * map_.info.width, abs(x), -1);
+    }
+    map_.info.width += abs(x);
+    // TODO(YiLuo) : Check if this is right!
+    map_.info.origin.position.x -= abs(x) * map_.info.resolution;
+    x = 0;
+  }
+  if (y < 0) {
+    map_.data.insert(begin(map_.data), abs(y) * map_.info.width, -1);
+    map_.info.height += abs(y);
+    map_.info.origin.position.y -= abs(y) * map_.info.resolution;
+    y = 0;
+  }
 
-  // update map size if new point pos is not in the old map
-  if (x < map_x_min_) {
-    map_x_min_ = x;
+  auto data = &map_.data[y * map_.info.width + x];
+  if (*data == -1) {
+    *data = 50;
   }
-  if (x > map_x_max_) {
-    map_x_max_ = x;
+  if (update_value > 0) {
+    *data = std::min(*data + update_value, 100);
   }
-  if (y < map_y_min_) {
-    map_y_min_ = y;
+  if (update_value < 0) {
+    *data = std::max(*data + update_value, 0);
   }
-  if (y > map_y_max_) {
-    map_y_max_ = y;
-  }
-  size_of_map_.first = map_x_max_ - map_x_min_ + 1;
-  size_of_map_.second = map_y_max_ - map_y_min_ + 1;
   return status::Ok;
 }
 
-status::status Map::Update(Point2D pos, CellOccupied occupied) {
-  return Update(pos.first, pos.second, occupied);
+status::status Map::Update(Point2D pos, int update_value) {
+  return Update(pos.first, pos.second, update_value);
 }
 
-void Map::PrintMap() {
-  // Actually this should iterates through map_, not by size_of_map_, but right
-  // now this is used because this is needed for printing in Terminal.
-  for (int i = map_x_min_; i <= map_x_max_; i++) {
-    for (int j = map_y_min_; j <= map_y_max_; j++) {
-      std::cerr << GetCell(i, j) << " ";
-    }
-    std::cerr << std::endl;
+status::status Map::UpdateWithScanPoint(float x0, float y0, float x1, float y1,
+                                        int update_value) {
+  Point2D robot_point = TransformIndex(x0, y0);
+  Point2D scan_point = TransformIndex(x1, y1);
+  Update(scan_point, update_value);
+  if (x1 < 0) {
+    robot_point.first -= scan_point.first;
+    scan_point.first = 0;
   }
+  if (y1 < 0) {
+    robot_point.second -= scan_point.second;
+    scan_point.second = 0;
+  }
+  Update(scan_point, update_value);
+  std::vector<Point2D> scan_line =
+      GetLine(robot_point.first, robot_point.second, scan_point.first,
+              scan_point.second);
+  for (auto point : scan_line) {
+    Update(point, -abs(update_value));
+  }
+  return status::Ok;
 }
 
-// TODO(YiLuo) : should not load by the size of map, but by the values in map
+std::vector<Point2D> Map::GetLineLow(int x0, int y0, int x1, int y1) {
+  int d_x = x1 - x0;
+  int d_y = y1 - y0;
+  int y_step = 1;
+  if (d_y < 0) {
+    y_step = -1;
+    d_y = -d_y;
+  }
+  int D = 2 * d_y - d_x;
+  int x = x0;
+  int y = y0;
+  std::vector<Point2D> res;
+  Point2D curr({x, y});
+  while (x < x1) {
+    if (D > 0) {
+      y += y_step;
+      D -= 2 * d_x;
+    }
+    D += 2 * d_y;
+    x += 1;
+    curr.first = x;
+    curr.second = y;
+    res.insert(begin(res), curr);
+  }
+  res.erase(begin(res));
+  return res;
+}
+
+std::vector<Point2D> Map::GetLineHigh(int x0, int y0, int x1, int y1) {
+  int d_x = x1 - x0;
+  int d_y = y1 - y0;
+  int x_step = 1;
+  if (d_x < 0) {
+    x_step = -1;
+    d_x = -d_x;
+  }
+  int D = 2 * d_x - d_y;
+  int x = x0;
+  int y = y0;
+  std::vector<Point2D> res;
+  Point2D curr({x, y});
+  while (y < y1) {
+    if (D > 0) {
+      x += x_step;
+      D -= 2 * d_y;
+    }
+    D += 2 * d_x;
+    y += 1;
+    curr.first = x;
+    curr.second = y;
+    res.insert(begin(res), curr);
+  }
+  res.erase(begin(res));
+  return res;
+}
+
+std::vector<Point2D> Map::GetLine(int x0, int y0, int x1, int y1) {
+  if (abs(y1 - y0) < abs(x1 - x0)) {
+    if (x0 > x1) {
+      return GetLineLow(x1, y1, x0, y0);
+    }
+    return GetLineLow(x0, y0, x1, y1);
+  }
+  if (y0 > y1) {
+    return GetLineHigh(x1, y1, x0, y0);
+  }
+  return GetLineHigh(x0, y0, x1, y1);
+}
+
 status::status Map::Load(std::string path_to_map) {
   // open the map file
   std::ifstream infile;
@@ -59,95 +167,23 @@ status::status Map::Load(std::string path_to_map) {
 
   // fill the map data into the map_
   int tmp;
-  for (int i = 0; i < size_of_map_.first; i++) {
-    for (int j = 0; j < size_of_map_.second; j++) {
-      infile >> tmp;
-      switch (tmp) {
-        case 0:
-          map_[{i, j}] = CellOccupied::empty;
-          break;
-        case 1:
-          map_[{i, j}] = CellOccupied::occupied;
-          break;
-        case 2:
-          map_[{i, j}] = CellOccupied::unknown;
-          break;
-        case 4:
-          map_[{i, j}] = CellOccupied::path;
-          break;
-        case 5:
-          map_[{i, j}] = CellOccupied::robot_pos;
-          break;
-        case 6:
-          map_[{i, j}] = CellOccupied::target_pos;
-          break;
-        default:
-          map_[{i, j}] = CellOccupied::unknown;
-          break;
-      }
-    }
+  while (!infile.eof()) {
+    infile >> tmp;
+    map_.data.push_back(tmp);
   }
   infile.close();
-  computeMapSize();
   return status::Ok;
 }
 
-// TODO(YiLuo) : should not load by the size of map, but by the values in map
-status::status Map::LoadGlobalMap(std::string path_to_map) {
-  // open the map file
-  std::ifstream infile;
-  infile.open(path_to_map.c_str());
-
-  // fill the map data into the map_
-  int tmp;
-  for (int i = -size_of_map_.first / 2; i < size_of_map_.first / 2; i++) {
-    for (int j = -size_of_map_.second / 2; j < size_of_map_.second / 2; j++) {
-      infile >> tmp;
-      switch (tmp) {
-        case 0:
-          map_[{i, j}] = CellOccupied::empty;
-          break;
-        case 1:
-          map_[{i, j}] = CellOccupied::occupied;
-          break;
-        case 2:
-          map_[{i, j}] = CellOccupied::unknown;
-          break;
-        case 4:
-          map_[{i, j}] = CellOccupied::path;
-          break;
-        case 5:
-          map_[{i, j}] = CellOccupied::robot_pos;
-          break;
-        case 6:
-          map_[{i, j}] = CellOccupied::target_pos;
-          break;
-        default:
-          map_[{i, j}] = CellOccupied::unknown;
-          break;
-      }
-    }
+Point2D Map::TransformIndex(float x, float y) {
+  Point2D pos;
+  if (x >= 0) {
+    pos.first = std::ceil(x * 10);
   }
-  infile.close();
-  computeMapSize();
-  return status::Ok;
-}
-
-void Map::computeMapSize() {
-  bool init = false;
-  for (auto pt : map_) {
-    if (!init) {
-      map_x_min_ = map_x_max_ = pt.first.first;
-      map_y_min_ = map_y_max_ = pt.first.second;
-      init = true;
-      continue;
-    } else {
-      int pt_x = pt.first.first;
-      int pt_y = pt.first.second;
-      map_x_min_ = std::min(map_x_min_, pt_x);
-      map_x_max_ = std::max(map_x_max_, pt_x);
-      map_y_min_ = std::min(map_y_min_, pt_y);
-      map_y_max_ = std::max(map_y_max_, pt_y);
-    }
+  pos.first = std::floor(x * 10);
+  if (y >= 0) {
+    pos.second = std::ceil(y * 10);
   }
+  pos.second = std::floor(y * 10);
+  return pos;
 }
