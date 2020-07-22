@@ -167,9 +167,11 @@ status::status Map::Load(std::string path_to_map) {
 
   // fill the map data into the map_
   int tmp;
+  int i = 0;
   while (!infile.eof()) {
     infile >> tmp;
-    map_.data.push_back(tmp);
+    map_.data[i] = tmp;
+    i++;
   }
   infile.close();
   return status::Ok;
