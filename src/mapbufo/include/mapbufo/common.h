@@ -3,6 +3,8 @@
 #include <boost/unordered_map.hpp>
 #include <utility>
 #include <algorithm>
+#include <math.h>
+
 namespace status {
 enum status { Error = 0, Ok = 1, Undifined = 2 };
 }

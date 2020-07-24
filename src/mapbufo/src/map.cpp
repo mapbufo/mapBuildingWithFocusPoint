@@ -1,20 +1,63 @@
 #include "map.h"
 
-nav_msgs::OccupancyGrid &Map::GetMap() { return map_; }
+Map::Map() {
+  nav_msgs::OccupancyGrid map_tmp;
+  // set the frame as default "map"
+  map_tmp.header.frame_id = "/map";
+  // 10m x 10m, with resolution 10cm
+  map_tmp.info.resolution = 0.1;
+  map_tmp.info.height = 100;
+  map_tmp.info.width = 100;
+  map_tmp.info.origin.position.x = 0.0;
+  map_tmp.info.origin.position.y = 0.0;
+  map_tmp.info.origin.position.z = 0.0;
+  map_tmp.info.origin.orientation.x = 0.0;
+  map_tmp.info.origin.orientation.y = 0.0;
+  map_tmp.info.origin.orientation.z = 0.0;
+  map_tmp.info.origin.orientation.w = 1.0;
+  // initialize map_data to -1
+  // use row-major to save the data, index = y*width + x
+  map_tmp.data.insert(begin(map_tmp.data),
+                      map_tmp.info.width * map_tmp.info.height, -1);
+
+  // 1. quadrant
+  maps_.push_back(map_tmp);
+
+  tf2::Quaternion q;
+  // 2. quadrant
+  q.setRPY(0, 0, M_PI / 2);
+  map_tmp.info.origin.position.x += 0.1;
+  map_tmp.info.origin.orientation.x = q.getX();
+  map_tmp.info.origin.orientation.y = q.getY();
+  map_tmp.info.origin.orientation.z = q.getZ();
+  map_tmp.info.origin.orientation.w = q.getW();
+  maps_.push_back(map_tmp);
+
+  // 3. quadrant
+  q.setRPY(0, 0, M_PI);
+  map_tmp.info.origin.position.y += 0.1;
+  map_tmp.info.origin.orientation.x = q.getX();
+  map_tmp.info.origin.orientation.y = q.getY();
+  map_tmp.info.origin.orientation.z = q.getZ();
+  map_tmp.info.origin.orientation.w = q.getW();
+  maps_.push_back(map_tmp);
+
+  // 4. quadrant
+  q.setRPY(0, 0, -M_PI / 2);
+  map_tmp.info.origin.position.x -= 0.1;
+  map_tmp.info.origin.orientation.x = q.getX();
+  map_tmp.info.origin.orientation.y = q.getY();
+  map_tmp.info.origin.orientation.z = q.getZ();
+  map_tmp.info.origin.orientation.w = q.getW();
+  maps_.push_back(map_tmp);
+}
 
 CellOccupied Map::GetCell(int x, int y) {
-  int index = y * map_.info.width + x;
-  int value = map_.data[index];
-  if (value == -1) {
-    return CellOccupied::unknown;
-  }
-  if (value >= occupied_bound) {
-    return CellOccupied::occupied;
-  }
-  if (value <= empty_bound) {
-    return CellOccupied::empty;
-  }
-  return CellOccupied::grey;
+  int x_qua;
+  int y_qua;
+  int qua;
+  TransformPositionIntoQuadrant(x, y, x_qua, y_qua, qua);
+  return GetCellInSingleQuadrant(x_qua, y_qua, qua);
 }
 
 CellOccupied Map::GetCell(Point2D pos) {
@@ -22,46 +65,9 @@ CellOccupied Map::GetCell(Point2D pos) {
 }
 
 status::status Map::Update(int x, int y, int update_value) {
-  // check if new point pos is not in the old map
-  if (x >= static_cast<int>(map_.info.width)) {
-    for (int i = map_.info.height; i >= 1; i--) {
-      map_.data.insert(begin(map_.data) + i * map_.info.width,
-                       x - map_.info.width + 1, -1);
-    }
-    map_.info.width = x + 1;
-  }
-  if (y >= static_cast<int>(map_.info.height)) {
-    map_.data.insert(end(map_.data),
-                     (y - map_.info.height + 1) * map_.info.width, -1);
-    map_.info.height = y + 1;
-  }
-  if (x < 0) {
-    for (int i = map_.info.height - 1; i >= 0; i--) {
-      map_.data.insert(begin(map_.data) + i * map_.info.width, abs(x), -1);
-    }
-    map_.info.width += abs(x);
-    // TODO(YiLuo) : Check if this is right!
-    map_.info.origin.position.x -= abs(x) * map_.info.resolution;
-    x = 0;
-  }
-  if (y < 0) {
-    map_.data.insert(begin(map_.data), abs(y) * map_.info.width, -1);
-    map_.info.height += abs(y);
-    map_.info.origin.position.y -= abs(y) * map_.info.resolution;
-    y = 0;
-  }
-
-  auto data = &map_.data[y * map_.info.width + x];
-  if (*data == -1) {
-    *data = 50;
-  }
-  if (update_value > 0) {
-    *data = std::min(*data + update_value, 100);
-  }
-  if (update_value < 0) {
-    *data = std::max(*data + update_value, 0);
-  }
-  return status::Ok;
+  int x_qua, y_qua, qua;
+  TransformPositionIntoQuadrant(x, y, x_qua, y_qua, qua);
+  return UpdateCellInSingleQuadrant(x_qua, y_qua, qua, update_value);
 }
 
 status::status Map::Update(Point2D pos, int update_value) {
@@ -72,15 +78,6 @@ status::status Map::UpdateWithScanPoint(float x0, float y0, float x1, float y1,
                                         int update_value) {
   Point2D robot_point = TransformIndex(x0, y0);
   Point2D scan_point = TransformIndex(x1, y1);
-  Update(scan_point, update_value);
-  if (x1 < 0) {
-    robot_point.first -= scan_point.first;
-    scan_point.first = 0;
-  }
-  if (y1 < 0) {
-    robot_point.second -= scan_point.second;
-    scan_point.second = 0;
-  }
   Update(scan_point, update_value);
   std::vector<Point2D> scan_line =
       GetLine(robot_point.first, robot_point.second, scan_point.first,
@@ -160,20 +157,84 @@ std::vector<Point2D> Map::GetLine(int x0, int y0, int x1, int y1) {
   return GetLineHigh(x0, y0, x1, y1);
 }
 
-status::status Map::Load(std::string path_to_map) {
-  // open the map file
-  std::ifstream infile;
-  infile.open(path_to_map.c_str());
+void Map::TransformPositionIntoQuadrant(int x, int y, int &x_qua, int &y_qua,
+                                        int &qua) {
 
-  // fill the map data into the map_
-  int tmp;
-  int i = 0;
-  while (!infile.eof()) {
-    infile >> tmp;
-    map_.data[i] = tmp;
-    i++;
+  // find out in which quadrant is this point, then transform the position
+  if (y >= 0) {
+    // 1. quadrant
+    if (x >= 0) {
+      x_qua = abs(x);
+      y_qua = abs(y);
+      qua = 0;
+    } else {
+      // 2. quadrant
+      x_qua = abs(y);
+      y_qua = abs(x);
+      qua = 1;
+    }
+  } else {
+    // 3. quadrant
+    if (x < 0) {
+      x_qua = abs(x);
+      y_qua = abs(y);
+      qua = 2;
+    } else {
+      // 4. quadrant
+      x_qua = abs(y);
+      y_qua = abs(x);
+      qua = 3;
+    }
   }
-  infile.close();
+}
+
+CellOccupied Map::GetCellInSingleQuadrant(int x, int y, int qua) {
+  int index = y * maps_[qua].info.width + x;
+  // if this point is not in the map
+  if (index >= maps_[qua].data.size()) {
+    return CellOccupied::unknown;
+  }
+  int value = maps_[qua].data[index];
+  if (value == -1) {
+    return CellOccupied::unknown;
+  }
+  if (value >= occupied_bound) {
+    return CellOccupied::occupied;
+  }
+  if (value <= empty_bound) {
+    return CellOccupied::empty;
+  }
+  return CellOccupied::grey;
+}
+
+status::status Map::UpdateCellInSingleQuadrant(int x, int y, int qua,
+                                               int value) {
+  // check if new point pos is not in the old map
+  // if not, then extend the map
+  if (x >= static_cast<int>(maps_[qua].info.width)) {
+    for (int i = maps_[qua].info.height; i >= 1; i--) {
+      maps_[qua].data.insert(begin(maps_[qua].data) + i * maps_[qua].info.width,
+                             x - maps_[qua].info.width + 1, -1);
+    }
+    maps_[qua].info.width = x + 1;
+  }
+  if (y >= static_cast<int>(maps_[qua].info.height)) {
+    maps_[qua].data.insert(
+        end(maps_[qua].data),
+        (y - maps_[qua].info.height + 1) * maps_[qua].info.width, -1);
+    maps_[qua].info.height = y + 1;
+  }
+  // update the probability
+  auto data = &maps_[qua].data[y * maps_[qua].info.width + x];
+  if (*data == -1) {
+    *data = 50;
+  }
+  if (value > 0) {
+    *data = std::min(*data + value, 100);
+  }
+  if (value < 0) {
+    *data = std::max(*data + value, 0);
+  }
   return status::Ok;
 }
 
