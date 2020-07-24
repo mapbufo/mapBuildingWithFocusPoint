@@ -26,7 +26,6 @@ Map::Map() {
   tf2::Quaternion q;
   // 2. quadrant
   q.setRPY(0, 0, M_PI / 2);
-  map_tmp.info.origin.position.x += 0.1;
   map_tmp.info.origin.orientation.x = q.getX();
   map_tmp.info.origin.orientation.y = q.getY();
   map_tmp.info.origin.orientation.z = q.getZ();
@@ -35,7 +34,6 @@ Map::Map() {
 
   // 3. quadrant
   q.setRPY(0, 0, M_PI);
-  map_tmp.info.origin.position.y += 0.1;
   map_tmp.info.origin.orientation.x = q.getX();
   map_tmp.info.origin.orientation.y = q.getY();
   map_tmp.info.origin.orientation.z = q.getZ();
@@ -44,7 +42,6 @@ Map::Map() {
 
   // 4. quadrant
   q.setRPY(0, 0, -M_PI / 2);
-  map_tmp.info.origin.position.x -= 0.1;
   map_tmp.info.origin.orientation.x = q.getX();
   map_tmp.info.origin.orientation.y = q.getY();
   map_tmp.info.origin.orientation.z = q.getZ();
@@ -170,18 +167,18 @@ void Map::TransformPositionIntoQuadrant(int x, int y, int &x_qua, int &y_qua,
     } else {
       // 2. quadrant
       x_qua = abs(y);
-      y_qua = abs(x);
+      y_qua = abs(x) - 1;
       qua = 1;
     }
   } else {
     // 3. quadrant
     if (x < 0) {
-      x_qua = abs(x);
-      y_qua = abs(y);
+      x_qua = abs(x) - 1;
+      y_qua = abs(y) - 1;
       qua = 2;
     } else {
       // 4. quadrant
-      x_qua = abs(y);
+      x_qua = abs(y) - 1;
       y_qua = abs(x);
       qua = 3;
     }
