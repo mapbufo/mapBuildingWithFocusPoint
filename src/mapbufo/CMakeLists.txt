@@ -15,12 +15,13 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   tf
   roslib
+  nav_msgs
 )
 
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES mapbufo
-   CATKIN_DEPENDS roscpp rospy sensor_msgs std_msgs
+   CATKIN_DEPENDS roscpp rospy sensor_msgs std_msgs nav_msgs
 #  DEPENDS system_lib
 )
 
@@ -29,7 +30,7 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-add_library( lidar_sim src/simulator/lidar_sim.cpp )
+# add_library( lidar_sim src/simulator/lidar_sim.cpp )
 add_library( map_sim src/simulator/map_simulator.cpp)
 add_library( map src/map.cpp)
 add_library( librobot src/robot.cpp)
@@ -43,7 +44,7 @@ add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catk
 
 target_link_libraries(${PROJECT_NAME}_node
   ${catkin_LIBRARIES}
-  lidar_sim
+#  lidar_sim
   map_sim
   map
   librobot

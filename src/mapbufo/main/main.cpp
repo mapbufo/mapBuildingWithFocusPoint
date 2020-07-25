@@ -1,33 +1,45 @@
 #include <geometry_msgs/Point32.h>
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/Twist.h>
+#include <math.h>
 #include <message_filters/subscriber.h>
+
 #include <message_filters/sync_policies/approximate_time.h>
 #include <message_filters/time_synchronizer.h>
+
+#include <nav_msgs/OccupancyGrid.h>
 #include <nav_msgs/Odometry.h>
+
 #include <ros/package.h>
+
 #include <ros/rate.h>
+
 #include <ros/ros.h>
 #include <sensor_msgs/LaserScan.h>
+
 #include <sensor_msgs/PointCloud.h>
 #include <tf/transform_datatypes.h>
+#include <tf2/LinearMath/Quaternion.h>
+#include <boost/bind.hpp>
 #include <iostream>
 #include <iterator>
+#include <vector>
 #include "common.h"
 #include "lidar_sim.h"
 #include "map.h"
 #include "map_simulator.h"
+
 #include "path_planning.h"
 #include "pid_controller.h"
-#include "robot.h"
 
-static std::vector<Point2D> curr_scan_;
+#include "robot.h"
+static std::vector<std::pair<float, float>> curr_scan_;
 static bool reached_pos_ = true;
 static std::pair<float, float> curr_robot_pos_;
 static std::pair<float, float> estimated_pos_;
 static std::pair<float, float> goal_;
 static bool angle_setted = false;
-
+static geometry_msgs::Pose robot_pose_;
 class CommunicationInterface
 {
 public:
@@ -83,7 +95,18 @@ public:
     for (int i = 0; i < number_of_laser; i++)
     {
       float laser_angle = angle_min + i * angle_increment;
-
+      // robot heading: x axis, robot left: y axis
+      float x = scan->ranges[i] * std::cos(laser_angle);
+      float y = scan->ranges[i] * std::sin(laser_angle);
+      // insert
+      double pos_x = robot_pose_.position.x;
+      double pos_y = robot_pose_.position.y;
+      tf::Quaternion q(robot_pose_.orientation.x, robot_pose_.orientation.y, robot_pose_.orientation.z,
+                       robot_pose_.orientation.w);
+      tf::Matrix3x3 m(q);
+      double roll, pitch, yaw;
+      m.getRPY(roll, pitch, yaw);
+      double robot_heading = yaw;
       if (laser_angle > -priority_angle_range_rad && laser_angle < priority_angle_range_rad)
       {
         if (std::isnan(scan->ranges[i]))  // if a point is nan, then the 10 points before and after must be nan so that
@@ -119,11 +142,14 @@ public:
           continue;
         }
 
-        // robot heading: x axis, robot left: y axis
-        float x = scan->ranges[i] * std::cos(laser_angle);
-        float y = scan->ranges[i] * std::sin(laser_angle);
-        // insert
-        curr_scan_.push_back(Point2D(int(x), int(y)));
+        // transform estimated_pos_ into absolute pos
+
+        float global_x = x * std::cos(yaw) - y * std::sin(yaw) + pos_x;
+        float global_y = x * std::sin(yaw) + y * std::cos(yaw) + pos_y;
+        if (!std::isnan(global_x) && !std::isnan(global_y))
+        {
+          curr_scan_.push_back({ global_x, global_y });
+        }
         geometry_msgs::Point32 pt;
         pt.x = x;
         pt.y = y;
@@ -148,11 +174,13 @@ public:
         // insert
         if (std::isnan(scan->ranges[i]))
           continue;
-        // robot heading: x axis, robot left: y axis
-        float x = scan->ranges[i] * std::cos(laser_angle);
-        float y = scan->ranges[i] * std::sin(laser_angle);
 
-        curr_scan_.push_back(Point2D(int(x), int(y)));
+        float global_x = x * std::cos(yaw) - y * std::sin(yaw) + pos_x;
+        float global_y = x * std::sin(yaw) + y * std::cos(yaw) + pos_y;
+        if (!std::isnan(global_x) && !std::isnan(global_y))
+        {
+          curr_scan_.push_back({ global_x, global_y });
+        }
         geometry_msgs::Point32 pt;
         pt.x = x;
         pt.y = y;
@@ -180,6 +208,7 @@ public:
     geometry_msgs::Pose pose;
     geometry_msgs::Twist twist;
     pose = msg.pose.pose;
+    robot_pose_ = pose;
     twist = msg.twist.twist;
     double pos_x = pose.position.x;
     double pos_y = pose.position.y;
@@ -187,7 +216,6 @@ public:
     tf::Matrix3x3 m(q);
     double roll, pitch, yaw;
     m.getRPY(roll, pitch, yaw);
-
     double robot_heading = yaw;
     // transform estimated_pos_ into absolute pos
     if (reached_pos_)
@@ -307,23 +335,33 @@ private:
 
 int main(int argc, char **argv)
 {
-  Map global_map();
   ros::init(argc, argv, "main");
-
+  ros::NodeHandle nh;
   // subscriber for scan and publisher for next pos
   CommunicationInterface CIObject;
 
-  ros::Rate loop_rate(1);
+  // ros::Rate loop_rate(1);
+  Map test_map;
+
+  ros::Publisher pub_map_quadrant_1 = nh.advertise<nav_msgs::OccupancyGrid>("occu_map_quadrant_1", 100);
+  ros::Publisher pub_map_quadrant_2 = nh.advertise<nav_msgs::OccupancyGrid>("occu_map_quadrant_2", 100);
+  ros::Publisher pub_map_quadrant_3 = nh.advertise<nav_msgs::OccupancyGrid>("occu_map_quadrant_3", 100);
+  ros::Publisher pub_map_quadrant_4 = nh.advertise<nav_msgs::OccupancyGrid>("occu_map_quadrant_4", 100);
 
   while (ros::ok())
   {
-    CIObject.control_publisher_.publish();
-    // for (auto point : curr_scan_)
-    // {
-    //   std::cerr << point.first << " " << point.second << std::endl;
-    // }
-    // std::cerr << curr_robot_pos_.first << " " << curr_robot_pos_.second << std::endl;
-
+    for (auto point : curr_scan_)
+    {
+      test_map.UpdateWithScanPoint(curr_robot_pos_.first, curr_robot_pos_.second, point.first, point.second, 20);
+      // std::cerr << curr_robot_pos_.first << " " << curr_robot_pos_.second << " " << point.first << " " <<
+      // point.second
+      //           << std::endl;
+      // std::cerr << point.first << " " << point.second << std::endl;
+    }
+    pub_map_quadrant_1.publish(test_map.GetMap()[0]);
+    pub_map_quadrant_2.publish(test_map.GetMap()[1]);
+    pub_map_quadrant_3.publish(test_map.GetMap()[2]);
+    pub_map_quadrant_4.publish(test_map.GetMap()[3]);
     ros::spinOnce();
   }
   // ros::spin();

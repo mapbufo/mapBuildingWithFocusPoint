@@ -2,8 +2,10 @@
 #define COMMON_H
 #include <boost/unordered_map.hpp>
 #include <utility>
-#include <math.h>
+
 #include <algorithm>
+#include <math.h>
+
 namespace status
 {
 enum status
@@ -12,6 +14,7 @@ enum status
   Ok = 1,
   Undifined = 2
 };
+
 }
 
 enum CellOccupied
@@ -19,6 +22,7 @@ enum CellOccupied
   empty = 0,
   occupied = 1,
   unknown = 2,
+  grey = 3,
   path = 4,
   robot_pos = 5,
   target_pos = 6
