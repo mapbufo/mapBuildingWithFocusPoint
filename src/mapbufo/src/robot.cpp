@@ -33,17 +33,17 @@ void Robot::findBestPos(ScanData scan, Point2D candidate_pt, Point2D &best_pos,
         best_pos.first = pt_x;
         best_pos.second = pt_y;
         init = true;
-      } else if (cur_heading_diff < best_heading_diff) {  // choose the one with
-                                                          // smaller angle
-                                                          // difference
+      } else if (cur_heading_diff < best_heading_diff) { // choose the one with
+                                                         // smaller angle
+                                                         // difference
         best_heading = cur_heading;
         best_heading_diff = cur_heading_diff;
         best_pos.first = pt_x;
         best_pos.second = pt_y;
       } else if (cur_heading_diff ==
-                 best_heading_diff)  // choose the farther point
-                                     // when angle differences
-                                     // are the same
+                 best_heading_diff) // choose the farther point
+                                    // when angle differences
+                                    // are the same
       {
         float best_dist =
             std::sqrt(pow(best_pos.first, 2) + pow(best_pos.second, 2));
@@ -92,7 +92,8 @@ Point2D Robot::estimateNextStep(ScanData scan, Point2D end_pos, float max_dist,
 
   // first check if the end pos is in reach
   if (scan.find(end_pos) != scan.end()) {
-    if (scan[end_pos] == CellOccupied::empty) return end_pos;
+    if (scan[end_pos] == CellOccupied::empty)
+      return end_pos;
   }
 
   // if already at the best heading:
@@ -101,8 +102,8 @@ Point2D Robot::estimateNextStep(ScanData scan, Point2D end_pos, float max_dist,
   // --> find the farthest, empty scan point in that direction
   Point2D farthest_pos;
   float farthest_pos_heading;
-  Point2D best_pos(-100, -100);  // initialization
-  float best_heading;            // init with some big number
+  Point2D best_pos(-100, -100); // initialization
+  float best_heading;           // init with some big number
 
   // find points near the line with ratio ~= heading
   float ratio = 0.0;
@@ -113,7 +114,7 @@ Point2D Robot::estimateNextStep(ScanData scan, Point2D end_pos, float max_dist,
   }
 
   int grid_size = 1;
-  int num_steps = int(max_dist / grid_size);  // value on x axis
+  int num_steps = int(max_dist / grid_size); // value on x axis
 
   std::set<std::pair<int, int>> line_point_vec;
   // go in x / y direction
@@ -131,7 +132,7 @@ Point2D Robot::estimateNextStep(ScanData scan, Point2D end_pos, float max_dist,
       } else if (std::abs(heading_) - M_PI / 2.0 > 10e-2) {
         x = float(x_ - i);
         y = (x - x_) * ratio + float(y_);
-      } else  // heading == +- M_PI
+      } else // heading == +- M_PI
       {
         x = x_;
         if (heading_ > 0)
@@ -151,19 +152,19 @@ Point2D Robot::estimateNextStep(ScanData scan, Point2D end_pos, float max_dist,
         float y;
         float x;
         if (heading_ > 10e-2 &&
-            heading_ - M_PI / 2.0 < -10e-2) {  // 1st quadrant
+            heading_ - M_PI / 2.0 < -10e-2) { // 1st quadrant
           y = float(y_ + i);
           x = (y - y_) / ratio + float(x_);
           line_point_vec.insert({floor(x), y});
           line_point_vec.insert({ceil(x), y});
         } else if (heading_ < -10e-2 &&
-                   heading_ + M_PI / 2.0 < -10e-2) {  // 4th quadrant
+                   heading_ + M_PI / 2.0 < -10e-2) { // 4th quadrant
           y = float(y_ - i);
           x = (y - y_) / ratio + float(x_);
           line_point_vec.insert({floor(x), y});
           line_point_vec.insert({ceil(x), y});
         } else if (M_PI - heading_ > 10e-2 &&
-                   heading_ - M_PI / 2.0 > 10e-2) {  // 2nd quadrant
+                   heading_ - M_PI / 2.0 > 10e-2) { // 2nd quadrant
           y = float(y_ + i);
           x = (y - y_) / ratio + float(x_);
 
@@ -177,7 +178,7 @@ Point2D Robot::estimateNextStep(ScanData scan, Point2D end_pos, float max_dist,
           line_point_vec.insert({ceil(x), y});
 
         } else if (std::abs(std::abs(heading_) - M_PI / 2.0) <
-                   10e-2)  // heading == +- M_PI
+                   10e-2) // heading == +- M_PI
         {
           x = x_;
           if (heading_ > 0)
@@ -186,7 +187,7 @@ Point2D Robot::estimateNextStep(ScanData scan, Point2D end_pos, float max_dist,
             y = float(y_ - i);
           line_point_vec.insert({x, floor(y)});
           line_point_vec.insert({x, ceil(y)});
-        } else  // heading == 0 / M_PI
+        } else // heading == 0 / M_PI
         {
           y = y_;
           if (std::abs(heading_) < 10e-2) {
