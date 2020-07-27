@@ -5,11 +5,12 @@
 #include "common.h"
 #include <nav_msgs/OccupancyGrid.h>
 #include <tf2/LinearMath/Quaternion.h>
+#include <ros/ros.h>
 
 class Map {
 public:
   // used to create global map
-  Map();
+  Map(ros::NodeHandle &nh);
   ~Map(){};
 
   /**
@@ -117,6 +118,8 @@ private:
    * then this cell will be treated as empty
    */
   int empty_bound = 25;
+
+  ros::NodeHandle nh_;
 
 private:
   /**

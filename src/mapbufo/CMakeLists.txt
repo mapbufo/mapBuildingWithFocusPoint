@@ -52,13 +52,6 @@ target_link_libraries(${PROJECT_NAME}_node
   pid_controller
 )
 
-# send the coordinate-transform
-add_executable(transform_support src/transform_support.cpp)
-
-target_link_libraries(transform_support
-  ${catkin_LIBRARIES}
-)
-
 #############
 ## Testing ##
 #############
