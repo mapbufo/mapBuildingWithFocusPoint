@@ -6,26 +6,27 @@
 #include "map_simulator.h"
 #include "path_planning.h"
 #include "robot.h"
-#include <ros/ros.h>
 #include <ros/package.h>
+#include <ros/ros.h>
 
 int main(int argc, char **argv) {
   ros::init(argc, argv, "main");
   ros::NodeHandle nh;
+  /*
   // ************************ initialization ************************ //
 
   // global map: the map used to generate scan points and as the reference for
   // comparison
   Map global_map({20, 20});
 
-  if (status::Error == global_map.LoadGlobalMap(ros::package::getPath("mapbufo") + "/maps/scenario_03.txt")) {
-    std::cerr << "Invalid map data!" << std::endl;
+  if (status::Error == global_map.LoadGlobalMap(ros::package::getPath("mapbufo")
+  + "/maps/scenario_03.txt")) { std::cerr << "Invalid map data!" << std::endl;
   }
   // empty map: the map created/filled by scans. Used for path planning
   Map empty_map({10, 10});
 
-  if (status::Error == empty_map.Load(ros::package::getPath("mapbufo") + "/maps/scenario_04.txt")) {
-    std::cerr << "Invalid map data!" << std::endl;
+  if (status::Error == empty_map.Load(ros::package::getPath("mapbufo") +
+  "/maps/scenario_04.txt")) { std::cerr << "Invalid map data!" << std::endl;
   }
 
   // set start and end position
@@ -169,6 +170,6 @@ int main(int argc, char **argv) {
   //    CellOccupied::robot_pos);
   //  }
 
-  empty_map.PrintMap();
+  empty_map.PrintMap();*/
   return 0;
 }

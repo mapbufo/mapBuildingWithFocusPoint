@@ -139,4 +139,4 @@ std::vector<Point2D> PathPlanning(Point2D start_pos, Point2D end_pos,
   OptimizePath(path, start_pos);
   return path;
 }
-}  // namespace PathPlanning
+} // namespace PathPlanning

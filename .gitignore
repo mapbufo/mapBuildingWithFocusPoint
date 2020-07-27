@@ -35,6 +35,9 @@
 /build
 /devel
 
+# vs code
+./vscode
+
 # catkin workspace
 .catkin_workspace
 
