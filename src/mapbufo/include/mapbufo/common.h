@@ -1,24 +1,18 @@
 #ifndef COMMON_H
 #define COMMON_H
-#include <boost/unordered_map.hpp>
-#include <utility>
-
 #include <algorithm>
+#include <boost/unordered_map.hpp>
+#include <iostream>
 #include <math.h>
+#include <utility>
+#include <vector>
 
-namespace status
-{
-enum status
-{
-  Error = 0,
-  Ok = 1,
-  Undifined = 2
-};
+namespace status {
+enum status { Error = 0, Ok = 1, Undifined = 2 };
 
 }
 
-enum CellOccupied
-{
+enum CellOccupied {
   empty = 0,
   occupied = 1,
   unknown = 2,
