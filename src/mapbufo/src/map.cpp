@@ -1,9 +1,10 @@
 #include "map.h"
 
-Map::Map() {
+Map::Map(ros::NodeHandle &nh): nh_(nh)
+{
   nav_msgs::OccupancyGrid map_tmp;
   // set the frame as default "map"
-  map_tmp.header.frame_id = "/map";
+  map_tmp.header.frame_id = "/odom";
   // 10m x 10m, with resolution 10cm
   map_tmp.info.resolution = 0.1;
   map_tmp.info.height = 100;
@@ -49,7 +50,8 @@ Map::Map() {
   maps_.push_back(map_tmp);
 }
 
-CellOccupied Map::GetCell(int x, int y) {
+CellOccupied Map::GetCell(int x, int y)
+{
   int x_qua;
   int y_qua;
   int qua;
@@ -57,25 +59,30 @@ CellOccupied Map::GetCell(int x, int y) {
   return GetCellInSingleQuadrant(x_qua, y_qua, qua);
 }
 
-CellOccupied Map::GetCell(Point2D pos) {
+CellOccupied Map::GetCell(Point2D pos)
+{
   return GetCell(pos.first, pos.second);
 }
 
-status::status Map::Update(int x, int y, int update_value) {
+status::status Map::Update(int x, int y, int update_value)
+{
   int x_qua, y_qua, qua;
   TransformPositionIntoQuadrant(x, y, x_qua, y_qua, qua);
   return UpdateCellInSingleQuadrant(x_qua, y_qua, qua, update_value);
 }
 
-status::status Map::Update(Point2D pos, int update_value) {
+status::status Map::Update(Point2D pos, int update_value)
+{
   return Update(pos.first, pos.second, update_value);
 }
 
 status::status Map::UpdateWithScanPoint(float x0, float y0, float x1, float y1,
-                                        int update_value) {
+                                        int update_value)
+{
   Point2D robot_point = TransformIndex(x0, y0);
   Point2D scan_point = TransformIndex(x1, y1);
   Update(scan_point, update_value);
+
   if (x0 == x1 && y0 == y1) {
     return status::Ok;
   }
@@ -88,11 +95,13 @@ status::status Map::UpdateWithScanPoint(float x0, float y0, float x1, float y1,
   return status::Ok;
 }
 
-std::vector<Point2D> Map::GetLineLow(int x0, int y0, int x1, int y1) {
+std::vector<Point2D> Map::GetLineLow(int x0, int y0, int x1, int y1)
+{
   int d_x = x1 - x0;
   int d_y = y1 - y0;
   int y_step = 1;
-  if (d_y < 0) {
+  if (d_y < 0)
+  {
     y_step = -1;
     d_y = -d_y;
   }
@@ -101,8 +110,10 @@ std::vector<Point2D> Map::GetLineLow(int x0, int y0, int x1, int y1) {
   int y = y0;
   std::vector<Point2D> res;
   Point2D curr({x, y});
-  while (x < x1) {
-    if (D > 0) {
+  while (x < x1)
+  {
+    if (D > 0)
+    {
       y += y_step;
       D -= 2 * d_x;
     }
@@ -116,11 +127,13 @@ std::vector<Point2D> Map::GetLineLow(int x0, int y0, int x1, int y1) {
   return res;
 }
 
-std::vector<Point2D> Map::GetLineHigh(int x0, int y0, int x1, int y1) {
+std::vector<Point2D> Map::GetLineHigh(int x0, int y0, int x1, int y1)
+{
   int d_x = x1 - x0;
   int d_y = y1 - y0;
   int x_step = 1;
-  if (d_x < 0) {
+  if (d_x < 0)
+  {
     x_step = -1;
     d_x = -d_x;
   }
@@ -129,8 +142,10 @@ std::vector<Point2D> Map::GetLineHigh(int x0, int y0, int x1, int y1) {
   int y = y0;
   std::vector<Point2D> res;
   Point2D curr({x, y});
-  while (y < y1) {
-    if (D > 0) {
+  while (y < y1)
+  {
+    if (D > 0)
+    {
       x += x_step;
       D -= 2 * d_y;
     }
@@ -144,42 +159,56 @@ std::vector<Point2D> Map::GetLineHigh(int x0, int y0, int x1, int y1) {
   return res;
 }
 
-std::vector<Point2D> Map::GetLine(int x0, int y0, int x1, int y1) {
-  if (abs(y1 - y0) < abs(x1 - x0)) {
-    if (x0 > x1) {
+std::vector<Point2D> Map::GetLine(int x0, int y0, int x1, int y1)
+{
+  if (abs(y1 - y0) < abs(x1 - x0))
+  {
+    if (x0 > x1)
+    {
       return GetLineLow(x1, y1, x0, y0);
     }
     return GetLineLow(x0, y0, x1, y1);
   }
-  if (y0 > y1) {
+  if (y0 > y1)
+  {
     return GetLineHigh(x1, y1, x0, y0);
   }
   return GetLineHigh(x0, y0, x1, y1);
 }
 
 void Map::TransformPositionIntoQuadrant(int x, int y, int &x_qua, int &y_qua,
-                                        int &qua) {
+                                        int &qua)
+{
 
   // find out in which quadrant is this point, then transform the position
-  if (y >= 0) {
+  if (y >= 0)
+  {
     // 1. quadrant
-    if (x >= 0) {
+    if (x >= 0)
+    {
       x_qua = abs(x);
       y_qua = abs(y);
       qua = 0;
-    } else {
+    }
+    else
+    {
       // 2. quadrant
       x_qua = abs(y);
       y_qua = abs(x) - 1;
       qua = 1;
     }
-  } else {
+  }
+  else
+  {
     // 3. quadrant
-    if (x < 0) {
+    if (x < 0)
+    {
       x_qua = abs(x) - 1;
       y_qua = abs(y) - 1;
       qua = 2;
-    } else {
+    }
+    else
+    {
       // 4. quadrant
       x_qua = abs(y) - 1;
       y_qua = abs(x);
@@ -188,37 +217,46 @@ void Map::TransformPositionIntoQuadrant(int x, int y, int &x_qua, int &y_qua,
   }
 }
 
-CellOccupied Map::GetCellInSingleQuadrant(int x, int y, int qua) {
+CellOccupied Map::GetCellInSingleQuadrant(int x, int y, int qua)
+{
   int index = y * maps_[qua].info.width + x;
   // if this point is not in the map
-  if (index >= maps_[qua].data.size()) {
+  if (index >= maps_[qua].data.size())
+  {
     return CellOccupied::unknown;
   }
   int value = maps_[qua].data[index];
-  if (value == -1) {
+  if (value == -1)
+  {
     return CellOccupied::unknown;
   }
-  if (value >= occupied_bound) {
+  if (value >= occupied_bound)
+  {
     return CellOccupied::occupied;
   }
-  if (value <= empty_bound) {
+  if (value <= empty_bound)
+  {
     return CellOccupied::empty;
   }
   return CellOccupied::grey;
 }
 
 status::status Map::UpdateCellInSingleQuadrant(int x, int y, int qua,
-                                               int value) {
+                                               int value)
+{
   // check if new point pos is not in the old map
   // if not, then extend the map
-  if (x >= static_cast<int>(maps_[qua].info.width)) {
-    for (int i = maps_[qua].info.height; i >= 1; i--) {
+  if (x >= static_cast<int>(maps_[qua].info.width))
+  {
+    for (int i = maps_[qua].info.height; i >= 1; i--)
+    {
       maps_[qua].data.insert(begin(maps_[qua].data) + i * maps_[qua].info.width,
                              x - maps_[qua].info.width + 1, -1);
     }
     maps_[qua].info.width = x + 1;
   }
-  if (y >= static_cast<int>(maps_[qua].info.height)) {
+  if (y >= static_cast<int>(maps_[qua].info.height))
+  {
     maps_[qua].data.insert(
         end(maps_[qua].data),
         (y - maps_[qua].info.height + 1) * maps_[qua].info.width, -1);
@@ -226,25 +264,31 @@ status::status Map::UpdateCellInSingleQuadrant(int x, int y, int qua,
   }
   // update the probability
   auto data = &maps_[qua].data[y * maps_[qua].info.width + x];
-  if (*data == -1) {
+  if (*data == -1)
+  {
     *data = 50;
   }
-  if (value > 0) {
+  if (value > 0)
+  {
     *data = std::min(*data + value, 100);
   }
-  if (value < 0) {
+  if (value < 0)
+  {
     *data = std::max(*data + value, 0);
   }
   return status::Ok;
 }
 
-Point2D Map::TransformIndex(float x, float y) {
+Point2D Map::TransformIndex(float x, float y)
+{
   Point2D pos;
-  if (x >= 0) {
+  if (x >= 0)
+  {
     pos.first = std::ceil(x * 10);
   }
   pos.first = std::floor(x * 10);
-  if (y >= 0) {
+  if (y >= 0)
+  {
     pos.second = std::ceil(y * 10);
   }
   pos.second = std::floor(y * 10);

@@ -34,6 +34,7 @@ include_directories(
 add_library( map_sim src/simulator/map_simulator.cpp)
 add_library( map src/map.cpp)
 add_library( librobot src/robot.cpp)
+add_library( pid_controller src/pid_controller.cpp)
 add_library( path_planning src/path_planning.cpp)
 
 # main function
@@ -48,13 +49,7 @@ target_link_libraries(${PROJECT_NAME}_node
   map
   librobot
   path_planning
-)
-
-# send the coordinate-transform
-add_executable(transform_support src/transform_support.cpp)
-
-target_link_libraries(transform_support
-  ${catkin_LIBRARIES}
+  pid_controller
 )
 
 #############

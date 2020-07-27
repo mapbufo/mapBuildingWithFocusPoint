@@ -3,8 +3,10 @@
 <launch>
 
   <node pkg="mapbufo" type="mapbufo_node" name="mapbufo_node">
+    <rosparam command="load" file="$(find mapbufo)/param/parameter.yaml" />
   </node>
 
-  <node pkg="mapbufo" type="transform_support" name="transform_support">
+  <node type="rviz" name="rviz" pkg="rviz" args="-d $(find mapbufo)/rviz_map.rviz" >
   </node>
+
 </launch>
