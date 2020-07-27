@@ -1,6 +1,6 @@
 #include "map.h"
 
-Map::Map()
+Map::Map(ros::NodeHandle &nh): nh_(nh)
 {
   nav_msgs::OccupancyGrid map_tmp;
   // set the frame as default "map"
@@ -82,15 +82,14 @@ status::status Map::UpdateWithScanPoint(float x0, float y0, float x1, float y1,
   Point2D robot_point = TransformIndex(x0, y0);
   Point2D scan_point = TransformIndex(x1, y1);
   Update(scan_point, update_value);
-  if (x0 == x1 && y0 == y1)
-  {
+
+  if (x0 == x1 && y0 == y1) {
     return status::Ok;
   }
   std::vector<Point2D> scan_line =
       GetLine(robot_point.first, robot_point.second, scan_point.first,
               scan_point.second);
-  for (auto point : scan_line)
-  {
+  for (auto point : scan_line) {
     Update(point, -abs(update_value));
   }
   return status::Ok;

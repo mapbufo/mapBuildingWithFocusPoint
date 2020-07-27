@@ -365,7 +365,7 @@ int main(int argc, char **argv)
   CommunicationInterface CIObject(nh);
 
   // global map
-  Map test_map;
+  Map test_map(nh);
 
   // loop for each 20 ms
   ros::Rate loop_rate(50);
