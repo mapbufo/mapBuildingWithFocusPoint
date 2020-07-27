@@ -30,9 +30,11 @@ public:
     scan_subscriber_ = nh.subscribe("/scan", 1, &CommunicationInterface::laserScanCallback, this);
     pos_subscriber_ = nh.subscribe("/odom", 1, &CommunicationInterface::robotPositionCallback, this);
 
+
     // output: robot_next_pos, robot_control
     pos_publisher_ = nh.advertise<geometry_msgs::Twist>("/cmd_vel_mux/input/teleop", 1);
     control_publisher_ = nh.advertise<geometry_msgs::Twist>("/cmd_vel_mux/input/teleop", 1);
+
 
     pub_map_quadrant_1_ = nh.advertise<nav_msgs::OccupancyGrid>("occu_map_quadrant_1", 100);
     pub_map_quadrant_2_ = nh.advertise<nav_msgs::OccupancyGrid>("occu_map_quadrant_2", 100);
@@ -216,6 +218,7 @@ public:
                 << estimated_pos_.second << std::endl;
     }
     scan_publisher_.publish(point_cloud);
+
   }
 
   void robotPositionCallback(const nav_msgs::Odometry msg)
@@ -376,5 +379,6 @@ int main(int argc, char **argv)
     ros::spinOnce();
     loop_rate.sleep();
   }
+
   return 0;
 }
