@@ -23,7 +23,7 @@
 
 class CommunicationInterface {
 public:
-  CommunicationInterface(ros::NodeHandle nh) {
+  CommunicationInterface(ros::NodeHandle &nh) {
     // input: laserscan, robot_position
     scan_subscriber_ = nh.subscribe(
         "/scan", 1, &CommunicationInterface::laserScanCallback, this);
