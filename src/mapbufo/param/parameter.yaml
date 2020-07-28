@@ -1,1 +1,14 @@
-lidar_range: 90.0
+# maximal range of lidar sensor(m)
+lidar_range: 10.0
+
+# if the probability of this cell is lower than 25, it will be treated as empty
+empty_bound: 25
+# if the probability of this cell is greater than 75, it will be treated as occupied
+occupied_bound: 75
+
+
+### each time the probability should be changed by this value, plus or minus
+# if the input data is filtered, then the update_value is lower
+update_value_filtered: 6
+# if the input data is original without filtering, then the update_value is higher
+update_value_origin: 20
