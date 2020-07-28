@@ -1,6 +1,6 @@
 #include "map.h"
 
-Map::Map(ros::NodeHandle &nh): nh_(nh)
+Map::Map(ros::NodeHandle &nh) : nh_(nh)
 {
   nav_msgs::OccupancyGrid map_tmp;
   // set the frame as default "map"
@@ -48,6 +48,9 @@ Map::Map(ros::NodeHandle &nh): nh_(nh)
   map_tmp.info.origin.orientation.z = q.getZ();
   map_tmp.info.origin.orientation.w = q.getW();
   maps_.push_back(map_tmp);
+
+  // prepare the parameter
+  GetParam();
 }
 
 CellOccupied Map::GetCell(int x, int y)
@@ -79,17 +82,28 @@ status::status Map::Update(Point2D pos, int update_value)
 status::status Map::UpdateWithScanPoint(float x0, float y0, float x1, float y1,
                                         int update_value)
 {
+  float distance = sqrt(pow(x1 - x0, 2) + pow(y1 - y0, 2));
+  bool inrange(false);
+  if (distance < lidar_range_ * 0.95)
+  {
+    inrange = true;
+  }
   Point2D robot_point = TransformIndex(x0, y0);
   Point2D scan_point = TransformIndex(x1, y1);
-  Update(scan_point, update_value);
+  if (inrange)
+  {
+    Update(scan_point, update_value);
+  }
 
-  if (x0 == x1 && y0 == y1) {
+  if (x0 == x1 && y0 == y1)
+  {
     return status::Ok;
   }
   std::vector<Point2D> scan_line =
       GetLine(robot_point.first, robot_point.second, scan_point.first,
               scan_point.second);
-  for (auto point : scan_line) {
+  for (auto point : scan_line)
+  {
     Update(point, -abs(update_value));
   }
   return status::Ok;
@@ -230,11 +244,11 @@ CellOccupied Map::GetCellInSingleQuadrant(int x, int y, int qua)
   {
     return CellOccupied::unknown;
   }
-  if (value >= occupied_bound)
+  if (value >= occupied_bound_)
   {
     return CellOccupied::occupied;
   }
-  if (value <= empty_bound)
+  if (value <= empty_bound_)
   {
     return CellOccupied::empty;
   }
@@ -293,4 +307,11 @@ Point2D Map::TransformIndex(float x, float y)
   }
   pos.second = std::floor(y * 10);
   return pos;
+}
+
+void Map::GetParam()
+{
+  nh_.getParam("/mapbufo_node/lidar_range", lidar_range_);
+  nh_.getParam("/mapbufo_node/empty_bound", empty_bound_);
+  nh_.getParam("/mapbufo_node/occupied_bound", occupied_bound_);
 }

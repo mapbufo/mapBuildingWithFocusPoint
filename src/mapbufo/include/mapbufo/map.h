@@ -4,10 +4,11 @@
 
 #include "common.h"
 #include <nav_msgs/OccupancyGrid.h>
-#include <tf2/LinearMath/Quaternion.h>
 #include <ros/ros.h>
+#include <tf2/LinearMath/Quaternion.h>
 
-class Map {
+class Map
+{
 public:
   // used to create global map
   Map(ros::NodeHandle &nh);
@@ -88,19 +89,6 @@ public:
    */
   std::vector<Point2D> GetLine(int x0, int y0, int x1, int y1);
 
-public:
-  /**
-   * each time the probability should be changed by this value, plus or minus
-   * if the input data is filtered, then the update_value is lower
-   */
-  const int update_value_filtered = 6;
-
-  /**
-   * if the input data is original without filtering, then the update_value is
-   * is higher
-   */
-  const int update_value_full = 30;
-
 private:
   /**
    * save the map data
@@ -111,15 +99,23 @@ private:
    * if the probability of this grid is bigger than occupied_bound,
    * then this cell will be treated as occupied
    */
-  int occupied_bound = 75;
+  int occupied_bound_;
 
   /**
    * if the probability of this grid is smaller than empty_bound,
    * then this cell will be treated as empty
    */
-  int empty_bound = 25;
+  int empty_bound_;
 
+  /**
+   * in order to get the rosparam
+   */
   ros::NodeHandle nh_;
+
+  /**
+   * max range of the liader
+   */
+  float lidar_range_;
 
 private:
   /**
@@ -156,4 +152,9 @@ private:
    * @param return  Point2D: position of robot(grid position)
    */
   Point2D TransformIndex(float x, float y);
+
+  /**
+   * get the needed parameter from file /param/parameter.yaml
+   */
+  void GetParam();
 };
