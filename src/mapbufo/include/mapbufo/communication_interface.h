@@ -29,11 +29,19 @@ private:
   ros::Publisher pos_publisher_;
   ros::Publisher control_publisher_;
   ros::Publisher scan_publisher_;
-  // map publishers
-  ros::Publisher pub_map_quadrant_1_;
-  ros::Publisher pub_map_quadrant_2_;
-  ros::Publisher pub_map_quadrant_3_;
-  ros::Publisher pub_map_quadrant_4_;
+  // global map publishers
+  ros::Publisher pub_global_map_quadrant_1_;
+  ros::Publisher pub_global_map_quadrant_2_;
+  ros::Publisher pub_global_map_quadrant_3_;
+  ros::Publisher pub_global_map_quadrant_4_;
+
+  // local map, publishers
+  Map map_local_;
+  ros::Publisher pub_local_map_quadrant_1_;
+  ros::Publisher pub_local_map_quadrant_2_;
+  ros::Publisher pub_local_map_quadrant_3_;
+  ros::Publisher pub_local_map_quadrant_4_;
+
   message_filters::Subscriber<sensor_msgs::LaserScan> scan_sub;
   message_filters::Subscriber<nav_msgs::Odometry> odom_sub;
   message_filters::TimeSynchronizer<sensor_msgs::LaserScan, nav_msgs::Odometry> sync;
@@ -52,14 +60,55 @@ private:
 
 public:
   CommunicationInterface(ros::NodeHandle &nh);
-  void scanOdomCallback(const sensor_msgs::LaserScan::ConstPtr &scan, const nav_msgs::Odometry::ConstPtr &msg);
+
+  /**
+   * save the received messages(laserscan and odometry)
+   * @param input sensor_msgs::LaserScan scan: sensor information from lidar
+   * @param input nav_msgs::Odometry odom: state information from robot
+   */
+  void scanOdomCallback(const sensor_msgs::LaserScan::ConstPtr &scan, const nav_msgs::Odometry::ConstPtr &odom);
+
+  /**
+   * filter the sensor data, transform them into global-coordinate
+   */
   void processScan();
+
+  /**
+   * publish the received sensor date for debugging
+   */
   void publishPointCloud();
 
-  void robotPositionCallback(const nav_msgs::Odometry::Ptr &odom);
+  /**
+   * save the received messages
+   * @param input nav_msgs::Odometry odom: state information of robot
+   */
+  void robotPositionCallback(const nav_msgs::Odometry::ConstPtr &odom);
+
+  /**
+   * ???
+   */
   void processOdom();
+
+  /**
+   * publish the control information for robot
+   */
   void publishTwist();
 
+  /**
+   * publish the global map message
+   * @param input Map map
+   */
+  void publishGlobalMap(Map &map);
+
+  /**
+   * publish the local map message
+   */
+  void publishLocalMap();
+
+  /**
+   * run the main algorithm
+   * @param input Map map: the current global map
+   */
   void cycle(Map &map);
 };
 #endif // COMMUNICATION_INTERFACE_H

@@ -1,6 +1,7 @@
 #include "communication_interface.h"
 
-CommunicationInterface::CommunicationInterface(ros::NodeHandle &nh) : sync(scan_sub, odom_sub, 10)
+CommunicationInterface::CommunicationInterface(ros::NodeHandle &nh)
+    : sync(scan_sub, odom_sub, 10), map_local_(nh, 0.01, 100, 100)
 {
   // input: laserscan, robot_position
   scan_sub.subscribe(nh, "/scan", 10);
@@ -10,14 +11,22 @@ CommunicationInterface::CommunicationInterface(ros::NodeHandle &nh) : sync(scan_
   // output: robot_control
   control_publisher_ = nh.advertise<geometry_msgs::Twist>("/cmd_vel_mux/input/teleop", 1);
 
-  pub_map_quadrant_1_ = nh.advertise<nav_msgs::OccupancyGrid>("occu_map_quadrant_1", 100);
-  pub_map_quadrant_2_ = nh.advertise<nav_msgs::OccupancyGrid>("occu_map_quadrant_2", 100);
-  pub_map_quadrant_3_ = nh.advertise<nav_msgs::OccupancyGrid>("occu_map_quadrant_3", 100);
-  pub_map_quadrant_4_ = nh.advertise<nav_msgs::OccupancyGrid>("occu_map_quadrant_4", 100);
+  // global map publishers
+  pub_global_map_quadrant_1_ = nh.advertise<nav_msgs::OccupancyGrid>("occu_global_map_quadrant_1", 100);
+  pub_global_map_quadrant_2_ = nh.advertise<nav_msgs::OccupancyGrid>("occu_global_map_quadrant_2", 100);
+  pub_global_map_quadrant_3_ = nh.advertise<nav_msgs::OccupancyGrid>("occu_global_map_quadrant_3", 100);
+  pub_global_map_quadrant_4_ = nh.advertise<nav_msgs::OccupancyGrid>("occu_global_map_quadrant_4", 100);
+
+  // local map publishers
+  pub_local_map_quadrant_1_ = nh.advertise<nav_msgs::OccupancyGrid>("occu_local_map_quadrant_1", 100);
+  pub_local_map_quadrant_2_ = nh.advertise<nav_msgs::OccupancyGrid>("occu_local_map_quadrant_2", 100);
+  pub_local_map_quadrant_3_ = nh.advertise<nav_msgs::OccupancyGrid>("occu_local_map_quadrant_3", 100);
+  pub_local_map_quadrant_4_ = nh.advertise<nav_msgs::OccupancyGrid>("occu_local_map_quadrant_4", 100);
 
   // debug output: processed scan_points
   scan_publisher_ = nh.advertise<sensor_msgs::PointCloud>("/processed_scan", 1);
 }
+
 void CommunicationInterface::scanOdomCallback(const sensor_msgs::LaserScan::ConstPtr &scan,
                                               const nav_msgs::Odometry::ConstPtr &odom)
 {
@@ -47,6 +56,7 @@ void CommunicationInterface::scanOdomCallback(const sensor_msgs::LaserScan::Cons
   input_odom_at_scan_.pose = odom->pose;
   input_odom_at_scan_.twist = odom->twist;
 }
+
 void CommunicationInterface::processScan()
 {
   float angle_min = input_scan_.angle_min;
@@ -201,7 +211,8 @@ void CommunicationInterface::publishPointCloud()
 {
   scan_publisher_.publish(filtered_point_cloud_);
 }
-void CommunicationInterface::robotPositionCallback(const nav_msgs::Odometry::Ptr &odom)
+
+void CommunicationInterface::robotPositionCallback(const nav_msgs::Odometry::ConstPtr &odom)
 {
   input_odom_.header = odom->header;
   input_odom_.child_frame_id = odom->child_frame_id;
@@ -326,6 +337,23 @@ void CommunicationInterface::publishTwist()
 {
   control_publisher_.publish(output_twist_);
 }
+
+void CommunicationInterface::publishGlobalMap(Map &map)
+{
+  pub_global_map_quadrant_1_.publish(map.GetMap()[0]);
+  pub_global_map_quadrant_2_.publish(map.GetMap()[1]);
+  pub_global_map_quadrant_3_.publish(map.GetMap()[2]);
+  pub_global_map_quadrant_4_.publish(map.GetMap()[3]);
+}
+
+void CommunicationInterface::publishLocalMap()
+{
+  pub_local_map_quadrant_1_.publish(map_local_.GetMap()[0]);
+  pub_local_map_quadrant_2_.publish(map_local_.GetMap()[1]);
+  pub_local_map_quadrant_3_.publish(map_local_.GetMap()[2]);
+  pub_local_map_quadrant_4_.publish(map_local_.GetMap()[3]);
+}
+
 void CommunicationInterface::cycle(Map &map)
 {
   processScan();
@@ -335,12 +363,12 @@ void CommunicationInterface::cycle(Map &map)
 
   for (auto point : curr_scan_)
   {
-    map.UpdateWithScanPoint(curr_robot_pos_.first, curr_robot_pos_.second, point.first.first, point.first.second,
-                            point.second);
+    map.UpdateWithScanPoint(curr_robot_pos_.first, curr_robot_pos_.second,
+                            point.first.first, point.first.second, point.second);
   }
-  // publish the updated map
-  pub_map_quadrant_1_.publish(map.GetMap()[0]);
-  pub_map_quadrant_2_.publish(map.GetMap()[1]);
-  pub_map_quadrant_3_.publish(map.GetMap()[2]);
-  pub_map_quadrant_4_.publish(map.GetMap()[3]);
+  // publish the updated global map
+  publishGlobalMap(map);
+
+  // publish the updated local map
+  publishLocalMap();
 }
