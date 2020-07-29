@@ -55,9 +55,11 @@
         "typeinfo": "cpp",
         "csignal": "cpp",
         "condition_variable": "cpp",
-        "mutex": "cpp"
+        "mutex": "cpp",
+        "string": "cpp"
     },
     "python.autoComplete.extraPaths": [
         "/usr/lib/python2.7/dist-packages"
-    ]
+    ],
+    "ros.distro": "kinetic"
 }

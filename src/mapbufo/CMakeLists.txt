@@ -36,7 +36,8 @@ add_library( map src/map.cpp)
 add_library( librobot src/robot.cpp)
 add_library( pid_controller src/pid_controller.cpp)
 add_library( path_planning src/path_planning.cpp)
-
+add_library( communication_interface src/communication_interface.cpp)
+target_link_libraries(communication_interface pid_controller)
 # main function
 add_executable(${PROJECT_NAME}_node main/main.cpp)
 
@@ -50,6 +51,7 @@ target_link_libraries(${PROJECT_NAME}_node
   librobot
   path_planning
   pid_controller
+  communication_interface
 )
 
 #############
