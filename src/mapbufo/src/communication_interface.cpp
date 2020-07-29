@@ -3,7 +3,6 @@
 CommunicationInterface::CommunicationInterface(ros::NodeHandle &nh) : sync(scan_sub, odom_sub, 10)
 {
   // input: laserscan, robot_position
-
   scan_sub.subscribe(nh, "/scan", 10);
   odom_sub.subscribe(nh, "/odom", 10);
   sync.registerCallback(boost::bind(&CommunicationInterface::scanOdomCallback, this, _1, _2));
@@ -53,7 +52,7 @@ void CommunicationInterface::scanOdomCallback(const sensor_msgs::LaserScan::Cons
 
   curr_scan_.clear();
   int counter = 0;
-  int resolution = 10; // pick only every ten points outside the interested area
+  int resolution = 10;  // pick only every ten points outside the interested area
   for (int i = 0; i < number_of_laser; i++)
   {
     float laser_angle = angle_min + i * angle_increment;
@@ -71,9 +70,9 @@ void CommunicationInterface::scanOdomCallback(const sensor_msgs::LaserScan::Cons
     double robot_heading = yaw;
     if (laser_angle > -priority_angle_range_rad && laser_angle < priority_angle_range_rad)
     {
-      if (std::isnan(scan->ranges[i])) // if a point is nan, then the 10
-                                       // points before and after must be nan
-                                       // so that it can be considered empty
+      if (std::isnan(scan->ranges[i]))  // if a point is nan, then the 10
+                                        // points before and after must be nan
+                                        // so that it can be considered empty
       {
         // check the +- 10 points
         if ((priority_angle_range_rad - abs(laser_angle)) / angle_increment < 10)
@@ -101,7 +100,7 @@ void CommunicationInterface::scanOdomCallback(const sensor_msgs::LaserScan::Cons
         float global_x = x * std::cos(yaw) - y * std::sin(yaw) + pos_x;
         float global_y = x * std::sin(yaw) + y * std::cos(yaw) + pos_y;
 
-        curr_scan_[{global_x, global_y}] = -20;
+        curr_scan_[{ global_x, global_y }] = -20;
         if (range_max > max_dist)
         {
           next_pos.first = range_max * std::cos(laser_angle);
@@ -117,7 +116,7 @@ void CommunicationInterface::scanOdomCallback(const sensor_msgs::LaserScan::Cons
       float global_y = x * std::sin(yaw) + y * std::cos(yaw) + pos_y;
       if (!std::isnan(global_x) && !std::isnan(global_y))
       {
-        curr_scan_[{global_x, global_y}] = 20;
+        curr_scan_[{ global_x, global_y }] = 20;
       }
       geometry_msgs::Point32 pt;
       pt.x = x;
@@ -148,7 +147,7 @@ void CommunicationInterface::scanOdomCallback(const sensor_msgs::LaserScan::Cons
         float global_x = x * std::cos(yaw) - y * std::sin(yaw) + pos_x;
         float global_y = x * std::sin(yaw) + y * std::cos(yaw) + pos_y;
 
-        curr_scan_[{global_x, global_y}] = 6;
+        curr_scan_[{ global_x, global_y }] = 6;
 
         continue;
       }
@@ -156,7 +155,7 @@ void CommunicationInterface::scanOdomCallback(const sensor_msgs::LaserScan::Cons
       float global_y = x * std::sin(yaw) + y * std::cos(yaw) + pos_y;
       if (!std::isnan(global_x) && !std::isnan(global_y))
       {
-        curr_scan_[{global_x, global_y}] = 6;
+        curr_scan_[{ global_x, global_y }] = 6;
       }
       geometry_msgs::Point32 pt;
       pt.x = x;
@@ -178,7 +177,6 @@ void CommunicationInterface::scanOdomCallback(const sensor_msgs::LaserScan::Cons
 
 void CommunicationInterface::robotPositionCallback(const nav_msgs::Odometry msg)
 {
-  // ROS_INFO("pos received");
   PIDController pid_angle(1, 0.2, 2.5);
   PIDController pid_speed(0.1, 0.00, 0.0);
 
