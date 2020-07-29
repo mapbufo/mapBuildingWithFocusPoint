@@ -44,12 +44,22 @@ private:
   std::pair<float, float> estimated_pos_;
   std::pair<float, float> goal_;
   bool angle_setted = false;
-  geometry_msgs::Pose robot_pose_;
+  nav_msgs::Odometry input_odom_;
+  nav_msgs::Odometry input_odom_at_scan_;
+  sensor_msgs::LaserScan input_scan_;
+  sensor_msgs::PointCloud filtered_point_cloud_;
+  geometry_msgs::Twist output_twist_;
 
 public:
   CommunicationInterface(ros::NodeHandle &nh);
   void scanOdomCallback(const sensor_msgs::LaserScan::ConstPtr &scan, const nav_msgs::Odometry::ConstPtr &msg);
-  void robotPositionCallback(const nav_msgs::Odometry msg);
+  void processScan();
+  void publishPointCloud();
+
+  void robotPositionCallback(const nav_msgs::Odometry::Ptr &odom);
+  void processOdom();
+  void publishTwist();
+
   void cycle(Map &map);
 };
 #endif // COMMUNICATION_INTERFACE_H
