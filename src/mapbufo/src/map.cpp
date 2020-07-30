@@ -53,6 +53,68 @@ Map::Map(ros::NodeHandle &nh) : nh_(nh)
   GetParam();
 }
 
+Map::Map(ros::NodeHandle &nh, float resolution, int width, int height) : nh_(nh)
+{
+  nav_msgs::OccupancyGrid map_tmp;
+  // set the frame as default "map"
+  map_tmp.header.frame_id = "/odom";
+  // 10m x 10m, with resolution 10cm
+  map_tmp.info.resolution = resolution;
+  map_tmp.info.height = width;
+  map_tmp.info.width = height;
+  map_tmp.info.origin.position.x = 0.0;
+  map_tmp.info.origin.position.y = 0.0;
+  map_tmp.info.origin.position.z = 0.0;
+  map_tmp.info.origin.orientation.x = 0.0;
+  map_tmp.info.origin.orientation.y = 0.0;
+  map_tmp.info.origin.orientation.z = 0.0;
+  map_tmp.info.origin.orientation.w = 1.0;
+  // initialize map_data to -1
+  // use row-major to save the data, index = y*width + x
+  map_tmp.data.insert(begin(map_tmp.data),
+                      map_tmp.info.width * map_tmp.info.height, -1);
+
+  // 1. quadrant
+  maps_.push_back(map_tmp);
+
+  tf2::Quaternion q;
+  // 2. quadrant
+  q.setRPY(0, 0, M_PI / 2);
+  map_tmp.info.origin.orientation.x = q.getX();
+  map_tmp.info.origin.orientation.y = q.getY();
+  map_tmp.info.origin.orientation.z = q.getZ();
+  map_tmp.info.origin.orientation.w = q.getW();
+  maps_.push_back(map_tmp);
+
+  // 3. quadrant
+  q.setRPY(0, 0, M_PI);
+  map_tmp.info.origin.orientation.x = q.getX();
+  map_tmp.info.origin.orientation.y = q.getY();
+  map_tmp.info.origin.orientation.z = q.getZ();
+  map_tmp.info.origin.orientation.w = q.getW();
+  maps_.push_back(map_tmp);
+
+  // 4. quadrant
+  q.setRPY(0, 0, -M_PI / 2);
+  map_tmp.info.origin.orientation.x = q.getX();
+  map_tmp.info.origin.orientation.y = q.getY();
+  map_tmp.info.origin.orientation.z = q.getZ();
+  map_tmp.info.origin.orientation.w = q.getW();
+  maps_.push_back(map_tmp);
+
+  // prepare the parameter
+  GetParam();
+}
+
+void Map::SetPos(float x, float y)
+{
+  for (auto &map : maps_)
+  {
+    map.info.origin.position.x = x;
+    map.info.origin.position.y = y;
+  }
+}
+
 CellOccupied Map::GetCell(int x, int y)
 {
   int x_qua;
@@ -295,17 +357,18 @@ status::status Map::UpdateCellInSingleQuadrant(int x, int y, int qua,
 
 Point2D Map::TransformIndex(float x, float y)
 {
+  float factor = 1 / maps_.front().info.resolution;
   Point2D pos;
   if (x >= 0)
   {
-    pos.first = std::ceil(x * 10);
+    pos.first = std::ceil(x * factor);
   }
-  pos.first = std::floor(x * 10);
+  pos.first = std::floor(x * factor);
   if (y >= 0)
   {
-    pos.second = std::ceil(y * 10);
+    pos.second = std::ceil(y * factor);
   }
-  pos.second = std::floor(y * 10);
+  pos.second = std::floor(y * factor);
   return pos;
 }
 

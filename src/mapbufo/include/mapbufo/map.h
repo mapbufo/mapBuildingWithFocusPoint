@@ -12,7 +12,17 @@ class Map
 public:
   // used to create global map
   Map(ros::NodeHandle &nh);
+
+  // used to create local map with specified parameter
+  Map(ros::NodeHandle &nh, float resolution, int width, int height);
+
   ~Map(){};
+
+  /**
+   * set the position of the map
+   * @param input float x, float y: position of (0,0) cell
+   */
+  void SetPos(float x, float y);
 
   /**
    * overload the [] function to simplify getting the cell status
