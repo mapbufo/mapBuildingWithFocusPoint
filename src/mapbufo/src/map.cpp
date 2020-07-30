@@ -357,17 +357,18 @@ status::status Map::UpdateCellInSingleQuadrant(int x, int y, int qua,
 
 Point2D Map::TransformIndex(float x, float y)
 {
+  float factor = 1 / maps_.front().info.resolution;
   Point2D pos;
   if (x >= 0)
   {
-    pos.first = std::ceil(x * 10);
+    pos.first = std::ceil(x * factor);
   }
-  pos.first = std::floor(x * 10);
+  pos.first = std::floor(x * factor);
   if (y >= 0)
   {
-    pos.second = std::ceil(y * 10);
+    pos.second = std::ceil(y * factor);
   }
-  pos.second = std::floor(y * 10);
+  pos.second = std::floor(y * factor);
   return pos;
 }
 
