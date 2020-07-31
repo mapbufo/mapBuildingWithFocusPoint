@@ -144,19 +144,9 @@ status::status Map::Update(Point2D pos, int update_value)
 status::status Map::UpdateWithScanPoint(float x0, float y0, float x1, float y1,
                                         int update_value)
 {
-  float distance = sqrt(pow(x1 - x0, 2) + pow(y1 - y0, 2));
-  bool inrange(false);
-  if (distance < lidar_range_ * 0.95)
-  {
-    inrange = true;
-  }
   Point2D robot_point = TransformIndex(x0, y0);
   Point2D scan_point = TransformIndex(x1, y1);
-  if (inrange)
-  {
-    Update(scan_point, update_value);
-  }
-
+  Update(scan_point, update_value);
   if (x0 == x1 && y0 == y1)
   {
     return status::Ok;
