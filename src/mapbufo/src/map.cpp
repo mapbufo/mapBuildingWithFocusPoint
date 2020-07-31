@@ -57,7 +57,7 @@ Map::Map(ros::NodeHandle &nh, float resolution, int width, int height) : nh_(nh)
 {
   nav_msgs::OccupancyGrid map_tmp;
   // set the frame as default "map"
-  map_tmp.header.frame_id = "/odom";
+  map_tmp.header.frame_id = "/base_footprint";
   // 10m x 10m, with resolution 10cm
   map_tmp.info.resolution = resolution;
   map_tmp.info.height = width;
@@ -106,12 +106,19 @@ Map::Map(ros::NodeHandle &nh, float resolution, int width, int height) : nh_(nh)
   GetParam();
 }
 
-void Map::SetPos(float x, float y)
+void Map::SetPos(geometry_msgs::Pose pose)
 {
   for (auto &map : maps_)
   {
-    map.info.origin.position.x = x;
-    map.info.origin.position.y = y;
+    map.info.origin.position = pose.position;
+  }
+}
+
+void Map::ResetMapData()
+{
+  for (auto &map : maps_)
+  {
+    map.data.assign(maps_.front().info.height * maps_.front().info.width, -1);
   }
 }
 
@@ -129,20 +136,20 @@ CellOccupied Map::GetCell(Point2D pos)
   return GetCell(pos.first, pos.second);
 }
 
-status::status Map::Update(int x, int y, int update_value)
+status::status Map::Update(int x, int y, int update_value, bool global)
 {
   int x_qua, y_qua, qua;
   TransformPositionIntoQuadrant(x, y, x_qua, y_qua, qua);
-  return UpdateCellInSingleQuadrant(x_qua, y_qua, qua, update_value);
+  return UpdateCellInSingleQuadrant(x_qua, y_qua, qua, update_value, global);
 }
 
-status::status Map::Update(Point2D pos, int update_value)
+status::status Map::Update(Point2D pos, int update_value, bool global)
 {
-  return Update(pos.first, pos.second, update_value);
+  return Update(pos.first, pos.second, update_value, global);
 }
 
 status::status Map::UpdateWithScanPoint(float x0, float y0, float x1, float y1,
-                                        int update_value)
+                                        int update_value, bool global)
 {
   float distance = sqrt(pow(x1 - x0, 2) + pow(y1 - y0, 2));
   bool inrange(false);
@@ -154,7 +161,7 @@ status::status Map::UpdateWithScanPoint(float x0, float y0, float x1, float y1,
   Point2D scan_point = TransformIndex(x1, y1);
   if (inrange)
   {
-    Update(scan_point, update_value);
+    Update(scan_point, update_value, global);
   }
 
   if (x0 == x1 && y0 == y1)
@@ -166,7 +173,30 @@ status::status Map::UpdateWithScanPoint(float x0, float y0, float x1, float y1,
               scan_point.second);
   for (auto point : scan_line)
   {
-    Update(point, -abs(update_value));
+    Update(point, -abs(update_value), global);
+  }
+  return status::Ok;
+}
+
+status::status Map::UpdateWithScanPoints(Point2DWithFloat robot_pos, ScanPointsFloatWithUpdateValue curr_scan)
+{
+  for (auto point : curr_scan)
+  {
+    UpdateWithScanPoint(robot_pos.first, robot_pos.second,
+                        point.first.first, point.first.second, point.second, true);
+  }
+  return status::Ok;
+}
+
+status::status Map::UpdateLocalMapWithScanPoints(Point2DWithFloat robot_pos,
+                                                 ScanPointsFloatWithUpdateValue curr_scan)
+{
+  ResetMapData();
+
+  for (auto point : curr_scan)
+  {
+    UpdateWithScanPoint(robot_pos.first, robot_pos.second,
+                        point.first.first, point.first.second, point.second, false);
   }
   return status::Ok;
 }
@@ -318,12 +348,17 @@ CellOccupied Map::GetCellInSingleQuadrant(int x, int y, int qua)
 }
 
 status::status Map::UpdateCellInSingleQuadrant(int x, int y, int qua,
-                                               int value)
+                                               int value, bool global)
 {
+  // if this is local map, then skip all the points outside the map
   // check if new point pos is not in the old map
   // if not, then extend the map
   if (x >= static_cast<int>(maps_[qua].info.width))
   {
+    if (!global)
+    {
+      return status::Ok;
+    }
     for (int i = maps_[qua].info.height; i >= 1; i--)
     {
       maps_[qua].data.insert(begin(maps_[qua].data) + i * maps_[qua].info.width,
@@ -333,6 +368,10 @@ status::status Map::UpdateCellInSingleQuadrant(int x, int y, int qua,
   }
   if (y >= static_cast<int>(maps_[qua].info.height))
   {
+    if (!global)
+    {
+      return status::Ok;
+    }
     maps_[qua].data.insert(
         end(maps_[qua].data),
         (y - maps_[qua].info.height + 1) * maps_[qua].info.width, -1);
