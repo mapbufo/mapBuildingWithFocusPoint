@@ -106,14 +106,6 @@ Map::Map(ros::NodeHandle &nh, float resolution, int width, int height) : nh_(nh)
   GetParam();
 }
 
-void Map::SetPos(geometry_msgs::Pose pose)
-{
-  for (auto &map : maps_)
-  {
-    map.info.origin.position = pose.position;
-  }
-}
-
 void Map::ResetMapData()
 {
   for (auto &map : maps_)

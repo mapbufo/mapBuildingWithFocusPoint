@@ -20,12 +20,6 @@ public:
   ~Map(){};
 
   /**
-   * set the pose of the map
-   * @param input geometry_msgs::Pose: pose of this map, same as robot
-   */
-  void SetPos(geometry_msgs::Pose pose);
-
-  /**
    * reset all the map data to -1
    */
   void ResetMapData();
@@ -95,8 +89,8 @@ public:
 
   /**
    * at first clear all the data from last cycle, then update the probability
-   * of the points in the local map with input unordered_map, then erase all
-   * extended data, the size of local map should not be changed
+   * of the points in the local map with input unordered_map, all the points
+   * outside the local map should not be calculated
    * @param input Point2DWithFloat robot_pos: current robot position(float)
    * @param input ScanPointsFloatWithUpdateValue curr_scan: current scan points
    *              with the cooresponding update value
