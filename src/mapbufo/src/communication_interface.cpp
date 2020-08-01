@@ -372,3 +372,41 @@ void CommunicationInterface::cycle(Map &map)
   // publish the updated local map
   publishLocalMap();
 }
+/*
+void CommunicationInterface::setGoalCallback()
+{
+  // compare current goal with new goal
+  // if different, then call global path-planning
+  // clear the old path, save the new path
+  // if same, then skip
+}
+
+void CommunicationInterface::cycle(Map &map)
+{
+  // always update the global map, no matter we have goal or not
+  processScan();
+
+  for (auto point : curr_scan_)
+  {
+    map.UpdateWithScanPoint(curr_robot_pos_.first, curr_robot_pos_.second,
+                            point.first.first, point.first.second, point.second);
+  }
+
+  // publish the updated global map
+  publishGlobalMap(map);
+
+  // publish the updated local map
+  publishLocalMap();
+
+  // check if we have global path
+  // if not, return
+  // if yes, then get the first target from the saved global path
+
+  // call local path-planning with the first target from global path
+  // transform the local path into global coordinate, update the path vector
+  // move in processOdom()
+  processOdom();
+
+  publishTwist();
+}
+*/
