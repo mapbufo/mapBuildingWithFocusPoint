@@ -183,7 +183,7 @@ void CommunicationInterface::processScan()
         float global_x = x * std::cos(yaw) - y * std::sin(yaw) + pos_x;
         float global_y = x * std::sin(yaw) + y * std::cos(yaw) + pos_y;
 
-        curr_scan_[{global_x, global_y}] = 6;
+        curr_scan_[{global_x, global_y}] = -6;
 
         continue;
       }
