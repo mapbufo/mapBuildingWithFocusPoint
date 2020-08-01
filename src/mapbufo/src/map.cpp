@@ -145,7 +145,7 @@ status::status Map::UpdateWithScanPoint(float x0, float y0, float x1, float y1,
 {
   Point2D robot_point = TransformIndex(x0, y0);
   Point2D scan_point = TransformIndex(x1, y1);
-  Update(scan_point, update_value);
+  Update(scan_point, update_value, global);
   if (x0 == x1 && y0 == y1)
   {
     return status::Ok;
