@@ -19,13 +19,15 @@
 #include <boost/bind.hpp>
 #include "common.h"
 #include "map.h"
+#include "path_planning.h"
 #include "pid_controller.h"
 
 class CommunicationInterface
 {
 private:
   ros::Subscriber scan_subscriber_;
-  ros::Subscriber pos_subscriber_;
+  ros::Subscriber goal_subscriber_;
+  ros::Subscriber odom_subscriber_;
   ros::Publisher pos_publisher_;
   ros::Publisher control_publisher_;
   ros::Publisher scan_publisher_;
@@ -58,8 +60,15 @@ private:
   sensor_msgs::PointCloud filtered_point_cloud_;
   geometry_msgs::Twist output_twist_;
 
+  Point2DWithFloat final_goal_;
+  std::vector<Point2DWithFloat> planned_path_vec_;
+  bool new_goal_updated_;
+
 public:
   CommunicationInterface(ros::NodeHandle &nh);
+
+  void setGoalCallback(const geometry_msgs::PoseStamped::ConstPtr &goal);
+  void setPath(const Map map);
 
   /**
    * save the received messages(laserscan and odometry)

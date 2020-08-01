@@ -1,13 +1,21 @@
 #include "communication_interface.h"
 
 CommunicationInterface::CommunicationInterface(ros::NodeHandle &nh)
-    : sync(scan_sub, odom_sub, 10), map_local_(nh, 0.01, 100, 100)
+  : sync(scan_sub, odom_sub, 10), map_local_(nh, 0.01, 100, 100)
 {
   // input: laserscan, robot_position
   scan_sub.subscribe(nh, "/scan", 10);
   odom_sub.subscribe(nh, "/odom", 10);
   sync.registerCallback(boost::bind(&CommunicationInterface::scanOdomCallback, this, _1, _2));
-  pos_subscriber_ = nh.subscribe("/odom", 1, &CommunicationInterface::robotPositionCallback, this);
+  odom_subscriber_ = nh.subscribe("/odom", 1, &CommunicationInterface::robotPositionCallback, this);
+
+  goal_subscriber_ = nh.subscribe("/move_base_simple/goal", 1, &CommunicationInterface::setGoalCallback, this);
+  // initialize the current goal
+  new_goal_updated_ = false;
+  reached_pos_ = false;
+  final_goal_.first = 0;
+  final_goal_.second = 0;
+
   // output: robot_control
   control_publisher_ = nh.advertise<geometry_msgs::Twist>("/cmd_vel_mux/input/teleop", 1);
 
@@ -88,7 +96,7 @@ void CommunicationInterface::processScan()
 
   curr_scan_.clear();
   int counter = 0;
-  int resolution = 10; // pick only every ten points outside the interested area
+  int resolution = 10;  // pick only every ten points outside the interested area
   for (int i = 0; i < number_of_laser; i++)
   {
     float laser_angle = angle_min + i * angle_increment;
@@ -106,9 +114,9 @@ void CommunicationInterface::processScan()
     double robot_heading = yaw;
     if (laser_angle > -priority_angle_range_rad && laser_angle < priority_angle_range_rad)
     {
-      if (std::isnan(input_scan_.ranges[i])) // if a point is nan, then the 10
-                                             // points before and after must be nan
-                                             // so that it can be considered empty
+      if (std::isnan(input_scan_.ranges[i]))  // if a point is nan, then the 10
+                                              // points before and after must be nan
+                                              // so that it can be considered empty
       {
         // check the +- 10 points
         if ((priority_angle_range_rad - abs(laser_angle)) / angle_increment < 10)
@@ -136,7 +144,7 @@ void CommunicationInterface::processScan()
         float global_x = x * std::cos(yaw) - y * std::sin(yaw) + pos_x;
         float global_y = x * std::sin(yaw) + y * std::cos(yaw) + pos_y;
 
-        curr_scan_[{global_x, global_y}] = -20;
+        curr_scan_[{ global_x, global_y }] = -20;
         if (range_max > max_dist)
         {
           next_pos.first = range_max * std::cos(laser_angle);
@@ -152,7 +160,7 @@ void CommunicationInterface::processScan()
       float global_y = x * std::sin(yaw) + y * std::cos(yaw) + pos_y;
       if (!std::isnan(global_x) && !std::isnan(global_y))
       {
-        curr_scan_[{global_x, global_y}] = 20;
+        curr_scan_[{ global_x, global_y }] = 20;
       }
       geometry_msgs::Point32 pt;
       pt.x = x;
@@ -183,7 +191,7 @@ void CommunicationInterface::processScan()
         float global_x = x * std::cos(yaw) - y * std::sin(yaw) + pos_x;
         float global_y = x * std::sin(yaw) + y * std::cos(yaw) + pos_y;
 
-        curr_scan_[{global_x, global_y}] = -6;
+        curr_scan_[{ global_x, global_y }] = -6;
 
         continue;
       }
@@ -191,7 +199,7 @@ void CommunicationInterface::processScan()
       float global_y = x * std::sin(yaw) + y * std::cos(yaw) + pos_y;
       if (!std::isnan(global_x) && !std::isnan(global_y))
       {
-        curr_scan_[{global_x, global_y}] = 6;
+        curr_scan_[{ global_x, global_y }] = 6;
       }
       geometry_msgs::Point32 pt;
       pt.x = x;
@@ -203,7 +211,7 @@ void CommunicationInterface::processScan()
   }
   if (reached_pos_)
   {
-    estimated_pos_ = next_pos;
+    // estimated_pos_ = next_pos;
   }
 }
 
@@ -222,7 +230,7 @@ void CommunicationInterface::robotPositionCallback(const nav_msgs::Odometry::Con
 
 void CommunicationInterface::processOdom()
 {
-  //map_local_.SetPos(input_odom_.pose.pose);
+  // map_local_.SetPos(input_odom_.pose.pose);
   PIDController pid_angle(1, 0.2, 2.5);
   PIDController pid_speed(0.1, 0.00, 0.0);
 
@@ -238,11 +246,13 @@ void CommunicationInterface::processOdom()
   m.getRPY(roll, pitch, yaw);
   double robot_heading = yaw;
   // transform estimated_pos_ into absolute pos
-  if (reached_pos_)
-  {
-    goal_.first = estimated_pos_.first * std::cos(yaw) - estimated_pos_.second * std::sin(yaw) + pos_x;
-    goal_.second = estimated_pos_.first * std::sin(yaw) + estimated_pos_.second * std::cos(yaw) + pos_y;
-  }
+
+  // goal_.first = estimated_pos_.first * std::cos(yaw) - estimated_pos_.second * std::sin(yaw) + pos_x;
+  // goal_.second = estimated_pos_.first * std::sin(yaw) + estimated_pos_.second * std::cos(yaw) + pos_y;
+  goal_.first = estimated_pos_.first;
+  goal_.second = estimated_pos_.second;
+
+  std::cerr << "goal " << goal_.first << " " << goal_.second << std::endl;
   curr_robot_pos_.first = pos_x;
   curr_robot_pos_.second = pos_y;
 
@@ -315,14 +325,12 @@ void CommunicationInterface::processOdom()
     // std::cerr << "not reached yet" << std::endl;
     // std::cerr << "curr pos: " << curr_robot_pos_.first << " " << curr_robot_pos_.second << " "
     //           << "next pos: " << goal_.first << " " << goal_.second << std::endl;
-    reached_pos_ = false;
   }
   else
   {
     // std::cerr << "arrived" << std::endl;
     // std::cerr << "curr pos: " << curr_robot_pos_.first << " " << curr_robot_pos_.second << " "
     //           << "next pos: " << goal_.first << " " << goal_.second << std::endl;
-    reached_pos_ = true;
 
     output_twist_.linear.x = 0;
 
@@ -357,8 +365,45 @@ void CommunicationInterface::publishLocalMap()
 
 void CommunicationInterface::cycle(Map &map)
 {
+  // check if a new goal is received; if so, update the planned path
+  if (!new_goal_updated_)
+  {
+    setPath(map);
+    // std::cerr << planned_path_vec_.size() << std::endl;
+  }
+  // process the received scan
   processScan();
   processOdom();
+  //
+  if (fabs(curr_robot_pos_.first - goal_.first) > 1e-1 || fabs(curr_robot_pos_.first - goal_.first) > 1e-1)
+  {
+    reached_pos_ = true;
+  }
+  else
+  {
+    reached_pos_ = false;
+  }
+
+  if (reached_pos_)
+  {
+    if (planned_path_vec_.empty())
+    {
+      std::cerr << "Finished. Planned pos (" << final_goal_.first << "," << final_goal_.second << ") is reached."
+                << "(current robot pos: (" << curr_robot_pos_.first << "," << curr_robot_pos_.second << "))"
+                << std::endl;
+    }
+    else
+    {
+      auto first_elem = planned_path_vec_.begin();
+      planned_path_vec_.erase(first_elem);  // remove the reached pos from path
+    }
+  }
+  else
+  {
+    estimated_pos_.first = planned_path_vec_[0].first;
+    estimated_pos_.second = planned_path_vec_[0].second;
+  }
+
   publishTwist();
   publishPointCloud();
 
@@ -372,15 +417,49 @@ void CommunicationInterface::cycle(Map &map)
   // publish the updated local map
   publishLocalMap();
 }
-/*
-void CommunicationInterface::setGoalCallback()
+
+void CommunicationInterface::setGoalCallback(const geometry_msgs::PoseStamped::ConstPtr &goal)
 {
   // compare current goal with new goal
   // if different, then call global path-planning
   // clear the old path, save the new path
   // if same, then skip
+
+  if (final_goal_.first != goal->pose.position.x || final_goal_.second != goal->pose.position.y)
+  {
+    // std::cerr << "The goal is changed from (" << final_goal_.first << " " << final_goal_.second << ") to ("
+    //           << goal->pose.position.x << " " << goal->pose.position.y << ")" << std::endl;
+    // update the current goal
+    final_goal_.first = goal->pose.position.x;
+    final_goal_.second = goal->pose.position.y;
+    new_goal_updated_ = false;
+  }
 }
 
+void CommunicationInterface::setPath(const Map map)
+{
+  // delete the old planned path
+  planned_path_vec_.clear();
+  // get a new path
+  Point2D start_pos(curr_robot_pos_.first, curr_robot_pos_.second);  // ??????
+  Point2D end_pos(final_goal_.first, final_goal_.second);
+  std::vector<Point2D> planned_path;
+  planned_path = PathPlanning::PathPlanning(start_pos, end_pos, map, true);
+  // planned_path = {{1, 1}, {2, 2}, {3, 0}};
+  for (int i = 0; i < planned_path.size(); i++)
+  {
+    Point2DWithFloat pt_float;
+    transformPoint2DToPoint2DWithFloat(planned_path[i], pt_float);
+    planned_path_vec_.push_back(pt_float);
+  }
+  new_goal_updated_ = true;
+  reached_pos_ = false;
+
+  estimated_pos_.first = planned_path_vec_[0].first;
+  estimated_pos_.second = planned_path_vec_[0].second;
+  std::cerr << estimated_pos_.first << " " << estimated_pos_.second << std::endl;
+}
+/*
 void CommunicationInterface::cycle(Map &map)
 {
   // always update the global map, no matter we have goal or not
