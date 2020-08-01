@@ -4,6 +4,7 @@
 
 #include "common.h"
 #include <nav_msgs/OccupancyGrid.h>
+#include <geometry_msgs/Pose.h>
 #include <ros/ros.h>
 #include <tf2/LinearMath/Quaternion.h>
 
@@ -19,10 +20,9 @@ public:
   ~Map(){};
 
   /**
-   * set the position of the map
-   * @param input float x, float y: position of (0,0) cell
+   * reset all the map data to -1
    */
-  void SetPos(float x, float y);
+  void ResetMapData();
 
   /**
    * overload the [] function to simplify getting the cell status
@@ -55,15 +55,17 @@ public:
    * update the occupied probability of the cell
    * @param input int x, int y: position in each quadrant
    * @param input int value: update probability
+   * @param input bool global: if this is local map, then call the local update
    */
-  status::status Update(int x, int y, int update_value);
+  status::status Update(int x, int y, int update_value, bool global);
 
   /**
    * update the occupied probability of the cell
    * @param input Point2D pos: position in each quadrant
    * @param input int value: update probability
+   * @param input bool global: if this is local map, then call the local update
    */
-  status::status Update(Point2D pos, int update_value);
+  status::status Update(Point2D pos, int update_value, bool global);
 
   /**
    * update the probability of the points, which are in the line between the
@@ -71,9 +73,30 @@ public:
    * @param input int x0, int y0: position of robot
    * @param input int x1, int y1: position of target point
    * @param input int update_value: the should be added probability
+   * @param input bool global: if this is local map, then call the local update
    */
   status::status UpdateWithScanPoint(float x0, float y0, float x1, float y1,
-                                     int update_value);
+                                     int update_value, bool global);
+
+  /**
+   * update the probability of the points with input unordered_map
+   * @param input Point2DWithFloat robot_pos: current robot position(float)
+   * @param input ScanPointsFloatWithUpdateValue curr_scan: current scan points
+   *              with the cooresponding update value
+   */
+  status::status UpdateWithScanPoints(Point2DWithFloat robot_pos,
+                                      ScanPointsFloatWithUpdateValue curr_scan);
+
+  /**
+   * at first clear all the data from last cycle, then update the probability
+   * of the points in the local map with input unordered_map, all the points
+   * outside the local map should not be calculated
+   * @param input Point2DWithFloat robot_pos: current robot position(float)
+   * @param input ScanPointsFloatWithUpdateValue curr_scan: current scan points
+   *              with the cooresponding update value
+   */
+  status::status UpdateLocalMapWithScanPoints(Point2DWithFloat robot_pos,
+                                              ScanPointsFloatWithUpdateValue curr_scan);
 
   /**
    * get the line-points with gradient between 0 and 1
@@ -152,9 +175,10 @@ private:
    * @param input int x, int y: position in each quadrant
    * @param input int qua: number of quadrant
    * @param input int value: update probability
+   * @param input bool global: if this is local map, then do not extend the map size
    * @return CellOccupied: status of this cell
    */
-  status::status UpdateCellInSingleQuadrant(int x, int y, int qua, int value);
+  status::status UpdateCellInSingleQuadrant(int x, int y, int qua, int value, bool global);
 
   /**
    * transform the position from float real position to int grid position

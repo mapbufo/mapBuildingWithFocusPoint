@@ -83,7 +83,7 @@ void CommunicationInterface::processScan()
   filtered_point_cloud_.header.seq = frame_id_;
   frame_id_++;
 
-  std::pair<float, float> next_pos(0, 0);
+  Point2DWithFloat next_pos(0, 0);
   float max_dist = 0;
 
   curr_scan_.clear();
@@ -183,7 +183,7 @@ void CommunicationInterface::processScan()
         float global_x = x * std::cos(yaw) - y * std::sin(yaw) + pos_x;
         float global_y = x * std::sin(yaw) + y * std::cos(yaw) + pos_y;
 
-        curr_scan_[{global_x, global_y}] = 6;
+        curr_scan_[{global_x, global_y}] = -6;
 
         continue;
       }
@@ -222,6 +222,7 @@ void CommunicationInterface::robotPositionCallback(const nav_msgs::Odometry::Con
 
 void CommunicationInterface::processOdom()
 {
+  //map_local_.SetPos(input_odom_.pose.pose);
   PIDController pid_angle(1, 0.2, 2.5);
   PIDController pid_speed(0.1, 0.00, 0.0);
 
@@ -361,11 +362,10 @@ void CommunicationInterface::cycle(Map &map)
   publishTwist();
   publishPointCloud();
 
-  for (auto point : curr_scan_)
-  {
-    map.UpdateWithScanPoint(curr_robot_pos_.first, curr_robot_pos_.second,
-                            point.first.first, point.first.second, point.second);
-  }
+  map.UpdateWithScanPoints(curr_robot_pos_, curr_scan_);
+
+  map_local_.UpdateLocalMapWithScanPoints(curr_robot_pos_, curr_scan_);
+
   // publish the updated global map
   publishGlobalMap(map);
 
