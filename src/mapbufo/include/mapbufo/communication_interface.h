@@ -46,11 +46,11 @@ private:
   message_filters::Subscriber<nav_msgs::Odometry> odom_sub;
   message_filters::TimeSynchronizer<sensor_msgs::LaserScan, nav_msgs::Odometry> sync;
 
-  boost::unordered_map<std::pair<float, float>, int> curr_scan_;
+  ScanPointsFloatWithUpdateValue curr_scan_;
   bool reached_pos_ = true;
-  std::pair<float, float> curr_robot_pos_;
-  std::pair<float, float> estimated_pos_;
-  std::pair<float, float> goal_;
+  Point2DWithFloat curr_robot_pos_;
+  Point2DWithFloat estimated_pos_;
+  Point2DWithFloat goal_;
   bool angle_setted = false;
   nav_msgs::Odometry input_odom_;
   nav_msgs::Odometry input_odom_at_scan_;

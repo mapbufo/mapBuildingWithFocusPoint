@@ -7,12 +7,19 @@
 #include <utility>
 #include <vector>
 
-namespace status {
-enum status { Error = 0, Ok = 1, Undifined = 2 };
+namespace status
+{
+  enum status
+  {
+    Error = 0,
+    Ok = 1,
+    Undifined = 2
+  };
 
 }
 
-enum CellOccupied {
+enum CellOccupied
+{
   empty = 0,
   occupied = 1,
   unknown = 2,
@@ -22,6 +29,8 @@ enum CellOccupied {
   target_pos = 6
 };
 typedef std::pair<int, int> Point2D;
+typedef std::pair<float, float> Point2DWithFloat;
 typedef boost::unordered_map<Point2D, CellOccupied> ScanData;
+typedef boost::unordered_map<Point2DWithFloat, int> ScanPointsFloatWithUpdateValue;
 
 #endif // !COMMON_H
