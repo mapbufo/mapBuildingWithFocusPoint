@@ -1,7 +1,7 @@
 #include "communication_interface.h"
 
 CommunicationInterface::CommunicationInterface(ros::NodeHandle &nh)
-  : sync(scan_sub, odom_sub, 10), map_local_(nh, 0.01, 100, 100)
+    : sync(scan_sub, odom_sub, 10), map_local_(nh, 0.01, 100, 100)
 {
   // input: laserscan, robot_position
   scan_sub.subscribe(nh, "/scan", 10);
@@ -15,7 +15,12 @@ CommunicationInterface::CommunicationInterface(ros::NodeHandle &nh)
   reached_pos_ = false;
   final_goal_.first = 0;
   final_goal_.second = 0;
-
+  curr_robot_pos_.first = 0;
+  curr_robot_pos_.second = 0;
+  goal_.first = 0;
+  goal_.second = 0;
+  goal_.first = 0;
+  goal_.second = 0;
   // output: robot_control
   control_publisher_ = nh.advertise<geometry_msgs::Twist>("/cmd_vel_mux/input/teleop", 1);
 
@@ -96,7 +101,7 @@ void CommunicationInterface::processScan()
 
   curr_scan_.clear();
   int counter = 0;
-  int resolution = 10;  // pick only every ten points outside the interested area
+  int resolution = 10; // pick only every ten points outside the interested area
   for (int i = 0; i < number_of_laser; i++)
   {
     float laser_angle = angle_min + i * angle_increment;
@@ -114,9 +119,9 @@ void CommunicationInterface::processScan()
     double robot_heading = yaw;
     if (laser_angle > -priority_angle_range_rad && laser_angle < priority_angle_range_rad)
     {
-      if (std::isnan(input_scan_.ranges[i]))  // if a point is nan, then the 10
-                                              // points before and after must be nan
-                                              // so that it can be considered empty
+      if (std::isnan(input_scan_.ranges[i])) // if a point is nan, then the 10
+                                             // points before and after must be nan
+                                             // so that it can be considered empty
       {
         // check the +- 10 points
         if ((priority_angle_range_rad - abs(laser_angle)) / angle_increment < 10)
@@ -144,7 +149,7 @@ void CommunicationInterface::processScan()
         float global_x = x * std::cos(yaw) - y * std::sin(yaw) + pos_x;
         float global_y = x * std::sin(yaw) + y * std::cos(yaw) + pos_y;
 
-        curr_scan_[{ global_x, global_y }] = -20;
+        curr_scan_[{global_x, global_y}] = -20;
         if (range_max > max_dist)
         {
           next_pos.first = range_max * std::cos(laser_angle);
@@ -154,13 +159,13 @@ void CommunicationInterface::processScan()
         continue;
       }
 
-      // transform estimated_pos_ into absolute pos
+      // transform goal_ into absolute pos
 
       float global_x = x * std::cos(yaw) - y * std::sin(yaw) + pos_x;
       float global_y = x * std::sin(yaw) + y * std::cos(yaw) + pos_y;
       if (!std::isnan(global_x) && !std::isnan(global_y))
       {
-        curr_scan_[{ global_x, global_y }] = 20;
+        curr_scan_[{global_x, global_y}] = 20;
       }
       geometry_msgs::Point32 pt;
       pt.x = x;
@@ -191,7 +196,7 @@ void CommunicationInterface::processScan()
         float global_x = x * std::cos(yaw) - y * std::sin(yaw) + pos_x;
         float global_y = x * std::sin(yaw) + y * std::cos(yaw) + pos_y;
 
-        curr_scan_[{ global_x, global_y }] = -6;
+        curr_scan_[{global_x, global_y}] = -6;
 
         continue;
       }
@@ -199,7 +204,7 @@ void CommunicationInterface::processScan()
       float global_y = x * std::sin(yaw) + y * std::cos(yaw) + pos_y;
       if (!std::isnan(global_x) && !std::isnan(global_y))
       {
-        curr_scan_[{ global_x, global_y }] = 6;
+        curr_scan_[{global_x, global_y}] = 6;
       }
       geometry_msgs::Point32 pt;
       pt.x = x;
@@ -208,10 +213,6 @@ void CommunicationInterface::processScan()
 
       filtered_point_cloud_.points.push_back(pt);
     }
-  }
-  if (reached_pos_)
-  {
-    // estimated_pos_ = next_pos;
   }
 }
 
@@ -240,19 +241,15 @@ void CommunicationInterface::processOdom()
   twist = input_odom_.twist.twist;
   double pos_x = pose.position.x;
   double pos_y = pose.position.y;
+
   tf::Quaternion q(pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w);
   tf::Matrix3x3 m(q);
   double roll, pitch, yaw;
   m.getRPY(roll, pitch, yaw);
   double robot_heading = yaw;
-  // transform estimated_pos_ into absolute pos
-
-  // goal_.first = estimated_pos_.first * std::cos(yaw) - estimated_pos_.second * std::sin(yaw) + pos_x;
-  // goal_.second = estimated_pos_.first * std::sin(yaw) + estimated_pos_.second * std::cos(yaw) + pos_y;
-  goal_.first = estimated_pos_.first;
-  goal_.second = estimated_pos_.second;
 
   std::cerr << "goal " << goal_.first << " " << goal_.second << std::endl;
+  std::cerr << "curr robo pos " << pos_x << " " << pos_y << std::endl;
   curr_robot_pos_.first = pos_x;
   curr_robot_pos_.second = pos_y;
 
@@ -320,17 +317,13 @@ void CommunicationInterface::processOdom()
   output_twist_.angular.y = 0.0;
   output_twist_.angular.z = set_angle;
 
-  if (fabs(curr_robot_pos_.first - goal_.first) > 1e-1 || fabs(curr_robot_pos_.first - goal_.first) > 1e-1)
+  if (fabs(curr_robot_pos_.first - goal_.first) > 1e-1 || fabs(curr_robot_pos_.second - goal_.second) > 1e-1)
   {
-    // std::cerr << "not reached yet" << std::endl;
-    // std::cerr << "curr pos: " << curr_robot_pos_.first << " " << curr_robot_pos_.second << " "
-    //           << "next pos: " << goal_.first << " " << goal_.second << std::endl;
+    std::cerr << "not reached yet" << std::endl;
   }
   else
   {
-    // std::cerr << "arrived" << std::endl;
-    // std::cerr << "curr pos: " << curr_robot_pos_.first << " " << curr_robot_pos_.second << " "
-    //           << "next pos: " << goal_.first << " " << goal_.second << std::endl;
+    std::cerr << "reached" << std::endl;
 
     output_twist_.linear.x = 0;
 
@@ -373,49 +366,58 @@ void CommunicationInterface::cycle(Map &map)
   }
   // process the received scan
   processScan();
-  processOdom();
-  //
-  if (fabs(curr_robot_pos_.first - goal_.first) > 1e-1 || fabs(curr_robot_pos_.first - goal_.first) > 1e-1)
-  {
-    reached_pos_ = true;
-  }
-  else
-  {
-    reached_pos_ = false;
-  }
-
-  if (reached_pos_)
-  {
-    if (planned_path_vec_.empty())
-    {
-      std::cerr << "Finished. Planned pos (" << final_goal_.first << "," << final_goal_.second << ") is reached."
-                << "(current robot pos: (" << curr_robot_pos_.first << "," << curr_robot_pos_.second << "))"
-                << std::endl;
-    }
-    else
-    {
-      auto first_elem = planned_path_vec_.begin();
-      planned_path_vec_.erase(first_elem);  // remove the reached pos from path
-    }
-  }
-  else
-  {
-    estimated_pos_.first = planned_path_vec_[0].first;
-    estimated_pos_.second = planned_path_vec_[0].second;
-  }
-
-  publishTwist();
-  publishPointCloud();
-
-  map.UpdateWithScanPoints(curr_robot_pos_, curr_scan_);
-
-  map_local_.UpdateLocalMapWithScanPoints(curr_robot_pos_, curr_scan_);
-
   // publish the updated global map
   publishGlobalMap(map);
 
   // publish the updated local map
   publishLocalMap();
+  //
+  if (fabs(curr_robot_pos_.first - goal_.first) < 1e-1 && fabs(curr_robot_pos_.second - goal_.second) < 1e-1)
+  {
+    std::cerr << 1 << std::endl;
+    reached_pos_ = true;
+  }
+  else
+  {
+    std::cerr << 2 << std::endl;
+    reached_pos_ = false;
+  }
+
+  if (reached_pos_)
+  {
+    std::cerr << 3 << std::endl;
+    if (!planned_path_vec_.empty())
+    {
+      std::cerr << "reached a planned pos, remaining poses are:" << std::endl;
+      // std::cerr << "NOT finished. Planned pos (" << final_goal_.first << "," << final_goal_.second << ") is reached."
+      //           << "(current robot pos: (" << curr_robot_pos_.first << "," << curr_robot_pos_.second << "))"
+      //           << std::endl;
+      auto first_elem = planned_path_vec_.begin();
+      planned_path_vec_.erase(first_elem); // remove the reached pos from path
+      for (auto pt : planned_path_vec_)
+      {
+        std::cerr << pt.first << " " << pt.second << std::endl;
+      }
+      reached_pos_ = false;
+      std::cerr << 4 << std::endl;
+    }
+  }
+  else
+  {
+    std::cerr << 5 << std::endl;
+    if (!planned_path_vec_.empty())
+    {
+      std::cerr << 6 << std::endl;
+      goal_.first = planned_path_vec_[0].first;
+      goal_.second = planned_path_vec_[0].second;
+    }
+  }
+  processOdom();
+  publishTwist();
+
+  map.UpdateWithScanPoints(curr_robot_pos_, curr_scan_);
+
+  map_local_.UpdateLocalMapWithScanPoints(curr_robot_pos_, curr_scan_);
 }
 
 void CommunicationInterface::setGoalCallback(const geometry_msgs::PoseStamped::ConstPtr &goal)
@@ -427,8 +429,8 @@ void CommunicationInterface::setGoalCallback(const geometry_msgs::PoseStamped::C
 
   if (final_goal_.first != goal->pose.position.x || final_goal_.second != goal->pose.position.y)
   {
-    // std::cerr << "The goal is changed from (" << final_goal_.first << " " << final_goal_.second << ") to ("
-    //           << goal->pose.position.x << " " << goal->pose.position.y << ")" << std::endl;
+    std::cerr << "The goal is changed from (" << final_goal_.first << " " << final_goal_.second << ") to ("
+              << goal->pose.position.x << " " << goal->pose.position.y << ")" << std::endl;
     // update the current goal
     final_goal_.first = goal->pose.position.x;
     final_goal_.second = goal->pose.position.y;
@@ -441,7 +443,7 @@ void CommunicationInterface::setPath(const Map map)
   // delete the old planned path
   planned_path_vec_.clear();
   // get a new path
-  Point2D start_pos(curr_robot_pos_.first, curr_robot_pos_.second);  // ??????
+  Point2D start_pos(curr_robot_pos_.first, curr_robot_pos_.second); // ??????
   Point2D end_pos(final_goal_.first, final_goal_.second);
   std::vector<Point2D> planned_path;
   planned_path = PathPlanning::PathPlanning(start_pos, end_pos, map, true);
@@ -455,9 +457,9 @@ void CommunicationInterface::setPath(const Map map)
   new_goal_updated_ = true;
   reached_pos_ = false;
 
-  estimated_pos_.first = planned_path_vec_[0].first;
-  estimated_pos_.second = planned_path_vec_[0].second;
-  std::cerr << estimated_pos_.first << " " << estimated_pos_.second << std::endl;
+  goal_.first = planned_path_vec_[0].first;
+  goal_.second = planned_path_vec_[0].second;
+  std::cerr << goal_.first << " " << goal_.second << std::endl;
 }
 /*
 void CommunicationInterface::cycle(Map &map)
