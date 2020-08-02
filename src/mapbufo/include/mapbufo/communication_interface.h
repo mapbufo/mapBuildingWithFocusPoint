@@ -53,6 +53,8 @@ private:
   message_filters::TimeSynchronizer<sensor_msgs::LaserScan, nav_msgs::Odometry> sync;
 
   ScanPointsFloatWithUpdateValue curr_scan_;
+  ScanPointsFloatWithUpdateValue curr_local_scan_;
+
   bool reached_pos_ = true;
   Point2DWithFloat curr_robot_pos_;
   Point2DWithFloat estimated_pos_;
@@ -61,7 +63,6 @@ private:
   nav_msgs::Odometry input_odom_;
   nav_msgs::Odometry input_odom_at_scan_;
   sensor_msgs::LaserScan input_scan_;
-  sensor_msgs::PointCloud filtered_point_cloud_;
   geometry_msgs::Twist output_twist_;
 
   Point2DWithFloat final_goal_;
@@ -93,11 +94,6 @@ public:
    * filter the sensor data, transform them into global-coordinate
    */
   void processScan();
-
-  /**
-   * publish the received sensor date for debugging
-   */
-  void publishPointCloud();
 
   /**
    * save the received messages
@@ -132,4 +128,4 @@ public:
    */
   void cycle(Map &map);
 };
-#endif // COMMUNICATION_INTERFACE_H
+#endif  // COMMUNICATION_INTERFACE_H

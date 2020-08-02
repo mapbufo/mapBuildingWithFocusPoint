@@ -1,7 +1,7 @@
 #include "communication_interface.h"
 
 CommunicationInterface::CommunicationInterface(ros::NodeHandle &nh)
-    : sync(scan_sub, odom_sub, 10), map_local_(nh, 0.01, 100, 100)
+  : sync(scan_sub, odom_sub, 10), map_local_(nh, 0.01, 100, 100)
 {
   // input: laserscan, robot_position
   scan_sub.subscribe(nh, "/scan", 10);
@@ -101,20 +101,13 @@ void CommunicationInterface::processScan()
   // 3: priority end
   // 4: angle max
 
-  // process scan
-  filtered_point_cloud_.points.clear();
-  static int frame_id_ = 0;
-  filtered_point_cloud_.header.frame_id = "/base_footprint";
-  filtered_point_cloud_.header.stamp = ros::Time::now();
-  filtered_point_cloud_.header.seq = frame_id_;
-  frame_id_++;
-
   Point2DWithFloat next_pos(0, 0);
   float max_dist = 0;
 
   curr_scan_.clear();
+  curr_local_scan_.clear();
   int counter = 0;
-  int resolution = 10; // pick only every ten points outside the interested area
+  int resolution = 10;  // pick only every ten points outside the interested area
   for (int i = 0; i < number_of_laser; i++)
   {
     float laser_angle = angle_min + i * angle_increment;
@@ -132,9 +125,9 @@ void CommunicationInterface::processScan()
     double robot_heading = yaw;
     if (laser_angle > -priority_angle_range_rad && laser_angle < priority_angle_range_rad)
     {
-      if (std::isnan(input_scan_.ranges[i])) // if a point is nan, then the 10
-                                             // points before and after must be nan
-                                             // so that it can be considered empty
+      if (std::isnan(input_scan_.ranges[i]))  // if a point is nan, then the 10
+                                              // points before and after must be nan
+                                              // so that it can be considered empty
       {
         // check the +- 10 points
         if ((priority_angle_range_rad - abs(laser_angle)) / angle_increment < 10)
@@ -159,10 +152,10 @@ void CommunicationInterface::processScan()
         }
         float x = range_max * std::cos(laser_angle);
         float y = range_max * std::sin(laser_angle);
+        curr_local_scan_[{ x, y }] = -20;
         float global_x = x * std::cos(yaw) - y * std::sin(yaw) + pos_x;
         float global_y = x * std::sin(yaw) + y * std::cos(yaw) + pos_y;
-
-        curr_scan_[{global_x, global_y}] = -20;
+        curr_scan_[{ global_x, global_y }] = -20;
         if (range_max > max_dist)
         {
           next_pos.first = range_max * std::cos(laser_angle);
@@ -172,20 +165,18 @@ void CommunicationInterface::processScan()
         continue;
       }
 
-      // transform goal_ into absolute pos
-
       float global_x = x * std::cos(yaw) - y * std::sin(yaw) + pos_x;
       float global_y = x * std::sin(yaw) + y * std::cos(yaw) + pos_y;
       if (!std::isnan(global_x) && !std::isnan(global_y))
       {
-        curr_scan_[{global_x, global_y}] = 20;
+        curr_local_scan_[{ x, y }] = 20;
+        curr_scan_[{ global_x, global_y }] = 20;
       }
       geometry_msgs::Point32 pt;
       pt.x = x;
       pt.y = y;
       pt.z = 0;
 
-      filtered_point_cloud_.points.push_back(pt);
       if (input_scan_.ranges[i] > max_dist)
       {
         next_pos.first = x;
@@ -208,8 +199,8 @@ void CommunicationInterface::processScan()
         float y = range_max * std::sin(laser_angle);
         float global_x = x * std::cos(yaw) - y * std::sin(yaw) + pos_x;
         float global_y = x * std::sin(yaw) + y * std::cos(yaw) + pos_y;
-
-        curr_scan_[{global_x, global_y}] = -6;
+        curr_local_scan_[{ x, y }] = -6;
+        curr_scan_[{ global_x, global_y }] = -6;
 
         continue;
       }
@@ -217,21 +208,15 @@ void CommunicationInterface::processScan()
       float global_y = x * std::sin(yaw) + y * std::cos(yaw) + pos_y;
       if (!std::isnan(global_x) && !std::isnan(global_y))
       {
-        curr_scan_[{global_x, global_y}] = 6;
+        curr_local_scan_[{ x, y }] = 6;
+        curr_scan_[{ global_x, global_y }] = 6;
       }
       geometry_msgs::Point32 pt;
       pt.x = x;
       pt.y = y;
       pt.z = 0;
-
-      filtered_point_cloud_.points.push_back(pt);
     }
   }
-}
-
-void CommunicationInterface::publishPointCloud()
-{
-  scan_publisher_.publish(filtered_point_cloud_);
 }
 
 void CommunicationInterface::robotPositionCallback(const nav_msgs::Odometry::ConstPtr &odom)
@@ -411,7 +396,8 @@ void CommunicationInterface::cycle(Map &map)
   processScan();
 
   map.UpdateWithScanPoints(curr_robot_pos_, curr_scan_);
-  map_local_.UpdateLocalMapWithScanPoints(curr_robot_pos_, curr_scan_);
+
+  map_local_.UpdateLocalMapWithScanPoints({ 0, 0 }, curr_local_scan_);
 
   // check if a new goal is received; if so, update the planned path
   if (!new_goal_updated_)
@@ -432,7 +418,7 @@ void CommunicationInterface::cycle(Map &map)
     if (!planned_path_vec_.empty())
     {
       std::cerr << "reached a planned pos, remaining poses are:" << std::endl;
-      planned_path_vec_.erase(begin(planned_path_vec_)); // remove the reached pos from path
+      planned_path_vec_.erase(begin(planned_path_vec_));  // remove the reached pos from path
       for (auto pt : planned_path_vec_)
       {
         std::cerr << pt.first << " " << pt.second << std::endl;
