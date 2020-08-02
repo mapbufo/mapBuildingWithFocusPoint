@@ -50,7 +50,7 @@ CommunicationInterface::CommunicationInterface(ros::NodeHandle &nh)
   path_line_.pose.orientation.w = 1.0;
   path_line_.scale.x = 0.05;
   path_line_.color.g = 1.0;
-  path_line_.color.a = 0.4;
+  path_line_.color.a = 0.6;
 }
 
 void CommunicationInterface::scanOdomCallback(const sensor_msgs::LaserScan::ConstPtr &scan,
