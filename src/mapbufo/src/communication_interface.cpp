@@ -262,8 +262,6 @@ void CommunicationInterface::processOdom()
   double robot_heading = yaw;
   // transform goal_ into absolute pos
 
-  // std::cerr << "goal " << goal_.first << " " << goal_.second << std::endl;
-  // std::cerr << "curr robo pos " << pos_x << " " << pos_y << std::endl;
   curr_robot_pos_.first = pos_x;
   curr_robot_pos_.second = pos_y;
 
@@ -409,42 +407,32 @@ void CommunicationInterface::publishPlannedPath(std::vector<Point2DWithFloat> pa
 
 void CommunicationInterface::cycle(Map &map)
 {
+  // process the received scan
+  processScan();
+
+  map.UpdateWithScanPoints(curr_robot_pos_, curr_scan_);
+  map_local_.UpdateLocalMapWithScanPoints(curr_robot_pos_, curr_scan_);
+
   // check if a new goal is received; if so, update the planned path
   if (!new_goal_updated_)
   {
     setPath(map);
-    // std::cerr << planned_path_vec_.size() << std::endl;
   }
-  // process the received scan
-  processScan();
-  // publish the updated global map
-  publishGlobalMap(map);
-
-  // publish the updated local map
-  publishLocalMap();
-  //
   if (fabs(curr_robot_pos_.first - goal_.first) < 1e-1 && fabs(curr_robot_pos_.second - goal_.second) < 1e-1)
   {
-    // std::cerr << 1 << std::endl;
     reached_pos_ = true;
   }
   else
   {
-    // std::cerr << 2 << std::endl;
     reached_pos_ = false;
   }
 
   if (reached_pos_)
   {
-    // std::cerr << 3 << std::endl;
     if (!planned_path_vec_.empty())
     {
       std::cerr << "reached a planned pos, remaining poses are:" << std::endl;
-      // std::cerr << "NOT finished. Planned pos (" << final_goal_.first << "," << final_goal_.second << ") is reached."
-      //           << "(current robot pos: (" << curr_robot_pos_.first << "," << curr_robot_pos_.second << "))"
-      //           << std::endl;
-      auto first_elem = planned_path_vec_.begin();
-      planned_path_vec_.erase(first_elem); // remove the reached pos from path
+      planned_path_vec_.erase(begin(planned_path_vec_)); // remove the reached pos from path
       for (auto pt : planned_path_vec_)
       {
         std::cerr << pt.first << " " << pt.second << std::endl;
@@ -454,26 +442,17 @@ void CommunicationInterface::cycle(Map &map)
       {
         goal_.first = planned_path_vec_[0].first;
         goal_.second = planned_path_vec_[0].second;
-        // std::cerr << 4 << std::endl;
       }
     }
   }
-  else
-  {
-    // std::cerr << 5 << std::endl;
-    if (!planned_path_vec_.empty())
-    {
-      // std::cerr << 6 << std::endl;
-      goal_.first = planned_path_vec_[0].first;
-      goal_.second = planned_path_vec_[0].second;
-    }
-  }
   processOdom();
+
   publishTwist();
 
-  map.UpdateWithScanPoints(curr_robot_pos_, curr_scan_);
-
-  map_local_.UpdateLocalMapWithScanPoints(curr_robot_pos_, curr_scan_);
+  // publish the updated global map
+  publishGlobalMap(map);
+  // publish the updated local map
+  publishLocalMap();
 
   publishPlannedPath(planned_path_vec_);
 }
@@ -484,11 +463,8 @@ void CommunicationInterface::setGoalCallback(const geometry_msgs::PoseStamped::C
   // if different, then call global path-planning
   // clear the old path, save the new path
   // if same, then skip
-
   if (final_goal_.first != goal->pose.position.x || final_goal_.second != goal->pose.position.y)
   {
-    // std::cerr << "The goal is changed from (" << final_goal_.first << " " << final_goal_.second << ") to ("
-    //           << goal->pose.position.x << " " << goal->pose.position.y << ")" << std::endl;
     // update the current goal
     final_goal_.first = goal->pose.position.x;
     final_goal_.second = goal->pose.position.y;
@@ -505,7 +481,7 @@ void CommunicationInterface::setPath(const Map map)
   Point2D end_pos = TransformIndex(final_goal_.first, final_goal_.second, 0.1);
   std::vector<Point2D> planned_path;
   planned_path = PathPlanning::PathPlanning(start_pos, end_pos, map, true);
-  // planned_path = {{1, 1}, {2, 2}, {3, 0}};
+
   for (int i = 0; i < planned_path.size(); i++)
   {
     Point2DWithFloat pt_float;
@@ -517,35 +493,4 @@ void CommunicationInterface::setPath(const Map map)
 
   goal_.first = planned_path_vec_[0].first;
   goal_.second = planned_path_vec_[0].second;
-  // std::cerr << goal_.first << " " << goal_.second << std::endl;
 }
-/*
-void CommunicationInterface::cycle(Map &map)
-{
-  // always update the global map, no matter we have goal or not
-  processScan();
-
-  for (auto point : curr_scan_)
-  {
-    map.UpdateWithScanPoint(curr_robot_pos_.first, curr_robot_pos_.second,
-                            point.first.first, point.first.second, point.second);
-  }
-
-  // publish the updated global map
-  publishGlobalMap(map);
-
-  // publish the updated local map
-  publishLocalMap();
-
-  // check if we have global path
-  // if not, return
-  // if yes, then get the first target from the saved global path
-
-  // call local path-planning with the first target from global path
-  // transform the local path into global coordinate, update the path vector
-  // move in processOdom()
-  processOdom();
-
-  publishTwist();
-}
-*/
