@@ -115,6 +115,14 @@ namespace PathPlanning
   std::vector<Point2D> PathPlanning(Point2D start_pos, Point2D end_pos,
                                     const Map &map, bool global)
   {
+    // result path
+    std::vector<Point2D> path;
+    // check if start position same as end position
+    if (start_pos.first == end_pos.first && start_pos.second == end_pos.second)
+    {
+      path.push_back(end_pos);
+      return path;
+    }
     // find all frontier and sort them with priority
     std::vector<Point2DWithFloat> frontier;
     // set the priority of start_position to 0
@@ -179,7 +187,6 @@ namespace PathPlanning
     }
 
     // get the path with the saved parents list
-    std::vector<Point2D> path;
     Point2D path_current_point = end_pos;
     while (path_current_point != start_pos)
     {
