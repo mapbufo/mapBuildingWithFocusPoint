@@ -48,6 +48,7 @@ private:
   message_filters::Subscriber<nav_msgs::Odometry> odom_sub;
   message_filters::TimeSynchronizer<sensor_msgs::LaserScan, nav_msgs::Odometry> sync;
 
+ 
   ScanPointsFloatWithUpdateValue curr_scan_;
   bool reached_pos_ = true;
   Point2DWithFloat curr_robot_pos_;

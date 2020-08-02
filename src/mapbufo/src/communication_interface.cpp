@@ -247,15 +247,29 @@ void CommunicationInterface::processOdom()
   double roll, pitch, yaw;
   m.getRPY(roll, pitch, yaw);
   double robot_heading = yaw;
+  // transform goal_ into absolute pos
 
-  std::cerr << "goal " << goal_.first << " " << goal_.second << std::endl;
-  std::cerr << "curr robo pos " << pos_x << " " << pos_y << std::endl;
+  // std::cerr << "goal " << goal_.first << " " << goal_.second << std::endl;
+  // std::cerr << "curr robo pos " << pos_x << " " << pos_y << std::endl;
   curr_robot_pos_.first = pos_x;
   curr_robot_pos_.second = pos_y;
 
   double target_angle = atan2(goal_.second - pos_y, goal_.first - pos_x);
 
+  std::cerr << "target angle " << target_angle << std::endl;
+  std::cerr << "robot_heading " << robot_heading << std::endl;
+
   double diff_angle = target_angle - robot_heading;
+  if (diff_angle > M_PI)
+  {
+    diff_angle = 2 * M_PI - diff_angle;
+  }
+  else if (diff_angle < -M_PI)
+  {
+    diff_angle = 2 * M_PI + diff_angle;
+  }
+  std::cerr << "diff angle " << diff_angle << std::endl;
+
   double update_angle = pid_angle.Control(diff_angle);
   if (fabs(diff_angle) < 1 * M_PI / 180.0)
   {
@@ -374,18 +388,18 @@ void CommunicationInterface::cycle(Map &map)
   //
   if (fabs(curr_robot_pos_.first - goal_.first) < 1e-1 && fabs(curr_robot_pos_.second - goal_.second) < 1e-1)
   {
-    std::cerr << 1 << std::endl;
+    // std::cerr << 1 << std::endl;
     reached_pos_ = true;
   }
   else
   {
-    std::cerr << 2 << std::endl;
+    // std::cerr << 2 << std::endl;
     reached_pos_ = false;
   }
 
   if (reached_pos_)
   {
-    std::cerr << 3 << std::endl;
+    // std::cerr << 3 << std::endl;
     if (!planned_path_vec_.empty())
     {
       std::cerr << "reached a planned pos, remaining poses are:" << std::endl;
@@ -399,15 +413,20 @@ void CommunicationInterface::cycle(Map &map)
         std::cerr << pt.first << " " << pt.second << std::endl;
       }
       reached_pos_ = false;
-      std::cerr << 4 << std::endl;
+      if (!planned_path_vec_.empty())
+      {
+        goal_.first = planned_path_vec_[0].first;
+        goal_.second = planned_path_vec_[0].second;
+        // std::cerr << 4 << std::endl;
+      }
     }
   }
   else
   {
-    std::cerr << 5 << std::endl;
+    // std::cerr << 5 << std::endl;
     if (!planned_path_vec_.empty())
     {
-      std::cerr << 6 << std::endl;
+      // std::cerr << 6 << std::endl;
       goal_.first = planned_path_vec_[0].first;
       goal_.second = planned_path_vec_[0].second;
     }
@@ -429,8 +448,8 @@ void CommunicationInterface::setGoalCallback(const geometry_msgs::PoseStamped::C
 
   if (final_goal_.first != goal->pose.position.x || final_goal_.second != goal->pose.position.y)
   {
-    std::cerr << "The goal is changed from (" << final_goal_.first << " " << final_goal_.second << ") to ("
-              << goal->pose.position.x << " " << goal->pose.position.y << ")" << std::endl;
+    // std::cerr << "The goal is changed from (" << final_goal_.first << " " << final_goal_.second << ") to ("
+    //           << goal->pose.position.x << " " << goal->pose.position.y << ")" << std::endl;
     // update the current goal
     final_goal_.first = goal->pose.position.x;
     final_goal_.second = goal->pose.position.y;
@@ -459,7 +478,7 @@ void CommunicationInterface::setPath(const Map map)
 
   goal_.first = planned_path_vec_[0].first;
   goal_.second = planned_path_vec_[0].second;
-  std::cerr << goal_.first << " " << goal_.second << std::endl;
+  // std::cerr << goal_.first << " " << goal_.second << std::endl;
 }
 /*
 void CommunicationInterface::cycle(Map &map)
