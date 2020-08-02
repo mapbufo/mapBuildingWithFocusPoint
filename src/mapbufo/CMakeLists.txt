@@ -16,12 +16,13 @@ find_package(catkin REQUIRED COMPONENTS
   tf
   roslib
   nav_msgs
+  visualization_msgs
 )
 
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES mapbufo
-   CATKIN_DEPENDS roscpp rospy sensor_msgs std_msgs nav_msgs
+   CATKIN_DEPENDS roscpp rospy sensor_msgs std_msgs nav_msgs visualization_msgs
 #  DEPENDS system_lib
 )
 

@@ -38,6 +38,19 @@ CommunicationInterface::CommunicationInterface(ros::NodeHandle &nh)
 
   // debug output: processed scan_points
   scan_publisher_ = nh.advertise<sensor_msgs::PointCloud>("/processed_scan", 1);
+
+  // publish planned path
+  pub_path_ = nh.advertise<visualization_msgs::Marker>("planned_path", 100);
+
+  path_line_.header.frame_id = "odom";
+  path_line_.ns = "path";
+  path_line_.id = 0;
+  path_line_.type = visualization_msgs::Marker::LINE_STRIP;
+  path_line_.action = visualization_msgs::Marker::ADD;
+  path_line_.pose.orientation.w = 1.0;
+  path_line_.scale.x = 0.05;
+  path_line_.color.g = 1.0;
+  path_line_.color.a = 0.4;
 }
 
 void CommunicationInterface::scanOdomCallback(const sensor_msgs::LaserScan::ConstPtr &scan,
@@ -370,6 +383,30 @@ void CommunicationInterface::publishLocalMap()
   pub_local_map_quadrant_4_.publish(map_local_.GetMap()[3]);
 }
 
+void CommunicationInterface::publishPlannedPath(std::vector<Point2DWithFloat> path)
+{
+  path_line_.points.clear();
+
+  // add the robot position at first
+  geometry_msgs::Point p_robot;
+  p_robot.x = curr_robot_pos_.first;
+  p_robot.y = curr_robot_pos_.second;
+  p_robot.z = 0.0;
+  path_line_.points.push_back(p_robot);
+
+  for (auto point : path)
+  {
+    geometry_msgs::Point p;
+    p.x = point.first;
+    p.y = point.second;
+    p.z = 0.0;
+    path_line_.points.push_back(p);
+  }
+
+  // publish
+  pub_path_.publish(path_line_);
+}
+
 void CommunicationInterface::cycle(Map &map)
 {
   // check if a new goal is received; if so, update the planned path
@@ -437,6 +474,8 @@ void CommunicationInterface::cycle(Map &map)
   map.UpdateWithScanPoints(curr_robot_pos_, curr_scan_);
 
   map_local_.UpdateLocalMapWithScanPoints(curr_robot_pos_, curr_scan_);
+
+  publishPlannedPath(planned_path_vec_);
 }
 
 void CommunicationInterface::setGoalCallback(const geometry_msgs::PoseStamped::ConstPtr &goal)
