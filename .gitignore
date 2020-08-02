@@ -43,3 +43,7 @@
 
 # qtcreator
 CMakeLists.txt.user
+
+# Doxygen files
+**/html
+**/latex

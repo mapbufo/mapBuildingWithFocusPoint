@@ -1,13 +1,26 @@
 #include "communication_interface.h"
 
 CommunicationInterface::CommunicationInterface(ros::NodeHandle &nh)
-    : sync(scan_sub, odom_sub, 10), map_local_(nh, 0.01, 100, 100)
+  : sync(scan_sub, odom_sub, 10), map_local_(nh, 0.01, 100, 100)
 {
   // input: laserscan, robot_position
   scan_sub.subscribe(nh, "/scan", 10);
   odom_sub.subscribe(nh, "/odom", 10);
   sync.registerCallback(boost::bind(&CommunicationInterface::scanOdomCallback, this, _1, _2));
-  pos_subscriber_ = nh.subscribe("/odom", 1, &CommunicationInterface::robotPositionCallback, this);
+  odom_subscriber_ = nh.subscribe("/odom", 1, &CommunicationInterface::robotPositionCallback, this);
+
+  goal_subscriber_ = nh.subscribe("/move_base_simple/goal", 1, &CommunicationInterface::setGoalCallback, this);
+  // initialize the current goal
+  new_goal_updated_ = false;
+  reached_pos_ = false;
+  final_goal_.first = 0;
+  final_goal_.second = 0;
+  curr_robot_pos_.first = 0;
+  curr_robot_pos_.second = 0;
+  goal_.first = 0;
+  goal_.second = 0;
+  goal_.first = 0;
+  goal_.second = 0;
   // output: robot_control
   control_publisher_ = nh.advertise<geometry_msgs::Twist>("/cmd_vel_mux/input/teleop", 1);
 
@@ -25,6 +38,19 @@ CommunicationInterface::CommunicationInterface(ros::NodeHandle &nh)
 
   // debug output: processed scan_points
   scan_publisher_ = nh.advertise<sensor_msgs::PointCloud>("/processed_scan", 1);
+
+  // publish planned path
+  pub_path_ = nh.advertise<visualization_msgs::Marker>("planned_path", 100);
+
+  path_line_.header.frame_id = "odom";
+  path_line_.ns = "path";
+  path_line_.id = 0;
+  path_line_.type = visualization_msgs::Marker::LINE_STRIP;
+  path_line_.action = visualization_msgs::Marker::ADD;
+  path_line_.pose.orientation.w = 1.0;
+  path_line_.scale.x = 0.05;
+  path_line_.color.g = 1.0;
+  path_line_.color.a = 0.6;
 }
 
 void CommunicationInterface::scanOdomCallback(const sensor_msgs::LaserScan::ConstPtr &scan,
@@ -75,20 +101,13 @@ void CommunicationInterface::processScan()
   // 3: priority end
   // 4: angle max
 
-  // process scan
-  filtered_point_cloud_.points.clear();
-  static int frame_id_ = 0;
-  filtered_point_cloud_.header.frame_id = "/base_footprint";
-  filtered_point_cloud_.header.stamp = ros::Time::now();
-  filtered_point_cloud_.header.seq = frame_id_;
-  frame_id_++;
-
   Point2DWithFloat next_pos(0, 0);
   float max_dist = 0;
 
   curr_scan_.clear();
+  curr_local_scan_.clear();
   int counter = 0;
-  int resolution = 10; // pick only every ten points outside the interested area
+  int resolution = 10;  // pick only every ten points outside the interested area
   for (int i = 0; i < number_of_laser; i++)
   {
     float laser_angle = angle_min + i * angle_increment;
@@ -106,9 +125,9 @@ void CommunicationInterface::processScan()
     double robot_heading = yaw;
     if (laser_angle > -priority_angle_range_rad && laser_angle < priority_angle_range_rad)
     {
-      if (std::isnan(input_scan_.ranges[i])) // if a point is nan, then the 10
-                                             // points before and after must be nan
-                                             // so that it can be considered empty
+      if (std::isnan(input_scan_.ranges[i]))  // if a point is nan, then the 10
+                                              // points before and after must be nan
+                                              // so that it can be considered empty
       {
         // check the +- 10 points
         if ((priority_angle_range_rad - abs(laser_angle)) / angle_increment < 10)
@@ -133,10 +152,10 @@ void CommunicationInterface::processScan()
         }
         float x = range_max * std::cos(laser_angle);
         float y = range_max * std::sin(laser_angle);
+        curr_local_scan_[{ x, y }] = -20;
         float global_x = x * std::cos(yaw) - y * std::sin(yaw) + pos_x;
         float global_y = x * std::sin(yaw) + y * std::cos(yaw) + pos_y;
-
-        curr_scan_[{global_x, global_y}] = -20;
+        curr_scan_[{ global_x, global_y }] = -20;
         if (range_max > max_dist)
         {
           next_pos.first = range_max * std::cos(laser_angle);
@@ -146,20 +165,18 @@ void CommunicationInterface::processScan()
         continue;
       }
 
-      // transform estimated_pos_ into absolute pos
-
       float global_x = x * std::cos(yaw) - y * std::sin(yaw) + pos_x;
       float global_y = x * std::sin(yaw) + y * std::cos(yaw) + pos_y;
       if (!std::isnan(global_x) && !std::isnan(global_y))
       {
-        curr_scan_[{global_x, global_y}] = 20;
+        curr_local_scan_[{ x, y }] = 20;
+        curr_scan_[{ global_x, global_y }] = 20;
       }
       geometry_msgs::Point32 pt;
       pt.x = x;
       pt.y = y;
       pt.z = 0;
 
-      filtered_point_cloud_.points.push_back(pt);
       if (input_scan_.ranges[i] > max_dist)
       {
         next_pos.first = x;
@@ -182,8 +199,8 @@ void CommunicationInterface::processScan()
         float y = range_max * std::sin(laser_angle);
         float global_x = x * std::cos(yaw) - y * std::sin(yaw) + pos_x;
         float global_y = x * std::sin(yaw) + y * std::cos(yaw) + pos_y;
-
-        curr_scan_[{global_x, global_y}] = -6;
+        curr_local_scan_[{ x, y }] = -6;
+        curr_scan_[{ global_x, global_y }] = -6;
 
         continue;
       }
@@ -191,25 +208,15 @@ void CommunicationInterface::processScan()
       float global_y = x * std::sin(yaw) + y * std::cos(yaw) + pos_y;
       if (!std::isnan(global_x) && !std::isnan(global_y))
       {
-        curr_scan_[{global_x, global_y}] = 6;
+        curr_local_scan_[{ x, y }] = 6;
+        curr_scan_[{ global_x, global_y }] = 6;
       }
       geometry_msgs::Point32 pt;
       pt.x = x;
       pt.y = y;
       pt.z = 0;
-
-      filtered_point_cloud_.points.push_back(pt);
     }
   }
-  if (reached_pos_)
-  {
-    estimated_pos_ = next_pos;
-  }
-}
-
-void CommunicationInterface::publishPointCloud()
-{
-  scan_publisher_.publish(filtered_point_cloud_);
 }
 
 void CommunicationInterface::robotPositionCallback(const nav_msgs::Odometry::ConstPtr &odom)
@@ -222,7 +229,7 @@ void CommunicationInterface::robotPositionCallback(const nav_msgs::Odometry::Con
 
 void CommunicationInterface::processOdom()
 {
-  //map_local_.SetPos(input_odom_.pose.pose);
+  // map_local_.SetPos(input_odom_.pose.pose);
   PIDController pid_angle(1, 0.2, 2.5);
   PIDController pid_speed(0.1, 0.00, 0.0);
 
@@ -232,23 +239,33 @@ void CommunicationInterface::processOdom()
   twist = input_odom_.twist.twist;
   double pos_x = pose.position.x;
   double pos_y = pose.position.y;
+
   tf::Quaternion q(pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w);
   tf::Matrix3x3 m(q);
   double roll, pitch, yaw;
   m.getRPY(roll, pitch, yaw);
   double robot_heading = yaw;
-  // transform estimated_pos_ into absolute pos
-  if (reached_pos_)
-  {
-    goal_.first = estimated_pos_.first * std::cos(yaw) - estimated_pos_.second * std::sin(yaw) + pos_x;
-    goal_.second = estimated_pos_.first * std::sin(yaw) + estimated_pos_.second * std::cos(yaw) + pos_y;
-  }
+  // transform goal_ into absolute pos
+
   curr_robot_pos_.first = pos_x;
   curr_robot_pos_.second = pos_y;
 
   double target_angle = atan2(goal_.second - pos_y, goal_.first - pos_x);
 
+  std::cerr << "target angle " << target_angle << std::endl;
+  std::cerr << "robot_heading " << robot_heading << std::endl;
+
   double diff_angle = target_angle - robot_heading;
+  if (diff_angle > M_PI)
+  {
+    diff_angle = 2 * M_PI - diff_angle;
+  }
+  else if (diff_angle < -M_PI)
+  {
+    diff_angle = 2 * M_PI + diff_angle;
+  }
+  std::cerr << "diff angle " << diff_angle << std::endl;
+
   double update_angle = pid_angle.Control(diff_angle);
   if (fabs(diff_angle) < 1 * M_PI / 180.0)
   {
@@ -310,19 +327,13 @@ void CommunicationInterface::processOdom()
   output_twist_.angular.y = 0.0;
   output_twist_.angular.z = set_angle;
 
-  if (fabs(curr_robot_pos_.first - goal_.first) > 1e-1 || fabs(curr_robot_pos_.first - goal_.first) > 1e-1)
+  if (fabs(curr_robot_pos_.first - goal_.first) > 1e-1 || fabs(curr_robot_pos_.second - goal_.second) > 1e-1)
   {
-    // std::cerr << "not reached yet" << std::endl;
-    // std::cerr << "curr pos: " << curr_robot_pos_.first << " " << curr_robot_pos_.second << " "
-    //           << "next pos: " << goal_.first << " " << goal_.second << std::endl;
-    reached_pos_ = false;
+    std::cerr << "not reached yet" << std::endl;
   }
   else
   {
-    // std::cerr << "arrived" << std::endl;
-    // std::cerr << "curr pos: " << curr_robot_pos_.first << " " << curr_robot_pos_.second << " "
-    //           << "next pos: " << goal_.first << " " << goal_.second << std::endl;
-    reached_pos_ = true;
+    std::cerr << "reached" << std::endl;
 
     output_twist_.linear.x = 0;
 
@@ -355,20 +366,117 @@ void CommunicationInterface::publishLocalMap()
   pub_local_map_quadrant_4_.publish(map_local_.GetMap()[3]);
 }
 
+void CommunicationInterface::publishPlannedPath(std::vector<Point2DWithFloat> path)
+{
+  path_line_.points.clear();
+
+  // add the robot position at first
+  geometry_msgs::Point p_robot;
+  p_robot.x = curr_robot_pos_.first;
+  p_robot.y = curr_robot_pos_.second;
+  p_robot.z = 0.0;
+  path_line_.points.push_back(p_robot);
+
+  for (auto point : path)
+  {
+    geometry_msgs::Point p;
+    p.x = point.first;
+    p.y = point.second;
+    p.z = 0.0;
+    path_line_.points.push_back(p);
+  }
+
+  // publish
+  pub_path_.publish(path_line_);
+}
+
 void CommunicationInterface::cycle(Map &map)
 {
+  // process the received scan
   processScan();
-  processOdom();
-  publishTwist();
-  publishPointCloud();
 
   map.UpdateWithScanPoints(curr_robot_pos_, curr_scan_);
 
-  map_local_.UpdateLocalMapWithScanPoints(curr_robot_pos_, curr_scan_);
+  map_local_.UpdateLocalMapWithScanPoints({ 0, 0 }, curr_local_scan_);
+
+  // check if a new goal is received; if so, update the planned path
+  if (!new_goal_updated_)
+  {
+    setPath(map);
+  }
+  if (fabs(curr_robot_pos_.first - goal_.first) < 1e-1 && fabs(curr_robot_pos_.second - goal_.second) < 1e-1)
+  {
+    reached_pos_ = true;
+  }
+  else
+  {
+    reached_pos_ = false;
+  }
+
+  if (reached_pos_)
+  {
+    if (!planned_path_vec_.empty())
+    {
+      std::cerr << "reached a planned pos, remaining poses are:" << std::endl;
+      planned_path_vec_.erase(begin(planned_path_vec_));  // remove the reached pos from path
+      for (auto pt : planned_path_vec_)
+      {
+        std::cerr << pt.first << " " << pt.second << std::endl;
+      }
+      reached_pos_ = false;
+      if (!planned_path_vec_.empty())
+      {
+        goal_.first = planned_path_vec_[0].first;
+        goal_.second = planned_path_vec_[0].second;
+      }
+    }
+  }
+  processOdom();
+
+  publishTwist();
 
   // publish the updated global map
   publishGlobalMap(map);
-
   // publish the updated local map
   publishLocalMap();
+
+  publishPlannedPath(planned_path_vec_);
+}
+
+void CommunicationInterface::setGoalCallback(const geometry_msgs::PoseStamped::ConstPtr &goal)
+{
+  // compare current goal with new goal
+  // if different, then call global path-planning
+  // clear the old path, save the new path
+  // if same, then skip
+  if (final_goal_.first != goal->pose.position.x || final_goal_.second != goal->pose.position.y)
+  {
+    // update the current goal
+    final_goal_.first = goal->pose.position.x;
+    final_goal_.second = goal->pose.position.y;
+    new_goal_updated_ = false;
+  }
+}
+
+void CommunicationInterface::setPath(const Map map)
+{
+  // delete the old planned path
+  planned_path_vec_.clear();
+  // get a new path
+  Point2D start_pos = TransformIndex(curr_robot_pos_.first, curr_robot_pos_.second, 0.1);
+  Point2D end_pos = TransformIndex(final_goal_.first, final_goal_.second, 0.1);
+  std::vector<Point2D> planned_path;
+  planned_path = PathPlanning::PathPlanning(start_pos, end_pos, map, true);
+
+  for (int i = 0; i < planned_path.size(); i++)
+  {
+    Point2DWithFloat pt_float;
+    pt_float = ReverseIndex(planned_path[i].first, planned_path[i].second, 0.1);
+    planned_path_vec_.push_back(pt_float);
+  }
+  new_goal_updated_ = true;
+  reached_pos_ = false;
+
+  goal_.first = planned_path_vec_[0].first;
+  goal_.second = planned_path_vec_[0].second;
 }

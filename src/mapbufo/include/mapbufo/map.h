@@ -181,13 +181,6 @@ private:
   status::status UpdateCellInSingleQuadrant(int x, int y, int qua, int value, bool global);
 
   /**
-   * transform the position from float real position to int grid position
-   * @param input float x, float y: position of robot(real data)
-   * @param return  Point2D: position of robot(grid position)
-   */
-  Point2D TransformIndex(float x, float y);
-
-  /**
    * get the needed parameter from file /param/parameter.yaml
    */
   void GetParam();

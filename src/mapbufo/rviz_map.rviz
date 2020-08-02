@@ -3,9 +3,7 @@ Panels:
     Help Height: 0
     Name: Displays
     Property Tree Widget:
-      Expanded:
-        - /Global Options1
-        - /Status1
+      Expanded: ~
       Splitter Ratio: 0.5
     Tree Height: 777
   - Class: rviz/Selection
@@ -35,7 +33,7 @@ Visualization Manager:
   Class: ""
   Displays:
     - Alpha: 0.5
-      Cell Size: 1
+      Cell Size: 0.100000001
       Class: rviz/Grid
       Color: 160; 160; 164
       Enabled: true
@@ -49,49 +47,49 @@ Visualization Manager:
         Y: 0
         Z: 0
       Plane: XY
-      Plane Cell Count: 10
+      Plane Cell Count: 200
       Reference Frame: <Fixed Frame>
       Value: true
     - Alpha: 0.699999988
       Class: rviz/Map
       Color Scheme: map
       Draw Behind: false
-      Enabled: false
+      Enabled: true
       Name: Map_global_1
       Topic: /occu_global_map_quadrant_1
       Unreliable: false
       Use Timestamp: false
-      Value: false
+      Value: true
     - Alpha: 0.699999988
       Class: rviz/Map
       Color Scheme: map
       Draw Behind: false
-      Enabled: false
+      Enabled: true
       Name: Map_global_2
       Topic: /occu_global_map_quadrant_2
       Unreliable: false
       Use Timestamp: false
-      Value: false
+      Value: true
     - Alpha: 0.699999988
       Class: rviz/Map
       Color Scheme: map
       Draw Behind: false
-      Enabled: false
+      Enabled: true
       Name: Map_global_3
       Topic: /occu_global_map_quadrant_3
       Unreliable: false
       Use Timestamp: false
-      Value: false
+      Value: true
     - Alpha: 0.699999988
       Class: rviz/Map
       Color Scheme: map
       Draw Behind: false
-      Enabled: false
+      Enabled: true
       Name: Map_global_4
       Topic: /occu_global_map_quadrant_4
       Unreliable: false
       Use Timestamp: false
-      Value: false
+      Value: true
     - Alpha: 0.699999988
       Class: rviz/Map
       Color Scheme: map
@@ -132,6 +130,14 @@ Visualization Manager:
       Unreliable: false
       Use Timestamp: false
       Value: true
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /planned_path
+      Name: planned_path
+      Namespaces:
+        path: true
+      Queue Size: 100
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -157,25 +163,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 22.0470142
+      Distance: 11.7729692
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 2.28902292
-        Y: 4.57962465
-        Z: 5.66292286
+        X: 1.14891815
+        Y: -0.94076097
+        Z: 3.2520051
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.0500000007
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 1.51539707
+      Pitch: 1.15539718
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.6685915
+      Yaw: 4.95177746
     Saved: ~
 Window Geometry:
   Displays:
@@ -196,4 +202,4 @@ Window Geometry:
     collapsed: false
   Width: 1920
   X: -2
-  Y: 21
+  Y: 45

@@ -16,12 +16,13 @@ find_package(catkin REQUIRED COMPONENTS
   tf
   roslib
   nav_msgs
+  visualization_msgs
 )
 
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES mapbufo
-   CATKIN_DEPENDS roscpp rospy sensor_msgs std_msgs nav_msgs
+   CATKIN_DEPENDS roscpp rospy sensor_msgs std_msgs nav_msgs visualization_msgs
 #  DEPENDS system_lib
 )
 
@@ -37,7 +38,7 @@ add_library( librobot src/robot.cpp)
 add_library( pid_controller src/pid_controller.cpp)
 add_library( path_planning src/path_planning.cpp)
 add_library( communication_interface src/communication_interface.cpp)
-target_link_libraries(communication_interface pid_controller)
+target_link_libraries(communication_interface pid_controller path_planning)
 # main function
 add_executable(${PROJECT_NAME}_node main/main.cpp)
 
