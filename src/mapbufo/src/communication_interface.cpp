@@ -501,15 +501,15 @@ void CommunicationInterface::setPath(const Map map)
   // delete the old planned path
   planned_path_vec_.clear();
   // get a new path
-  Point2D start_pos(curr_robot_pos_.first, curr_robot_pos_.second); // ??????
-  Point2D end_pos(final_goal_.first, final_goal_.second);
+  Point2D start_pos = TransformIndex(curr_robot_pos_.first, curr_robot_pos_.second, 0.1);
+  Point2D end_pos = TransformIndex(final_goal_.first, final_goal_.second, 0.1);
   std::vector<Point2D> planned_path;
   planned_path = PathPlanning::PathPlanning(start_pos, end_pos, map, true);
   // planned_path = {{1, 1}, {2, 2}, {3, 0}};
   for (int i = 0; i < planned_path.size(); i++)
   {
     Point2DWithFloat pt_float;
-    transformPoint2DToPoint2DWithFloat(planned_path[i], pt_float);
+    pt_float = ReverseIndex(planned_path[i].first, planned_path[i].second, 0.1);
     planned_path_vec_.push_back(pt_float);
   }
   new_goal_updated_ = true;

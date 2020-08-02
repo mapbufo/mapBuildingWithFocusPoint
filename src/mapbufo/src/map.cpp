@@ -143,8 +143,8 @@ status::status Map::Update(Point2D pos, int update_value, bool global)
 status::status Map::UpdateWithScanPoint(float x0, float y0, float x1, float y1,
                                         int update_value, bool global)
 {
-  Point2D robot_point = TransformIndex(x0, y0);
-  Point2D scan_point = TransformIndex(x1, y1);
+  Point2D robot_point = TransformIndex(x0, y0, maps_.front().info.resolution);
+  Point2D scan_point = TransformIndex(x1, y1, maps_.front().info.resolution);
   Update(scan_point, update_value, global);
   if (x0 == x1 && y0 == y1)
   {
@@ -374,23 +374,6 @@ status::status Map::UpdateCellInSingleQuadrant(int x, int y, int qua,
     *data = std::max(*data + value, 0);
   }
   return status::Ok;
-}
-
-Point2D Map::TransformIndex(float x, float y)
-{
-  float factor = 1 / maps_.front().info.resolution;
-  Point2D pos;
-  if (x >= 0)
-  {
-    pos.first = std::ceil(x * factor);
-  }
-  pos.first = std::floor(x * factor);
-  if (y >= 0)
-  {
-    pos.second = std::ceil(y * factor);
-  }
-  pos.second = std::floor(y * factor);
-  return pos;
 }
 
 void Map::GetParam()
