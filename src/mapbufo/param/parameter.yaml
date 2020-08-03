@@ -12,3 +12,8 @@ occupied_bound: 75
 update_value_filtered: 6
 # if the input data is original without filtering, then the update_value is higher
 update_value_origin: 20
+
+### camera static data
+x: -0.087
+y: 0.048
+z: 0.297
