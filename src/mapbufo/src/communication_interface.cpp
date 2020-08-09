@@ -3,10 +3,15 @@
 CommunicationInterface::CommunicationInterface(ros::NodeHandle &nh)
   : sync(scan_sub, odom_sub, 10), map_local_(nh, 0.01, 100, 100)
 {
+  counter = 0;
   // input: laserscan, robot_position
   scan_sub.subscribe(nh, "/scan", 10);
   odom_sub.subscribe(nh, "/odom", 10);
   sync.registerCallback(boost::bind(&CommunicationInterface::scanOdomCallback, this, _1, _2));
+
+  depth_image_subscriber_ =
+      nh.subscribe("/camera/depth/image_raw", 1, &CommunicationInterface::depthImageCallback, this);
+
   odom_subscriber_ = nh.subscribe("/odom", 1, &CommunicationInterface::robotPositionCallback, this);
 
   goal_subscriber_ = nh.subscribe("/move_base_simple/goal", 1, &CommunicationInterface::setGoalCallback, this);
@@ -51,6 +56,84 @@ CommunicationInterface::CommunicationInterface(ros::NodeHandle &nh)
   path_line_.scale.x = 0.05;
   path_line_.color.g = 1.0;
   path_line_.color.a = 0.6;
+}
+
+void CommunicationInterface::depthImageCallback(const sensor_msgs::Image::ConstPtr &depth_img)
+{
+  if (counter == 0)
+  {
+    counter++;
+
+    // std_msgs/Header header
+    // uint32 height
+    // uint32 width
+    // string encoding
+    // uint8 is_bigendian
+    // uint32 step
+    // uint8[] data
+
+    int img_height = depth_img->height;
+    int img_width = depth_img->width;
+
+    std::string img_encoding = depth_img->encoding;
+    int img_step = depth_img->step;
+
+    std::vector<float> x_vec;
+    std::vector<float> y_vec;
+    std::vector<float> z_vec;
+
+    // ///////////////////////////////////////////////////////////
+
+    const float center_x = cam_intr_[2];
+    const float center_y = cam_intr_[5];
+    const float focal_x = cam_intr_[0];
+    const float focal_y = cam_intr_[4];
+    const float *depth_row = reinterpret_cast<const float *>(&depth_img->data[0]);
+    const int row_step = img_step / sizeof(float);
+    std::cerr << row_step << std::endl;
+    for (int v = 0; v < img_height; ++v, depth_row += row_step)
+    {
+      for (int u = 0; u < img_width; ++u)  // Loop over each pixel in row
+      {
+        const float depth = depth_row[u];
+
+        if (std::isfinite(depth))
+        {  // Not NaN or Inf
+          double z = depth;
+          float x = (u - center_x) * z / focal_x;
+          float y = (v - center_y) * z / focal_y;
+
+          x_vec.push_back(x);
+          y_vec.push_back(y);
+          z_vec.push_back(z);
+        }
+      }
+    }
+
+    std::ofstream output_file;
+
+    output_file.open("/home/yu/mapBuFo/mapBuildingWithFocusPoint/depth_image.ply");
+    output_file << "ply" << std::endl;
+    output_file << "format ascii 1.0" << std::endl;
+    output_file << "element vertex " << x_vec.size() << std::endl;
+    output_file << "property float x" << std::endl;
+    output_file << "property float y" << std::endl;
+    output_file << "property float z" << std::endl;
+    output_file << "property uchar red" << std::endl;
+    output_file << "property uchar green" << std::endl;
+    output_file << "property uchar blue" << std::endl;
+    output_file << "end_header" << std::endl;
+
+    // set poses
+    for (int j = 0; j < x_vec.size(); j++)
+    {
+      output_file << x_vec[j] << " " << y_vec[j] << " " << z_vec[j] << " "
+                  << " " << 0 << " " << 255 << " " << 0 << std::endl;
+      // std::cerr << x_vec[j] << " " << y_vec[j] << " " << z_vec[j] << " "
+      //           << " " << 0 << " " << 255 << " " << 0 << std::endl;
+    }
+  }
+  ///////////////////////////////////////////////////////////
 }
 
 void CommunicationInterface::scanOdomCallback(const sensor_msgs::LaserScan::ConstPtr &scan,
@@ -252,9 +335,6 @@ void CommunicationInterface::processOdom()
 
   double target_angle = atan2(goal_.second - pos_y, goal_.first - pos_x);
 
-  std::cerr << "target angle " << target_angle << std::endl;
-  std::cerr << "robot_heading " << robot_heading << std::endl;
-
   double diff_angle = target_angle - robot_heading;
   if (diff_angle > M_PI)
   {
@@ -264,7 +344,6 @@ void CommunicationInterface::processOdom()
   {
     diff_angle = 2 * M_PI + diff_angle;
   }
-  std::cerr << "diff angle " << diff_angle << std::endl;
 
   double update_angle = pid_angle.Control(diff_angle);
   if (fabs(diff_angle) < 1 * M_PI / 180.0)
@@ -329,11 +408,11 @@ void CommunicationInterface::processOdom()
 
   if (fabs(curr_robot_pos_.first - goal_.first) > 1e-1 || fabs(curr_robot_pos_.second - goal_.second) > 1e-1)
   {
-    std::cerr << "not reached yet" << std::endl;
+    // std::cerr << "not reached yet" << std::endl;
   }
   else
   {
-    std::cerr << "reached" << std::endl;
+    // std::cerr << "reached" << std::endl;
 
     output_twist_.linear.x = 0;
 
@@ -417,11 +496,11 @@ void CommunicationInterface::cycle(Map &map)
   {
     if (!planned_path_vec_.empty())
     {
-      std::cerr << "reached a planned pos, remaining poses are:" << std::endl;
+      // std::cerr << "reached a planned pos, remaining poses are:" << std::endl;
       planned_path_vec_.erase(begin(planned_path_vec_));  // remove the reached pos from path
       for (auto pt : planned_path_vec_)
       {
-        std::cerr << pt.first << " " << pt.second << std::endl;
+        // std::cerr << pt.first << " " << pt.second << std::endl;
       }
       reached_pos_ = false;
       if (!planned_path_vec_.empty())

@@ -13,19 +13,22 @@
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/Twist.h>
 #include <nav_msgs/Odometry.h>
+#include <sensor_msgs/Image.h>
 #include <sensor_msgs/LaserScan.h>
 #include <sensor_msgs/PointCloud.h>
 #include <visualization_msgs/Marker.h>
 
 #include <boost/bind.hpp>
+#include <fstream>
+#include <iostream>
 #include "common.h"
 #include "map.h"
 #include "path_planning.h"
 #include "pid_controller.h"
-
 class CommunicationInterface
 {
 private:
+  ros::Subscriber depth_image_subscriber_;
   ros::Subscriber scan_subscriber_;
   ros::Subscriber goal_subscriber_;
   ros::Subscriber odom_subscriber_;
@@ -37,7 +40,7 @@ private:
   ros::Publisher pub_global_map_quadrant_2_;
   ros::Publisher pub_global_map_quadrant_3_;
   ros::Publisher pub_global_map_quadrant_4_;
-
+  int counter;
   // local map, publishers
   Map map_local_;
   ros::Publisher pub_local_map_quadrant_1_;
@@ -47,11 +50,9 @@ private:
 
   // planned path
   ros::Publisher pub_path_;
-
   message_filters::Subscriber<sensor_msgs::LaserScan> scan_sub;
   message_filters::Subscriber<nav_msgs::Odometry> odom_sub;
   message_filters::TimeSynchronizer<sensor_msgs::LaserScan, nav_msgs::Odometry> sync;
-
   ScanPointsFloatWithUpdateValue curr_scan_;
   ScanPointsFloatWithUpdateValue curr_local_scan_;
 
@@ -70,6 +71,13 @@ private:
   bool new_goal_updated_;
 
   visualization_msgs::Marker path_line_;
+
+  // depth camera info
+  //     [fx  0 cx]
+  // K = [ 0 fy cy]
+  //     [ 0  0  1]
+
+  float cam_intr_[9] = {554.254691191187, 0.0, 320.5, 0.0, 554.254691191187, 240.5, 0.0, 0.0, 1.0};
 
 public:
   CommunicationInterface(ros::NodeHandle &nh);
@@ -90,6 +98,7 @@ public:
    */
   void scanOdomCallback(const sensor_msgs::LaserScan::ConstPtr &scan, const nav_msgs::Odometry::ConstPtr &odom);
 
+  void depthImageCallback(const sensor_msgs::Image::ConstPtr &depth_img);
   /**
    * filter the sensor data, transform them into global-coordinate
    */
@@ -128,4 +137,4 @@ public:
    */
   void cycle(Map &map);
 };
-#endif  // COMMUNICATION_INTERFACE_H
+#endif // COMMUNICATION_INTERFACE_H
