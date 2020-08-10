@@ -12,12 +12,12 @@
 #include <geometry_msgs/Point32.h>
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/Twist.h>
+#include <math.h>
 #include <nav_msgs/Odometry.h>
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/LaserScan.h>
 #include <sensor_msgs/PointCloud.h>
 #include <visualization_msgs/Marker.h>
-
 #include <boost/bind.hpp>
 #include <fstream>
 #include <iostream>
@@ -77,7 +77,7 @@ private:
   // K = [ 0 fy cy]
   //     [ 0  0  1]
 
-  float cam_intr_[9] = {554.254691191187, 0.0, 320.5, 0.0, 554.254691191187, 240.5, 0.0, 0.0, 1.0};
+  float cam_intr_[9] = { 554.254691191187, 0.0, 320.5, 0.0, 554.254691191187, 240.5, 0.0, 0.0, 1.0 };
 
 public:
   CommunicationInterface(ros::NodeHandle &nh);
@@ -137,4 +137,4 @@ public:
    */
   void cycle(Map &map);
 };
-#endif // COMMUNICATION_INTERFACE_H
+#endif  // COMMUNICATION_INTERFACE_H
