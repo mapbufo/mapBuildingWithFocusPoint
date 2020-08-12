@@ -68,4 +68,103 @@ Point2DWithFloat ReverseIndex(int x, int y, float res)
   pos.second = static_cast<float>(y * res);
   return pos;
 }
+
+/**
+   * get the line-points with gradient between 0 and 1
+   * @param input int x0, int y0: position of robot
+   * @param input int x1, int y1: position of target point
+   * @return vector<Point2D>: all the passed points in the line
+   */
+std::vector<Point2D> GetLineLow(int x0, int y0, int x1, int y1)
+{
+  int d_x = x1 - x0;
+  int d_y = y1 - y0;
+  int y_step = 1;
+  if (d_y < 0)
+  {
+    y_step = -1;
+    d_y = -d_y;
+  }
+  int D = 2 * d_y - d_x;
+  int x = x0;
+  int y = y0;
+  std::vector<Point2D> res;
+  Point2D curr({x, y});
+  while (x < x1)
+  {
+    if (D > 0)
+    {
+      y += y_step;
+      D -= 2 * d_x;
+    }
+    D += 2 * d_y;
+    x += 1;
+    curr.first = x;
+    curr.second = y;
+    res.insert(begin(res), curr);
+  }
+  res.erase(begin(res));
+  return res;
+}
+
+/**
+   * get the line-points with gradient greater than 1
+   * @param input int x0, int y0: position of robot
+   * @param input int x1, int y1: position of target point
+   * @return vector<Point2D>: all the passed points in the line
+   */
+std::vector<Point2D> GetLineHigh(int x0, int y0, int x1, int y1)
+{
+  int d_x = x1 - x0;
+  int d_y = y1 - y0;
+  int x_step = 1;
+  if (d_x < 0)
+  {
+    x_step = -1;
+    d_x = -d_x;
+  }
+  int D = 2 * d_x - d_y;
+  int x = x0;
+  int y = y0;
+  std::vector<Point2D> res;
+  Point2D curr({x, y});
+  while (y < y1)
+  {
+    if (D > 0)
+    {
+      x += x_step;
+      D -= 2 * d_y;
+    }
+    D += 2 * d_x;
+    y += 1;
+    curr.first = x;
+    curr.second = y;
+    res.insert(begin(res), curr);
+  }
+  res.erase(begin(res));
+  return res;
+}
+
+/**
+  * get the line-points between robot and target point
+  * @param input int x0, int y0: position of robot
+  * @param input int x1, int y1: position of target point
+  * @return vector<Point2D>: all the passed points in the line
+  */
+std::vector<Point2D> GetLine(int x0, int y0, int x1, int y1)
+{
+  if (abs(y1 - y0) < abs(x1 - x0))
+  {
+    if (x0 > x1)
+    {
+      return GetLineLow(x1, y1, x0, y0);
+    }
+    return GetLineLow(x0, y0, x1, y1);
+  }
+  if (y0 > y1)
+  {
+    return GetLineHigh(x1, y1, x0, y0);
+  }
+  return GetLineHigh(x0, y0, x1, y1);
+}
 #endif // !COMMON_H

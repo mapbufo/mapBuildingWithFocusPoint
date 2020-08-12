@@ -98,30 +98,6 @@ public:
   status::status UpdateLocalMapWithScanPoints(Point2DWithFloat robot_pos,
                                               ScanPointsFloatWithUpdateValue curr_scan);
 
-  /**
-   * get the line-points with gradient between 0 and 1
-   * @param input int x0, int y0: position of robot
-   * @param input int x1, int y1: position of target point
-   * @return vector<Point2D>: all the passed points in the line
-   */
-  std::vector<Point2D> GetLineLow(int x0, int y0, int x1, int y1);
-
-  /**
-   * get the line-points with gradient greater than 1
-   * @param input int x0, int y0: position of robot
-   * @param input int x1, int y1: position of target point
-   * @return vector<Point2D>: all the passed points in the line
-   */
-  std::vector<Point2D> GetLineHigh(int x0, int y0, int x1, int y1);
-
-  /**
-   * get the line-points between robot and target point
-   * @param input int x0, int y0: position of robot
-   * @param input int x1, int y1: position of target point
-   * @return vector<Point2D>: all the passed points in the line
-   */
-  std::vector<Point2D> GetLine(int x0, int y0, int x1, int y1);
-
 private:
   /**
    * save the map data
