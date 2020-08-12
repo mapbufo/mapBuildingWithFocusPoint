@@ -1,7 +1,7 @@
 #include "communication_interface.h"
 
 CommunicationInterface::CommunicationInterface(ros::NodeHandle &nh)
-    : sync(scan_sub, odom_sub, 10), map_local_(nh, 0.01, 100, 100)
+  : sync(scan_sub, odom_sub, 10), map_local_(nh, 0.01, 100, 100)
 {
   counter = 0;
   // input: laserscan, robot_position
@@ -88,12 +88,12 @@ void CommunicationInterface::depthImageCallback(const sensor_msgs::Image::ConstP
 
   for (int v = 0; v < img_height; ++v, depth_row += row_step)
   {
-    for (int u = 0; u < img_width; ++u) // Loop over each pixel in row
+    for (int u = 0; u < img_width; ++u)  // Loop over each pixel in row
     {
       const float depth = depth_row[u];
 
       if (std::isfinite(depth))
-      { // Not NaN or Inf
+      {  // Not NaN or Inf
         double z = depth;
         float x = (u - center_x) * z / focal_x;
         float y = (v - center_y) * z / focal_y;
@@ -138,13 +138,13 @@ void CommunicationInterface::depthImageCallback(const sensor_msgs::Image::ConstP
   std::vector<std::pair<float, float>> scan_points;
   const float *new_depth_row = reinterpret_cast<const float *>(&depth_img->data[0]);
   new_depth_row += row_step * (int)(center_y - 1);
-  for (int u = 0; u < img_width; ++u) // Loop over each pixel in row
+  for (int u = 0; u < img_width; ++u)  // Loop over each pixel in row
   {
     const float depth = new_depth_row[u];
-    const double th = -atan2((double)(u - center_x) / focal_x, 1.0); // Atan2(x, z), but depth divides out
+    const double th = -atan2((double)(u - center_x) / focal_x, 1.0);  // Atan2(x, z), but depth divides out
 
     if (std::isfinite(depth))
-    { // Not NaN or Inf
+    {  // Not NaN or Inf
 
       double x = (u - center_x) * depth / focal_x;
       double z = depth;
@@ -152,7 +152,7 @@ void CommunicationInterface::depthImageCallback(const sensor_msgs::Image::ConstP
 
       // double r = std::sqrt(std::pow(x, 2) + std::pow(z, 2));
       double r = hypot(x, z);
-      scan_points.push_back({th, r});
+      scan_points.push_back({ th, r });
     }
   }
 
@@ -240,7 +240,7 @@ void CommunicationInterface::processScan()
   curr_scan_.clear();
   curr_local_scan_.clear();
   int counter = 0;
-  int resolution = 10; // pick only every ten points outside the interested area
+  int resolution = 10;  // pick only every ten points outside the interested area
   for (int i = 0; i < number_of_laser; i++)
   {
     float laser_angle = angle_min + i * angle_increment;
@@ -258,9 +258,9 @@ void CommunicationInterface::processScan()
     double robot_heading = yaw;
     if (laser_angle > -priority_angle_range_rad && laser_angle < priority_angle_range_rad)
     {
-      if (std::isnan(input_scan_.ranges[i])) // if a point is nan, then the 10
-                                             // points before and after must be nan
-                                             // so that it can be considered empty
+      if (std::isnan(input_scan_.ranges[i]))  // if a point is nan, then the 10
+                                              // points before and after must be nan
+                                              // so that it can be considered empty
       {
         // check the +- 10 points
         if ((priority_angle_range_rad - abs(laser_angle)) / angle_increment < 10)
@@ -285,10 +285,10 @@ void CommunicationInterface::processScan()
         }
         float x = range_max * std::cos(laser_angle);
         float y = range_max * std::sin(laser_angle);
-        curr_local_scan_[{x, y}] = -20;
+        curr_local_scan_[{ x, y }] = -20;
         float global_x = x * std::cos(yaw) - y * std::sin(yaw) + pos_x;
         float global_y = x * std::sin(yaw) + y * std::cos(yaw) + pos_y;
-        curr_scan_[{global_x, global_y}] = -20;
+        curr_scan_[{ global_x, global_y }] = -20;
         if (range_max > max_dist)
         {
           next_pos.first = range_max * std::cos(laser_angle);
@@ -302,8 +302,8 @@ void CommunicationInterface::processScan()
       float global_y = x * std::sin(yaw) + y * std::cos(yaw) + pos_y;
       if (!std::isnan(global_x) && !std::isnan(global_y))
       {
-        curr_local_scan_[{x, y}] = 20;
-        curr_scan_[{global_x, global_y}] = 20;
+        curr_local_scan_[{ x, y }] = 20;
+        curr_scan_[{ global_x, global_y }] = 20;
       }
       geometry_msgs::Point32 pt;
       pt.x = x;
@@ -332,8 +332,8 @@ void CommunicationInterface::processScan()
         float y = range_max * std::sin(laser_angle);
         float global_x = x * std::cos(yaw) - y * std::sin(yaw) + pos_x;
         float global_y = x * std::sin(yaw) + y * std::cos(yaw) + pos_y;
-        curr_local_scan_[{x, y}] = -6;
-        curr_scan_[{global_x, global_y}] = -6;
+        curr_local_scan_[{ x, y }] = -6;
+        curr_scan_[{ global_x, global_y }] = -6;
 
         continue;
       }
@@ -341,8 +341,8 @@ void CommunicationInterface::processScan()
       float global_y = x * std::sin(yaw) + y * std::cos(yaw) + pos_y;
       if (!std::isnan(global_x) && !std::isnan(global_y))
       {
-        curr_local_scan_[{x, y}] = 6;
-        curr_scan_[{global_x, global_y}] = 6;
+        curr_local_scan_[{ x, y }] = 6;
+        curr_scan_[{ global_x, global_y }] = 6;
       }
       geometry_msgs::Point32 pt;
       pt.x = x;
@@ -527,13 +527,13 @@ void CommunicationInterface::cycle(Map &map)
   // update maps
   map.UpdateWithScanPoints(curr_robot_pos_, curr_scan_);
 
-  map_local_.UpdateLocalMapWithScanPoints({0, 0}, curr_local_scan_);
+  map_local_.UpdateLocalMapWithScanPoints({ 0, 0 }, curr_local_scan_);
 
-  // // // check if the planned path is blocked
+  // // // check if the next planned target position is blocked
   // // // if so, re-plan path (re plan full path with setPath() for now)
-  // transformIndex
-  // get points on line
-  // for(every point check four sides for obstacles)
+  // transformIndex (common.h)) res = 0.1 ("goal_")
+  // list = get points on line (map.xxxx)
+  // for(every point in list check four sides for obstacles)
   // // if (check... == false)
   // // {
   // //   setPath(map);
@@ -558,7 +558,7 @@ void CommunicationInterface::cycle(Map &map)
     if (!planned_path_vec_.empty())
     {
       // std::cerr << "reached a planned pos, remaining poses are:" << std::endl;
-      planned_path_vec_.erase(begin(planned_path_vec_)); // remove the reached pos from path
+      planned_path_vec_.erase(begin(planned_path_vec_));  // remove the reached pos from path
       for (auto pt : planned_path_vec_)
       {
         // std::cerr << pt.first << " " << pt.second << std::endl;
