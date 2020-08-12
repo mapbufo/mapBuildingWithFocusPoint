@@ -28,7 +28,7 @@
 class CommunicationInterface
 {
 private:
-  ros::Subscriber depth_image_subscriber_;
+  // ros::Subscriber depth_image_subscriber_;
   ros::Subscriber scan_subscriber_;
   ros::Subscriber goal_subscriber_;
   ros::Subscriber odom_subscriber_;
@@ -77,7 +77,7 @@ private:
   // K = [ 0 fy cy]
   //     [ 0  0  1]
 
-  float cam_intr_[9] = { 554.254691191187, 0.0, 320.5, 0.0, 554.254691191187, 240.5, 0.0, 0.0, 1.0 };
+  float cam_intr_[9] = {554.254691191187, 0.0, 320.5, 0.0, 554.254691191187, 240.5, 0.0, 0.0, 1.0};
 
 public:
   CommunicationInterface(ros::NodeHandle &nh);
@@ -137,4 +137,4 @@ public:
    */
   void cycle(Map &map);
 };
-#endif  // COMMUNICATION_INTERFACE_H
+#endif // COMMUNICATION_INTERFACE_H

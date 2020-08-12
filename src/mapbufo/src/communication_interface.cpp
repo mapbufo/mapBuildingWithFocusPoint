@@ -9,8 +9,8 @@ CommunicationInterface::CommunicationInterface(ros::NodeHandle &nh)
   odom_sub.subscribe(nh, "/odom", 10);
   sync.registerCallback(boost::bind(&CommunicationInterface::scanOdomCallback, this, _1, _2));
 
-  depth_image_subscriber_ =
-      nh.subscribe("/camera/depth/image_raw", 1, &CommunicationInterface::depthImageCallback, this);
+  // depth_image_subscriber_ =
+  //     nh.subscribe("/camera/depth/image_raw", 1, &CommunicationInterface::depthImageCallback, this);
 
   odom_subscriber_ = nh.subscribe("/odom", 1, &CommunicationInterface::robotPositionCallback, this);
 
@@ -58,133 +58,133 @@ CommunicationInterface::CommunicationInterface(ros::NodeHandle &nh)
   path_line_.color.a = 0.6;
 }
 
-void CommunicationInterface::depthImageCallback(const sensor_msgs::Image::ConstPtr &depth_img)
-{
-  // std_msgs/Header header
-  // uint32 height
-  // uint32 width
-  // string encoding
-  // uint8 is_bigendian
-  // uint32 step
-  // uint8[] data
-  int img_height = depth_img->height;
-  int img_width = depth_img->width;
+// void CommunicationInterface::depthImageCallback(const sensor_msgs::Image::ConstPtr &depth_img)
+// {
+//   // std_msgs/Header header
+//   // uint32 height
+//   // uint32 width
+//   // string encoding
+//   // uint8 is_bigendian
+//   // uint32 step
+//   // uint8[] data
+//   int img_height = depth_img->height;
+//   int img_width = depth_img->width;
 
-  std::string img_encoding = depth_img->encoding;
-  int img_step = depth_img->step;
+//   std::string img_encoding = depth_img->encoding;
+//   int img_step = depth_img->step;
 
-  std::vector<float> x_vec;
-  std::vector<float> y_vec;
-  std::vector<float> z_vec;
+//   std::vector<float> x_vec;
+//   std::vector<float> y_vec;
+//   std::vector<float> z_vec;
 
-  // ///////////////////////////////////////////////////////////
+//   // ///////////////////////////////////////////////////////////
 
-  const float center_x = cam_intr_[2];
-  const float center_y = cam_intr_[5];
-  const float focal_x = cam_intr_[0];
-  const float focal_y = cam_intr_[4];
-  const float *depth_row = reinterpret_cast<const float *>(&depth_img->data[0]);
-  const int row_step = img_step / sizeof(float);
+//   const float center_x = cam_intr_[2];
+//   const float center_y = cam_intr_[5];
+//   const float focal_x = cam_intr_[0];
+//   const float focal_y = cam_intr_[4];
+//   const float *depth_row = reinterpret_cast<const float *>(&depth_img->data[0]);
+//   const int row_step = img_step / sizeof(float);
 
-  for (int v = 0; v < img_height; ++v, depth_row += row_step)
-  {
-    for (int u = 0; u < img_width; ++u)  // Loop over each pixel in row
-    {
-      const float depth = depth_row[u];
+//   for (int v = 0; v < img_height; ++v, depth_row += row_step)
+//   {
+//     for (int u = 0; u < img_width; ++u)  // Loop over each pixel in row
+//     {
+//       const float depth = depth_row[u];
 
-      if (std::isfinite(depth))
-      {  // Not NaN or Inf
-        double z = depth;
-        float x = (u - center_x) * z / focal_x;
-        float y = (v - center_y) * z / focal_y;
+//       if (std::isfinite(depth))
+//       {  // Not NaN or Inf
+//         double z = depth;
+//         float x = (u - center_x) * z / focal_x;
+//         float y = (v - center_y) * z / focal_y;
 
-        x_vec.push_back(x);
-        y_vec.push_back(y);
-        z_vec.push_back(z);
-      }
-    }
-  }
+//         x_vec.push_back(x);
+//         y_vec.push_back(y);
+//         z_vec.push_back(z);
+//       }
+//     }
+//   }
 
-  // save the point cloud into a ply-file so that it can be displayed with meshlab
+//   // save the point cloud into a ply-file so that it can be displayed with meshlab
 
-  // std::ofstream output_file;
+//   // std::ofstream output_file;
 
-  // output_file.open("/home/yu/mapBuFo/mapBuildingWithFocusPoint/depth_image.ply");
-  // output_file << "ply" << std::endl;
-  // output_file << "format ascii 1.0" << std::endl;
-  // output_file << "element vertex " << x_vec.size() << std::endl;
-  // output_file << "property float x" << std::endl;
-  // output_file << "property float y" << std::endl;
-  // output_file << "property float z" << std::endl;
-  // output_file << "property uchar red" << std::endl;
-  // output_file << "property uchar green" << std::endl;
-  // output_file << "property uchar blue" << std::endl;
-  // output_file << "end_header" << std::endl;
+//   // output_file.open("/home/yu/mapBuFo/mapBuildingWithFocusPoint/depth_image.ply");
+//   // output_file << "ply" << std::endl;
+//   // output_file << "format ascii 1.0" << std::endl;
+//   // output_file << "element vertex " << x_vec.size() << std::endl;
+//   // output_file << "property float x" << std::endl;
+//   // output_file << "property float y" << std::endl;
+//   // output_file << "property float z" << std::endl;
+//   // output_file << "property uchar red" << std::endl;
+//   // output_file << "property uchar green" << std::endl;
+//   // output_file << "property uchar blue" << std::endl;
+//   // output_file << "end_header" << std::endl;
 
-  // // set poses
-  // for (int j = 0; j < x_vec.size(); j++)
-  // {
-  //   output_file << x_vec[j] << " " << y_vec[j] << " " << z_vec[j] << " "
-  //               << " " << 0 << " " << 255 << " " << 0 << std::endl;
-  // }
+//   // // set poses
+//   // for (int j = 0; j < x_vec.size(); j++)
+//   // {
+//   //   output_file << x_vec[j] << " " << y_vec[j] << " " << z_vec[j] << " "
+//   //               << " " << 0 << " " << 255 << " " << 0 << std::endl;
+//   // }
 
-  ///////////////////////////////////////////////////////////
+//   ///////////////////////////////////////////////////////////
 
-  // get laser scan from the point cloud:
-  // left:   (0, cy)
-  // center: (cx, cy)
-  // right:  (2*cx, cy)
+//   // get laser scan from the point cloud:
+//   // left:   (0, cy)
+//   // center: (cx, cy)
+//   // right:  (2*cx, cy)
 
-  std::vector<std::pair<float, float>> scan_points;
-  const float *new_depth_row = reinterpret_cast<const float *>(&depth_img->data[0]);
-  new_depth_row += row_step * (int)(center_y - 1);
-  for (int u = 0; u < img_width; ++u)  // Loop over each pixel in row
-  {
-    const float depth = new_depth_row[u];
-    const double th = -atan2((double)(u - center_x) / focal_x, 1.0);  // Atan2(x, z), but depth divides out
+//   std::vector<std::pair<float, float>> scan_points;
+//   const float *new_depth_row = reinterpret_cast<const float *>(&depth_img->data[0]);
+//   new_depth_row += row_step * (int)(center_y - 1);
+//   for (int u = 0; u < img_width; ++u)  // Loop over each pixel in row
+//   {
+//     const float depth = new_depth_row[u];
+//     const double th = -atan2((double)(u - center_x) / focal_x, 1.0);  // Atan2(x, z), but depth divides out
 
-    if (std::isfinite(depth))
-    {  // Not NaN or Inf
+//     if (std::isfinite(depth))
+//     {  // Not NaN or Inf
 
-      double x = (u - center_x) * depth / focal_x;
-      double z = depth;
-      // std::cerr << x << " " << z << std::endl;
+//       double x = (u - center_x) * depth / focal_x;
+//       double z = depth;
+//       // std::cerr << x << " " << z << std::endl;
 
-      // double r = std::sqrt(std::pow(x, 2) + std::pow(z, 2));
-      double r = hypot(x, z);
-      scan_points.push_back({ th, r });
-    }
-  }
+//       // double r = std::sqrt(std::pow(x, 2) + std::pow(z, 2));
+//       double r = hypot(x, z);
+//       scan_points.push_back({ th, r });
+//     }
+//   }
 
-  // std::ofstream output_file;
+//   // std::ofstream output_file;
 
-  // output_file.open("/home/yu/mapBuFo/mapBuildingWithFocusPoint/scan_points.txt");
+//   // output_file.open("/home/yu/mapBuFo/mapBuildingWithFocusPoint/scan_points.txt");
 
-  // // set poses
-  // for (int j = 0; j < scan_points.size(); j++)
-  // {
-  //   output_file << scan_points[j].first << " " << scan_points[j].second << std::endl;
-  // }
+//   // // set poses
+//   // for (int j = 0; j < scan_points.size(); j++)
+//   // {
+//   //   output_file << scan_points[j].first << " " << scan_points[j].second << std::endl;
+//   // }
 
-  // create laser scan data
-  sensor_msgs::LaserScan ls;
-  ls.header.seq = counter++;
-  ls.header.stamp = ros::Time::now();
-  ls.header.frame_id = "camera_depth_frame";
-  int num_points = scan_points.size();
-  ls.angle_min = scan_points[0].first;
-  ls.angle_max = scan_points[num_points - 1].first;
-  ls.angle_increment = (ls.angle_max - ls.angle_min) / num_points;
-  ls.range_min = 0.02;
-  ls.range_max = 10;
-  ls.scan_time = 0.02;
-  for (int j = 0; j < scan_points.size(); j++)
-  {
-    ls.ranges.push_back(scan_points[j].second);
-  }
+//   // create laser scan data
+//   sensor_msgs::LaserScan ls;
+//   ls.header.seq = counter++;
+//   ls.header.stamp = ros::Time::now();
+//   ls.header.frame_id = "camera_depth_frame";
+//   int num_points = scan_points.size();
+//   ls.angle_min = scan_points[0].first;
+//   ls.angle_max = scan_points[num_points - 1].first;
+//   ls.angle_increment = (ls.angle_max - ls.angle_min) / num_points;
+//   ls.range_min = 0.02;
+//   ls.range_max = 10;
+//   ls.scan_time = 0.02;
+//   for (int j = 0; j < scan_points.size(); j++)
+//   {
+//     ls.ranges.push_back(scan_points[j].second);
+//   }
 
-  // scan_publisher_.publish(ls);
-}
+//   // scan_publisher_.publish(ls);
+// }
 
 void CommunicationInterface::scanOdomCallback(const sensor_msgs::LaserScan::ConstPtr &scan,
                                               const nav_msgs::Odometry::ConstPtr &odom)
