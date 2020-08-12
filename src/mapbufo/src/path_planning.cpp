@@ -5,57 +5,122 @@ namespace PathPlanning
   std::vector<Point2D> GetNeighbors(Point2D current, Map map, bool global)
   {
     std::vector<Point2D> neighbors;
-    Point2D point_neigh;
-    point_neigh.first = current.first - 1;
-    point_neigh.second = current.second;
     if (global)
     {
-      if (map.GetCell(point_neigh) != CellOccupied::occupied)
+      bool none_occupied(true);
+      // left
+      for (int i = -3; i < 4; i++)
       {
-        neighbors.push_back(point_neigh);
+        if (map.GetCell(Point2D(current.first - 4, current.second + i)) == CellOccupied::occupied)
+        {
+          none_occupied = false;
+          break;
+        }
       }
-      point_neigh.first = current.first + 1;
-      point_neigh.second = current.second;
-      if (map.GetCell(point_neigh) != CellOccupied::occupied)
+      if (none_occupied)
       {
-        neighbors.push_back(point_neigh);
+        neighbors.push_back(Point2D(current.first - 1, current.second));
       }
-      point_neigh.first = current.first;
-      point_neigh.second = current.second - 1;
-      if (map.GetCell(point_neigh) != CellOccupied::occupied)
+      // right
+      none_occupied = true;
+      for (int i = -3; i < 4; i++)
       {
-        neighbors.push_back(point_neigh);
+        if (map.GetCell(Point2D(current.first + 4, current.second + i)) == CellOccupied::occupied)
+        {
+          none_occupied = false;
+          break;
+        }
       }
-      point_neigh.first = current.first;
-      point_neigh.second = current.second + 1;
-      if (map.GetCell(point_neigh) != CellOccupied::occupied)
+      if (none_occupied)
       {
-        neighbors.push_back(point_neigh);
+        neighbors.push_back(Point2D(current.first + 1, current.second));
+      }
+      // down
+      none_occupied = true;
+      for (int i = -3; i < 4; i++)
+      {
+        if (map.GetCell(Point2D(current.first + i, current.second - 4)) == CellOccupied::occupied)
+        {
+          none_occupied = false;
+          break;
+        }
+      }
+      if (none_occupied)
+      {
+        neighbors.push_back(Point2D(current.first, current.second - 1));
+      }
+      // up
+      none_occupied = true;
+      for (int i = -3; i < 4; i++)
+      {
+        if (map.GetCell(Point2D(current.first + i, current.second + 4)) == CellOccupied::occupied)
+        {
+          none_occupied = false;
+          break;
+        }
+      }
+      if (none_occupied)
+      {
+        neighbors.push_back(Point2D(current.first, current.second + 1));
       }
     }
     else
     {
-      if (map.GetCell(point_neigh) == CellOccupied::empty)
+      // left
+      bool all_empty(true);
+      for (int i = -3; i < 4; i++)
       {
-        neighbors.push_back(point_neigh);
+        if (map.GetCell(Point2D(current.first - 4, current.second + i)) != CellOccupied::empty)
+        {
+          all_empty = false;
+          break;
+        }
       }
-      point_neigh.first = current.first + 1;
-      point_neigh.second = current.second;
-      if (map.GetCell(point_neigh) == CellOccupied::empty)
+      if (all_empty)
       {
-        neighbors.push_back(point_neigh);
+        neighbors.push_back(Point2D(current.first - 1, current.second));
       }
-      point_neigh.first = current.first;
-      point_neigh.second = current.second - 1;
-      if (map.GetCell(point_neigh) == CellOccupied::empty)
+      // right
+      all_empty = true;
+      for (int i = -3; i < 4; i++)
       {
-        neighbors.push_back(point_neigh);
+        if (map.GetCell(Point2D(current.first + 4, current.second + i)) != CellOccupied::empty)
+        {
+          all_empty = false;
+          break;
+        }
       }
-      point_neigh.first = current.first;
-      point_neigh.second = current.second + 1;
-      if (map.GetCell(point_neigh) == CellOccupied::empty)
+      if (all_empty)
       {
-        neighbors.push_back(point_neigh);
+        neighbors.push_back(Point2D(current.first + 1, current.second));
+      }
+      // down
+      all_empty = true;
+      for (int i = -3; i < 4; i++)
+      {
+        if (map.GetCell(Point2D(current.first + i, current.second - 4)) != CellOccupied::empty)
+        {
+          all_empty = false;
+          break;
+        }
+      }
+      if (all_empty)
+      {
+        neighbors.push_back(Point2D(current.first, current.second - 1));
+      }
+      // up
+      all_empty = true;
+      for (int i = -3; i < 4; i++)
+      {
+        if (map.GetCell(Point2D(current.first + i, current.second + 4)) != CellOccupied::empty)
+        {
+          all_empty = false;
+          break;
+        }
+      }
+      if (all_empty)
+      {
+        neighbors.push_back(Point2D(current.first, current.second + 1));
       }
     }
     return neighbors;
