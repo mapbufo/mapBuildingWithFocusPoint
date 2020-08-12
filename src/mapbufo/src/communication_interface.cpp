@@ -183,7 +183,7 @@ void CommunicationInterface::depthImageCallback(const sensor_msgs::Image::ConstP
     ls.ranges.push_back(scan_points[j].second);
   }
 
-  scan_publisher_.publish(ls);
+  // scan_publisher_.publish(ls);
 }
 
 void CommunicationInterface::scanOdomCallback(const sensor_msgs::LaserScan::ConstPtr &scan,
@@ -539,6 +539,67 @@ void CommunicationInterface::cycle(Map &map)
   // //   setPath(map);
   // // }
 
+  //////////////////////////////////////
+
+  // if (!planned_path_vec_.empty())
+  // {
+  //   // get the first pos
+  //   Point2DWithFloat next_target = planned_path_vec_[0];
+  //   Point2D targetPointInMap = TransformIndex(next_target.first, next_target.second, 0.1f);
+  //   Point2D robotPosInMap = TransformIndex(curr_robot_pos_.first, curr_robot_pos_.second, 0.1f);
+
+  //   std::vector<Point2D> pointsToBeChecked =
+  //       GetLine(targetPointInMap.first, targetPointInMap.second, robotPosInMap.first, robotPosInMap.second);
+  //   bool pathBlocked = false;
+  //   for (auto pt : pointsToBeChecked)
+  //   {
+  //     // check if the surroundings are occupied
+
+  //     // left
+  //     for (int i = -3; i < 4; i++)
+  //     {
+  //       if (map.GetCell(Point2D(pt.first - 4, pt.second + i)) == CellOccupied::occupied)
+  //       {
+  //         pathBlocked = true;
+  //       }
+  //     }
+
+  //     // right
+
+  //     for (int i = -3; i < 4; i++)
+  //     {
+  //       if (map.GetCell(Point2D(pt.first + 4, pt.second + i)) == CellOccupied::occupied)
+  //       {
+  //         pathBlocked = true;
+  //       }
+  //     }
+
+  //     // down
+  //     for (int i = -3; i < 4; i++)
+  //     {
+  //       if (map.GetCell(Point2D(pt.first + i, pt.second - 4)) == CellOccupied::occupied)
+  //       {
+  //         pathBlocked = true;
+  //       }
+  //     }
+
+  //     // up
+  //     for (int i = -3; i < 4; i++)
+  //     {
+  //       if (map.GetCell(Point2D(pt.first + i, pt.second + 4)) == CellOccupied::occupied)
+  //       {
+  //         pathBlocked = true;
+  //       }
+  //     }
+  //   }
+  //   if (pathBlocked)
+  //   {
+  //     std::cerr << "blocked. replan path." << std::endl;
+  //     setPath(map);
+  //   }
+  // }
+  //////////////////////////////////////
+
   // check if a new goal is received; if so, update the planned path
   if (!new_goal_updated_)
   {
@@ -571,6 +632,7 @@ void CommunicationInterface::cycle(Map &map)
       }
     }
   }
+
   processOdom();
 
   publishTwist();
