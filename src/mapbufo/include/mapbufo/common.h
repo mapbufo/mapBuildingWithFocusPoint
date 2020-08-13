@@ -6,6 +6,7 @@
 #include <iostream>
 #include <utility>
 #include <vector>
+#include <Eigen/Dense>
 
 namespace status
 {
@@ -167,4 +168,19 @@ std::vector<Point2D> GetLine(int x0, int y0, int x1, int y1)
   }
   return GetLineHigh(x0, y0, x1, y1);
 }
+
+Point2DWithFloat TransformFromGlobalToLocal(float robot_x, float robot_y, float target_x, float target_y, float yaw)
+{
+  Eigen::Matrix2f transform_matrix;
+  transform_matrix << cos(yaw), -sin(yaw), sin(yaw), cos(yaw);
+  Eigen::Vector2f global_point_vec(target_x, target_y);
+  Eigen::Vector2f local_coord_vec(robot_x, robot_y);
+  Eigen::Vector2f local_point_vec;
+
+  // calculate the point_pos in local coordinate
+  local_point_vec = transform_matrix.inverse() * (global_point_vec - local_coord_vec);
+
+  return Point2DWithFloat(local_point_vec[0], local_point_vec[0]);
+}
+
 #endif // !COMMON_H

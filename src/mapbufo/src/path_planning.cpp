@@ -253,6 +253,11 @@ namespace PathPlanning
 
     // get the path with the saved parents list
     Point2D path_current_point = end_pos;
+    // if there is no path found, then return empty path
+    if (!parents.count(path_current_point))
+    {
+      return path;
+    }
     while (path_current_point != start_pos)
     {
       path.insert(begin(path), path_current_point);

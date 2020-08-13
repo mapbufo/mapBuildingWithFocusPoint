@@ -75,7 +75,8 @@ public:
   CommunicationInterface(ros::NodeHandle &nh);
 
   void setGoalCallback(const geometry_msgs::PoseStamped::ConstPtr &goal);
-  void setPath(const Map map);
+  void setPath(const Map &map);
+  void setLocalPath(const Map &map_local);
 
   /**
    * publish the planned path
@@ -128,4 +129,4 @@ public:
    */
   void cycle(Map &map);
 };
-#endif  // COMMUNICATION_INTERFACE_H
+#endif // COMMUNICATION_INTERFACE_H
