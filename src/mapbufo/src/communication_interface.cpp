@@ -1,8 +1,11 @@
 #include "communication_interface.h"
 
 CommunicationInterface::CommunicationInterface(ros::NodeHandle &nh)
-    : sync(scan_sub, odom_sub, 10), map_local_(nh, 0.01, 100, 100)
+    : sync(scan_sub, odom_sub, 10), map_local_(nh, 0.01, 300, 300)
 {
+
+  pub_possible_targets_ = nh.advertise<visualization_msgs::MarkerArray>("possible_targets", 100);
+
   // input: laserscan, robot_position
   scan_sub.subscribe(nh, "/scan", 10);
   odom_sub.subscribe(nh, "/odom", 10);
@@ -415,6 +418,8 @@ void CommunicationInterface::cycle(Map &map)
     goal_.second = planned_path_vec_[0].second;
   }
 
+  pub_possible_targets_.publish(possible_targets_);
+
   if (fabs(curr_robot_pos_.first - goal_.first) < 1e-1 && fabs(curr_robot_pos_.second - goal_.second) < 1e-1)
   {
     reached_pos_ = true;
@@ -513,6 +518,28 @@ void CommunicationInterface::setLocalPath(const Map &map_local)
   {
     return;
   }
+
+  possible_targets_.markers.clear();
+  visualization_msgs::Marker tmp_marker;
+  tmp_marker.header.frame_id = "base_footprint";
+  tmp_marker.header.stamp = ros::Time::now();
+  tmp_marker.ns = "possible_targets";
+  tmp_marker.type = visualization_msgs::Marker::CUBE;
+  tmp_marker.action = visualization_msgs::Marker::ADD;
+  tmp_marker.scale.x = 0.1;
+  tmp_marker.scale.y = 0.1;
+  tmp_marker.scale.z = 0.1;
+  tmp_marker.color.r = 1;
+  tmp_marker.color.g = 0;
+  tmp_marker.color.b = 0;
+  tmp_marker.color.a = 1;
+  tmp_marker.pose.orientation.x = 0;
+  tmp_marker.pose.orientation.y = 0;
+  tmp_marker.pose.orientation.z = 0;
+  tmp_marker.pose.orientation.w = 1;
+  tmp_marker.lifetime = ros::Duration();
+  int id = 0;
+
   // iterate through all possible targets, find if there is a local path
   for (; fa_target != begin(planned_path_vec_); fa_target--)
   {
@@ -525,9 +552,19 @@ void CommunicationInterface::setLocalPath(const Map &map_local)
     tf::Matrix3x3 m(q);
     double roll, pitch, yaw;
     m.getRPY(roll, pitch, yaw);
+    //std::cerr << "                  target_pos: " << (fa_target - 1)->first << ", " << (fa_target - 1)->second << std::endl;
     Point2DWithFloat tmp_end_pos = TransformFromGlobalToLocal(curr_robot_pos_.first, curr_robot_pos_.second,
                                                               (fa_target - 1)->first, (fa_target - 1)->second, yaw);
+
+    tmp_marker.id = id;
+    id += 1;
+    tmp_marker.pose.position.x = tmp_end_pos.first;
+    tmp_marker.pose.position.y = tmp_end_pos.second;
+    tmp_marker.pose.position.z = 0;
+    possible_targets_.markers.push_back(tmp_marker);
+
     Point2D end_pos = TransformIndex(tmp_end_pos.first, tmp_end_pos.second, 0.01F);
+    std::cerr << "                  end_pos: " << end_pos.first << ", " << end_pos.second << std::endl;
 
     std::vector<Point2D> planned_path;
     planned_path = PathPlanning::PathPlanning(start_pos, end_pos, map_local_, false);
@@ -536,6 +573,7 @@ void CommunicationInterface::setLocalPath(const Map &map_local)
     // then return
     if (!planned_path.empty())
     {
+      std::cerr << "not empty" << std::endl;
       planned_path_vec_.erase(begin(planned_path_vec_), fa_target - 1);
       // transform the points back into float
       for (int i = planned_path.size() - 1; i >= 0; i--)

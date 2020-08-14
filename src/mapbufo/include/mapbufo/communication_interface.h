@@ -16,6 +16,7 @@
 #include <sensor_msgs/LaserScan.h>
 #include <sensor_msgs/PointCloud.h>
 #include <visualization_msgs/Marker.h>
+#include <visualization_msgs/MarkerArray.h>
 
 #include <boost/bind.hpp>
 #include "common.h"
@@ -48,7 +49,11 @@ private:
   // planned path
   ros::Publisher pub_path_;
 
-  message_filters::Subscriber<sensor_msgs::LaserScan> scan_sub;
+  ros::Publisher pub_possible_targets_;
+  visualization_msgs::MarkerArray possible_targets_;
+
+  message_filters::Subscriber<sensor_msgs::LaserScan>
+      scan_sub;
   message_filters::Subscriber<nav_msgs::Odometry> odom_sub;
   message_filters::TimeSynchronizer<sensor_msgs::LaserScan, nav_msgs::Odometry> sync;
 
