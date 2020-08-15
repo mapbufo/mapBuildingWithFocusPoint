@@ -5,7 +5,7 @@ namespace PathPlanning
   std::vector<Point2D> GetNeighbors(Point2D current, Map map, bool global)
   {
     std::vector<Point2D> neighbors;
-    if (global)
+    //if (global)
     {
       bool none_occupied(true);
       // left
@@ -63,14 +63,15 @@ namespace PathPlanning
       {
         neighbors.push_back(Point2D(current.first, current.second + 1));
       }
-    }
+    } /*
     else
     {
+      std::cerr << "path planning local" << std::endl;
       // left
       bool all_empty(true);
-      for (int i = -30; i < 40; i++)
+      for (int i = -3; i < 4; i++)
       {
-        if (map.GetCell(Point2D(current.first - 40, current.second + i)) != CellOccupied::empty)
+        if (map.GetCell(Point2D(current.first - 4, current.second + i)) == CellOccupied::occupied)
         {
           all_empty = false;
           break;
@@ -82,9 +83,9 @@ namespace PathPlanning
       }
       // right
       all_empty = true;
-      for (int i = -30; i < 40; i++)
+      for (int i = -3; i < 4; i++)
       {
-        if (map.GetCell(Point2D(current.first + 40, current.second + i)) != CellOccupied::empty)
+        if (map.GetCell(Point2D(current.first + 4, current.second + i)) == CellOccupied::occupied)
         {
           all_empty = false;
           break;
@@ -96,9 +97,9 @@ namespace PathPlanning
       }
       // down
       all_empty = true;
-      for (int i = -30; i < 40; i++)
+      for (int i = -3; i < 4; i++)
       {
-        if (map.GetCell(Point2D(current.first + i, current.second - 40)) != CellOccupied::empty)
+        if (map.GetCell(Point2D(current.first + i, current.second - 4)) == CellOccupied::occupied)
         {
           all_empty = false;
           break;
@@ -110,9 +111,9 @@ namespace PathPlanning
       }
       // up
       all_empty = true;
-      for (int i = -30; i < 40; i++)
+      for (int i = -3; i < 4; i++)
       {
-        if (map.GetCell(Point2D(current.first + i, current.second + 40)) != CellOccupied::empty)
+        if (map.GetCell(Point2D(current.first + i, current.second + 4)) == CellOccupied::occupied)
         {
           all_empty = false;
           break;
@@ -122,7 +123,8 @@ namespace PathPlanning
       {
         neighbors.push_back(Point2D(current.first, current.second + 1));
       }
-    }
+      //std::cerr << "neighbours.size: " << neighbors.size() << std::endl;
+    }*/
     return neighbors;
   }
 

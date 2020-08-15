@@ -180,7 +180,7 @@ Point2DWithFloat TransformFromGlobalToLocal(float robot_x, float robot_y, float 
   // calculate the point_pos in local coordinate
   local_point_vec = transform_matrix.inverse() * (global_point_vec - local_coord_vec);
 
-  return Point2DWithFloat(local_point_vec[0], local_point_vec[0]);
+  return Point2DWithFloat(local_point_vec[0], local_point_vec[1]);
 }
 
 #endif // !COMMON_H

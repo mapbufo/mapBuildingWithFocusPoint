@@ -408,8 +408,10 @@ void CommunicationInterface::cycle(Map &map)
     setPath(map);
   }
 
+  std::cerr << "planned_path_vec_.size(): " << planned_path_vec_.size() << std::endl;
+  std::cerr << "the element in path: " << planned_path_vec_.front().first << ", " << planned_path_vec_.front().second << std::endl;
   // need a condition to choose whether local path should be updated or not.
-  if (!planned_path_vec_.empty())
+  if (planned_path_vec_.size() > 1)
   {
     setLocalPath(map_local_);
 
@@ -568,6 +570,7 @@ void CommunicationInterface::setLocalPath(const Map &map_local)
 
     std::vector<Point2D> planned_path;
     planned_path = PathPlanning::PathPlanning(start_pos, end_pos, map_local_, false);
+    map_local_.Update(end_pos, 100, false);
     // if there is a path found, then remove the first element of planned_path_vec_
     // and add the local path into planned_path_vec_
     // then return
