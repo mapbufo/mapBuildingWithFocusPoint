@@ -5,7 +5,7 @@ namespace PathPlanning
   std::vector<Point2D> GetNeighbors(Point2D current, Map map, bool global)
   {
     std::vector<Point2D> neighbors;
-    //if (global)
+    if (global)
     {
       bool none_occupied(true);
       // left
@@ -63,15 +63,33 @@ namespace PathPlanning
       {
         neighbors.push_back(Point2D(current.first, current.second + 1));
       }
-    } /*
+    }
     else
     {
-      std::cerr << "path planning local" << std::endl;
+      if (map.GetCell(Point2D(current.first - 1, current.second)) == CellOccupied::empty)
+      {
+        neighbors.push_back(Point2D(current.first - 1, current.second));
+      }
+      if (map.GetCell(Point2D(current.first + 1, current.second)) == CellOccupied::empty)
+      {
+        neighbors.push_back(Point2D(current.first + 1, current.second));
+      }
+      if (map.GetCell(Point2D(current.first, current.second - 1)) == CellOccupied::empty)
+      {
+        neighbors.push_back(Point2D(current.first, current.second - 1));
+      }
+      if (map.GetCell(Point2D(current.first, current.second + 1)) == CellOccupied::empty)
+      {
+        neighbors.push_back(Point2D(current.first, current.second + 1));
+      }
+
+      /*
+      //std::cerr << "path planning local" << std::endl;
       // left
       bool all_empty(true);
       for (int i = -3; i < 4; i++)
       {
-        if (map.GetCell(Point2D(current.first - 4, current.second + i)) == CellOccupied::occupied)
+        if (map.GetCell(Point2D(current.first - 4, current.second + i)) != CellOccupied::empty)
         {
           all_empty = false;
           break;
@@ -85,7 +103,7 @@ namespace PathPlanning
       all_empty = true;
       for (int i = -3; i < 4; i++)
       {
-        if (map.GetCell(Point2D(current.first + 4, current.second + i)) == CellOccupied::occupied)
+        if (map.GetCell(Point2D(current.first + 4, current.second + i)) != CellOccupied::empty)
         {
           all_empty = false;
           break;
@@ -99,7 +117,7 @@ namespace PathPlanning
       all_empty = true;
       for (int i = -3; i < 4; i++)
       {
-        if (map.GetCell(Point2D(current.first + i, current.second - 4)) == CellOccupied::occupied)
+        if (map.GetCell(Point2D(current.first + i, current.second - 4)) != CellOccupied::empty)
         {
           all_empty = false;
           break;
@@ -113,7 +131,7 @@ namespace PathPlanning
       all_empty = true;
       for (int i = -3; i < 4; i++)
       {
-        if (map.GetCell(Point2D(current.first + i, current.second + 4)) == CellOccupied::occupied)
+        if (map.GetCell(Point2D(current.first + i, current.second + 4)) != CellOccupied::empty)
         {
           all_empty = false;
           break;
@@ -123,10 +141,10 @@ namespace PathPlanning
       {
         neighbors.push_back(Point2D(current.first, current.second + 1));
       }
-      //std::cerr << "neighbours.size: " << neighbors.size() << std::endl;
-    }*/
+      //std::cerr << "neighbours.size: " << neighbors.size() << std::endl;*/
+    }
     return neighbors;
-  }
+  } // namespace PathPlanning
 
   // distance in x-achs plus distance in y-achs
   float CalculateCostSoFar(Point2D start_pos, Point2D current)

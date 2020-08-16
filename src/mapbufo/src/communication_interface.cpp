@@ -1,7 +1,7 @@
 #include "communication_interface.h"
 
 CommunicationInterface::CommunicationInterface(ros::NodeHandle &nh)
-    : sync(scan_sub, odom_sub, 10), map_local_(nh, 0.01, 300, 300)
+    : sync(scan_sub, odom_sub, 10), map_local_(nh, 0.05, 300, 300)
 {
 
   pub_possible_targets_ = nh.advertise<visualization_msgs::MarkerArray>("possible_targets", 100);
@@ -409,17 +409,28 @@ void CommunicationInterface::cycle(Map &map)
   }
 
   std::cerr << "planned_path_vec_.size(): " << planned_path_vec_.size() << std::endl;
-  std::cerr << "the element in path: " << planned_path_vec_.front().first << ", " << planned_path_vec_.front().second << std::endl;
+
   // need a condition to choose whether local path should be updated or not.
   if (planned_path_vec_.size() > 1)
   {
     setLocalPath(map_local_);
+  }
 
+  //std::cerr << "cycle 111111111111" << std::endl;
+  if (!local_path_vec_.empty())
+  {
+    // set the first element of local path as goal_
+    goal_.first = local_path_vec_[0].first;
+    goal_.second = local_path_vec_[0].second;
+  }
+  else if (!planned_path_vec_.empty())
+  {
     // set the first element of planned path as goal_
     goal_.first = planned_path_vec_[0].first;
     goal_.second = planned_path_vec_[0].second;
   }
 
+  //std::cerr << "cycle 2222222222222" << std::endl;
   pub_possible_targets_.publish(possible_targets_);
 
   if (fabs(curr_robot_pos_.first - goal_.first) < 1e-1 && fabs(curr_robot_pos_.second - goal_.second) < 1e-1)
@@ -433,14 +444,29 @@ void CommunicationInterface::cycle(Map &map)
 
   if (reached_pos_)
   {
-    if (!planned_path_vec_.empty())
+    //std::cerr << "cycle 3333333333333" << std::endl;
+    if (!local_path_vec_.empty())
+    {
+      std::cerr << "reached a planned pos, remaining poses are:" << std::endl;
+      local_path_vec_.erase(begin(local_path_vec_)); // remove the reached pos from path
+      reached_pos_ = false;
+      if (!local_path_vec_.empty())
+      {
+        // set the first element of local path as goal_
+        goal_.first = local_path_vec_[0].first;
+        goal_.second = local_path_vec_[0].second;
+      }
+      else if (!planned_path_vec_.empty())
+      {
+        // set the first element of planned path as goal_
+        goal_.first = planned_path_vec_[0].first;
+        goal_.second = planned_path_vec_[0].second;
+      }
+    }
+    else if (!planned_path_vec_.empty())
     {
       std::cerr << "reached a planned pos, remaining poses are:" << std::endl;
       planned_path_vec_.erase(begin(planned_path_vec_)); // remove the reached pos from path
-      for (auto pt : planned_path_vec_)
-      {
-        std::cerr << pt.first << " " << pt.second << std::endl;
-      }
       reached_pos_ = false;
       if (!planned_path_vec_.empty())
       {
@@ -448,6 +474,8 @@ void CommunicationInterface::cycle(Map &map)
         goal_.second = planned_path_vec_[0].second;
       }
     }
+
+    //std::cerr << "cycle 4444444444444" << std::endl;
   }
   processOdom();
 
@@ -459,6 +487,31 @@ void CommunicationInterface::cycle(Map &map)
   publishLocalMap();
 
   publishPlannedPath(planned_path_vec_);
+
+  visualization_msgs::Marker tmp_marker;
+  tmp_marker.header.frame_id = "odom";
+  tmp_marker.header.stamp = ros::Time::now();
+  tmp_marker.ns = "possible_targets";
+  tmp_marker.type = visualization_msgs::Marker::CUBE;
+  tmp_marker.action = visualization_msgs::Marker::ADD;
+  tmp_marker.scale.x = 0.1;
+  tmp_marker.scale.y = 0.1;
+  tmp_marker.scale.z = 0.1;
+  tmp_marker.color.r = 0;
+  tmp_marker.color.g = 0;
+  tmp_marker.color.b = 1;
+  tmp_marker.color.a = 1;
+  tmp_marker.pose.orientation.x = 0;
+  tmp_marker.pose.orientation.y = 0;
+  tmp_marker.pose.orientation.z = 0;
+  tmp_marker.pose.orientation.w = 1;
+  tmp_marker.lifetime = ros::Duration();
+  int id = 0;
+  tmp_marker.id = 100000;
+  tmp_marker.pose.position.x = goal_.first;
+  tmp_marker.pose.position.y = goal_.second;
+  tmp_marker.pose.position.z = 0;
+  possible_targets_.markers.push_back(tmp_marker);
 }
 
 void CommunicationInterface::setGoalCallback(const geometry_msgs::PoseStamped::ConstPtr &goal)
@@ -498,23 +551,24 @@ void CommunicationInterface::setPath(const Map &map)
 
 void CommunicationInterface::setLocalPath(const Map &map_local)
 {
+  //std::cerr << "setLocalPath 111111111111" << std::endl;
   if (planned_path_vec_.empty())
   {
     return;
   }
   // find all elements from planned_path_vec_ in FoV
-  std::vector<Point2D> possible_targets;
   std::vector<Point2DWithFloat>::iterator fa_target;
   for (fa_target = begin(planned_path_vec_); fa_target != end(planned_path_vec_); fa_target++)
   {
     // estimate if this target is in FoV
     float distance_2 = powf(fa_target->first - curr_robot_pos_.first, 2) + powf(fa_target->second - curr_robot_pos_.second, 2);
     // if this target is not in FoV, then break.(The rest targets are further)
-    if (distance_2 >= 2 * 2)
+    if (distance_2 >= 1 * 1)
     {
       break;
     }
   }
+  //std::cerr << "setLocalPath 222222222222" << std::endl;
   // if there is no target in FoV, then return
   if (fa_target == begin(planned_path_vec_))
   {
@@ -542,13 +596,16 @@ void CommunicationInterface::setLocalPath(const Map &map_local)
   tmp_marker.lifetime = ros::Duration();
   int id = 0;
 
+  map_local_.Update(Point2D({100, 0}), 100, false);
+
   // iterate through all possible targets, find if there is a local path
   for (; fa_target != begin(planned_path_vec_); fa_target--)
   {
+    //std::cerr << "setLocalPath 333333333333" << std::endl;
     // try to find a local path, start from the fartherst target
     // transform the points into local-coordinate and local-index
     // start_pos is the robot_Pos, which is always at the center of local map
-    Point2D start_pos(0, 0);
+    Point2D start_pos(2, 0);
     tf::Quaternion q(input_odom_.pose.pose.orientation.x, input_odom_.pose.pose.orientation.y,
                      input_odom_.pose.pose.orientation.z, input_odom_.pose.pose.orientation.w);
     tf::Matrix3x3 m(q);
@@ -558,6 +615,16 @@ void CommunicationInterface::setLocalPath(const Map &map_local)
     Point2DWithFloat tmp_end_pos = TransformFromGlobalToLocal(curr_robot_pos_.first, curr_robot_pos_.second,
                                                               (fa_target - 1)->first, (fa_target - 1)->second, yaw);
 
+    // if the angle is bigger than 45 degree, then skip
+    float angle = tanf(tmp_end_pos.second / tmp_end_pos.first);
+    std::cerr << "tmp_end_pos.second: " << tmp_end_pos.second << ", tmp_end_pos.first: " << tmp_end_pos.first << std::endl;
+    std::cerr << "angle: " << angle << std::endl;
+    if (tmp_end_pos.first < 0 || angle > 1 || angle < -1)
+    {
+      std::cerr << "angle is too big, skip this point" << std::endl;
+      continue;
+    }
+
     tmp_marker.id = id;
     id += 1;
     tmp_marker.pose.position.x = tmp_end_pos.first;
@@ -565,8 +632,8 @@ void CommunicationInterface::setLocalPath(const Map &map_local)
     tmp_marker.pose.position.z = 0;
     possible_targets_.markers.push_back(tmp_marker);
 
-    Point2D end_pos = TransformIndex(tmp_end_pos.first, tmp_end_pos.second, 0.01F);
-    std::cerr << "                  end_pos: " << end_pos.first << ", " << end_pos.second << std::endl;
+    Point2D end_pos = TransformIndex(tmp_end_pos.first, tmp_end_pos.second, 0.05F);
+    //std::cerr << "                  end_pos: " << end_pos.first << ", " << end_pos.second << std::endl;
 
     std::vector<Point2D> planned_path;
     planned_path = PathPlanning::PathPlanning(start_pos, end_pos, map_local_, false);
@@ -576,14 +643,15 @@ void CommunicationInterface::setLocalPath(const Map &map_local)
     // then return
     if (!planned_path.empty())
     {
-      std::cerr << "not empty" << std::endl;
-      planned_path_vec_.erase(begin(planned_path_vec_), fa_target - 1);
+      std::cerr << "\n\n\nsetLocalPath 444444444444444" << std::endl;
+      planned_path_vec_.erase(begin(planned_path_vec_), fa_target);
+      local_path_vec_.clear();
       // transform the points back into float
       for (int i = planned_path.size() - 1; i >= 0; i--)
       {
         Point2DWithFloat pt_float;
         pt_float = ReverseIndex(planned_path[i].first, planned_path[i].second, 0.01);
-        planned_path_vec_.insert(begin(planned_path_vec_), pt_float);
+        local_path_vec_.insert(begin(local_path_vec_), pt_float);
       }
       return;
     }

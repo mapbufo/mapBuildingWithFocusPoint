@@ -74,6 +74,8 @@ private:
   std::vector<Point2DWithFloat> planned_path_vec_;
   bool new_goal_updated_;
 
+  std::vector<Point2DWithFloat> local_path_vec_;
+
   visualization_msgs::Marker path_line_;
 
 public:
