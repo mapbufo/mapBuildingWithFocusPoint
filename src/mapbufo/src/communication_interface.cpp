@@ -23,6 +23,7 @@ CommunicationInterface::CommunicationInterface(ros::NodeHandle &nh)
   goal_.second = 0;
   goal_.first = 0;
   goal_.second = 0;
+  planned_path_vec_.clear();
   // output: robot_control
   control_publisher_ = nh.advertise<geometry_msgs::Twist>("/cmd_vel_mux/input/teleop", 1);
 
@@ -476,6 +477,20 @@ void CommunicationInterface::cycle(Map &map)
 
     // std::cerr << "cycle 4444444444444" << std::endl;
   }
+
+  ////////////////////////////////////
+
+  if (!planned_path_vec_.empty())
+  {
+    if (checkIfPathBlocked(map))
+    {
+      std::cerr << "blocked. replan path." << std::endl;
+      setPath(map);
+    }
+  }
+
+  //////////////////////////////////////
+
   processOdom();
 
   publishTwist();
@@ -663,4 +678,91 @@ void CommunicationInterface::setLocalPath(const Map &map_local)
       return;
     }
   }
+}
+
+bool CommunicationInterface::checkIfPathBlocked(Map map)
+{
+  // loop over all planned path points
+  for (int idx = 0; idx < planned_path_vec_.size(); idx++)
+  {
+    // firstly, check if this point is out of laser range - only those points that are within FoV are considered
+    Point2DWithFloat path_pt = planned_path_vec_[idx];
+    float dist =
+        powf(powf(curr_robot_pos_.first - path_pt.first, 2) + powf(curr_robot_pos_.second - path_pt.second, 2), 0.5);
+    // if out of sight, return
+    if (dist > 8)
+    {
+      return false;  // not blocked
+    }
+
+    // secondly, get points between two planned path points and check if they are blocked
+    Point2DWithFloat first_path_pt = curr_robot_pos_;  // initialization with the current robot pos
+    Point2DWithFloat second_path_pt = curr_robot_pos_;
+
+    if (idx == 0)  // The first line is from the current robot position to the first planned path point
+    {
+      first_path_pt = curr_robot_pos_;
+      second_path_pt = planned_path_vec_[idx];
+    }
+    else
+    {
+      first_path_pt = planned_path_vec_[idx - 1];
+      second_path_pt = planned_path_vec_[idx];
+    }
+
+    // transform float, "exact" positions into integer, "map coord." points for the getLine() function
+    Point2D firstPosInMap = TransformIndex(first_path_pt.first, first_path_pt.second, 0.1f);
+    Point2D secondPosInMap = TransformIndex(second_path_pt.first, second_path_pt.second, 0.1f);
+    if (firstPosInMap == secondPosInMap)  // function getLine needs two different positions
+    {
+      continue;
+    }
+
+    // get points between two path points
+    std::vector<Point2D> pointsToBeChecked =
+        GetLine(firstPosInMap.first, firstPosInMap.second, secondPosInMap.first, secondPosInMap.second);
+
+    for (auto pt : pointsToBeChecked)
+    {
+      // check if the surroundings are occupied
+
+      // left
+      for (int i = -3; i < 4; i++)
+      {
+        if (map.GetCell(Point2D(pt.first - 4, pt.second + i)) == CellOccupied::occupied)
+        {
+          return true;  // blocked!
+        }
+      }
+
+      // right
+
+      for (int i = -3; i < 4; i++)
+      {
+        if (map.GetCell(Point2D(pt.first + 4, pt.second + i)) == CellOccupied::occupied)
+        {
+          return true;  // blocked!
+        }
+      }
+
+      // down
+      for (int i = -3; i < 4; i++)
+      {
+        if (map.GetCell(Point2D(pt.first + i, pt.second - 4)) == CellOccupied::occupied)
+        {
+          return true;  // blocked!
+        }
+      }
+
+      // up
+      for (int i = -3; i < 4; i++)
+      {
+        if (map.GetCell(Point2D(pt.first + i, pt.second + 4)) == CellOccupied::occupied)
+        {
+          return true;  // blocked!
+        }
+      }
+    }
+  }
+  return false;
 }
