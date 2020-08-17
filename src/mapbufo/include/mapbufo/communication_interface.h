@@ -77,6 +77,8 @@ public:
   void setGoalCallback(const geometry_msgs::PoseStamped::ConstPtr &goal);
   void setPath(const Map map);
 
+  bool checkIfPathBlocked(Map map);
+
   /**
    * publish the planned path
    * @param input std::vector<Point2DWithFloat> path: planned path
