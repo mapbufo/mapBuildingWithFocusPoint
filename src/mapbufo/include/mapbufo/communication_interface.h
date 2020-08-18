@@ -49,9 +49,6 @@ private:
   // planned path
   ros::Publisher pub_path_;
 
-  ros::Publisher pub_possible_targets_;
-  visualization_msgs::MarkerArray possible_targets_;
-
   message_filters::Subscriber<sensor_msgs::LaserScan>
       scan_sub;
   message_filters::Subscriber<nav_msgs::Odometry> odom_sub;
