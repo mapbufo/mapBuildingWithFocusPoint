@@ -75,6 +75,10 @@ private:
 
   visualization_msgs::Marker path_line_;
 
+  // check ros time
+  ros::Time begin_;
+  ros::Time end_;
+
 public:
   CommunicationInterface(ros::NodeHandle &nh);
 

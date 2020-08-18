@@ -389,24 +389,35 @@ void CommunicationInterface::publishPlannedPath(std::vector<Point2DWithFloat> pa
 
 void CommunicationInterface::cycle(Map &map)
 {
+  ros::Time t1 = ros::Time::now();
   // process the received scan
   processScan();
+  ros::Time t2 = ros::Time::now();
+  std::cerr << "t2 - t1: " << t2 - t1 << std::endl;
 
   map.UpdateWithScanPoints(curr_robot_pos_, curr_scan_);
+  ros::Time t3 = ros::Time::now();
+  std::cerr << "t3 - t2: " << t3 - t2 << std::endl;
 
   map_local_.UpdateLocalMapWithScanPoints({0, 0}, curr_local_scan_);
+  ros::Time t4 = ros::Time::now();
+  std::cerr << "t4 - t3: " << t4 - t3 << std::endl;
 
   // check if a new goal is received; if so, update the planned path
   if (!new_goal_updated_)
   {
     setPath(map);
   }
+  ros::Time t5 = ros::Time::now();
+  std::cerr << "t5 - t4: " << t5 - t4 << std::endl;
 
   // need a condition to choose whether local path should be updated or not.
   if (planned_path_vec_.size() > 1)
   {
     setLocalPath(map_local_);
   }
+  ros::Time t6 = ros::Time::now();
+  std::cerr << "t6 - t5: " << t6 - t5 << std::endl;
 
   if (!local_path_vec_.empty())
   {
@@ -420,6 +431,8 @@ void CommunicationInterface::cycle(Map &map)
     goal_.first = planned_path_vec_[0].first;
     goal_.second = planned_path_vec_[0].second;
   }
+  ros::Time t7 = ros::Time::now();
+  std::cerr << "t7 - t6: " << t7 - t6 << std::endl;
 
   std::cerr << "goal: " << goal_.first << " " << goal_.second << std::endl;
   if (fabs(curr_robot_pos_.first - goal_.first) < 1e-1 && fabs(curr_robot_pos_.second - goal_.second) < 1e-1)
@@ -461,6 +474,8 @@ void CommunicationInterface::cycle(Map &map)
       }
     }
   }
+  ros::Time t8 = ros::Time::now();
+  std::cerr << "t8 - t7: " << t8 - t7 << std::endl;
 
   if (!planned_path_vec_.empty())
   {
@@ -470,8 +485,12 @@ void CommunicationInterface::cycle(Map &map)
       setPath(map);
     }
   }
+  ros::Time t9 = ros::Time::now();
+  std::cerr << "t9 - t8: " << t9 - t8 << std::endl;
 
   processOdom();
+  ros::Time t10 = ros::Time::now();
+  std::cerr << "t10 - t9: " << t10 - t9 << std::endl;
 
   publishTwist();
 
@@ -481,6 +500,8 @@ void CommunicationInterface::cycle(Map &map)
   publishLocalMap();
 
   publishPlannedPath(planned_path_vec_);
+  ros::Time t11 = ros::Time::now();
+  std::cerr << "t11 - t10: " << t11 - t10 << std::endl;
 }
 
 void CommunicationInterface::setGoalCallback(const geometry_msgs::PoseStamped::ConstPtr &goal)
@@ -565,7 +586,8 @@ void CommunicationInterface::setLocalPath(const Map &map_local)
       continue;
     }
 
-    Point2D end_pos = TransformIndex(tmp_end_pos.first, tmp_end_pos.second, map_local_.GetMap().front().info.resolution);
+    Point2D end_pos =
+        TransformIndex(tmp_end_pos.first, tmp_end_pos.second, map_local_.GetMap().front().info.resolution);
 
     std::vector<Point2D> planned_path;
     planned_path = PathPlanning::PathPlanning(start_pos, end_pos, map_local_, false);
@@ -581,7 +603,8 @@ void CommunicationInterface::setLocalPath(const Map &map_local)
       {
         Point2DWithFloat pt_float;
 
-        pt_float = ReverseIndex(planned_path[i].first, planned_path[i].second, map_local_.GetMap().front().info.resolution);
+        pt_float =
+            ReverseIndex(planned_path[i].first, planned_path[i].second, map_local_.GetMap().front().info.resolution);
         Point2DWithFloat pt_float_global = TransformFromLocalToGlobal(curr_robot_pos_.first, curr_robot_pos_.second,
                                                                       pt_float.first, pt_float.second, yaw);
         local_path_vec_.insert(begin(local_path_vec_), pt_float_global);
