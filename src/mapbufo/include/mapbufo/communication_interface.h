@@ -49,8 +49,9 @@ private:
   // planned path
   ros::Publisher pub_path_;
 
-  message_filters::Subscriber<sensor_msgs::LaserScan>
-      scan_sub;
+  ros::Publisher pub_local_path_;
+
+  message_filters::Subscriber<sensor_msgs::LaserScan> scan_sub;
   message_filters::Subscriber<nav_msgs::Odometry> odom_sub;
   message_filters::TimeSynchronizer<sensor_msgs::LaserScan, nav_msgs::Odometry> sync;
 
@@ -69,11 +70,13 @@ private:
 
   Point2DWithFloat final_goal_;
   std::vector<Point2DWithFloat> planned_path_vec_;
+
   bool new_goal_updated_;
 
   std::vector<Point2DWithFloat> local_path_vec_;
 
   visualization_msgs::Marker path_line_;
+  visualization_msgs::Marker local_path_line_;
 
   // check ros time
   ros::Time begin_;
@@ -93,6 +96,8 @@ public:
    * @param input std::vector<Point2DWithFloat> path: planned path
    */
   void publishPlannedPath(std::vector<Point2DWithFloat> path);
+
+  void publishPlannedLocalPath(std::vector<Point2DWithFloat> path);
 
   /**
    * save the received messages(laserscan and odometry)

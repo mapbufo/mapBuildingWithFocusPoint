@@ -43,6 +43,8 @@ CommunicationInterface::CommunicationInterface(ros::NodeHandle &nh)
   // publish planned path
   pub_path_ = nh.advertise<visualization_msgs::Marker>("planned_path", 100);
 
+  pub_local_path_ = nh.advertise<visualization_msgs::Marker>("planned_local_path", 100);
+
   path_line_.header.frame_id = "odom";
   path_line_.ns = "path";
   path_line_.id = 0;
@@ -52,6 +54,16 @@ CommunicationInterface::CommunicationInterface(ros::NodeHandle &nh)
   path_line_.scale.x = 0.05;
   path_line_.color.g = 1.0;
   path_line_.color.a = 0.6;
+
+  local_path_line_.header.frame_id = "odom";
+  local_path_line_.ns = "path";
+  local_path_line_.id = 1;
+  local_path_line_.type = visualization_msgs::Marker::LINE_STRIP;
+  local_path_line_.action = visualization_msgs::Marker::ADD;
+  local_path_line_.pose.orientation.w = 1.0;
+  local_path_line_.scale.x = 0.05;
+  local_path_line_.color.r = 1.0;
+  local_path_line_.color.a = 0.6;
 }
 
 void CommunicationInterface::scanOdomCallback(const sensor_msgs::LaserScan::ConstPtr &scan,
@@ -387,6 +399,30 @@ void CommunicationInterface::publishPlannedPath(std::vector<Point2DWithFloat> pa
   pub_path_.publish(path_line_);
 }
 
+void CommunicationInterface::publishPlannedLocalPath(std::vector<Point2DWithFloat> path)
+{
+  local_path_line_.points.clear();
+
+  // add the robot position at first
+  geometry_msgs::Point p_robot;
+  p_robot.x = 0;
+  p_robot.y = 0;
+  p_robot.z = 0.0;
+  local_path_line_.points.push_back(p_robot);
+
+  for (auto point : path)
+  {
+    geometry_msgs::Point p;
+    p.x = point.first;
+    p.y = point.second;
+    p.z = 0.0;
+    local_path_line_.points.push_back(p);
+  }
+
+  // publish
+  pub_local_path_.publish(local_path_line_);
+}
+
 void CommunicationInterface::cycle(Map &map)
 {
   ros::Time t1 = ros::Time::now();
@@ -500,6 +536,7 @@ void CommunicationInterface::cycle(Map &map)
   publishLocalMap();
 
   publishPlannedPath(planned_path_vec_);
+  publishPlannedLocalPath(local_path_vec_);
   ros::Time t11 = ros::Time::now();
   std::cerr << "t11 - t10: " << t11 - t10 << std::endl;
 }
