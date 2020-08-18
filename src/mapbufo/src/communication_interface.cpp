@@ -655,6 +655,12 @@ void CommunicationInterface::setLocalPath(const Map &map_local)
         Point2DWithFloat pt_float_global = TransformFromLocalToGlobal(curr_robot_pos_.first, curr_robot_pos_.second,
                                                                       pt_float.first, pt_float.second, yaw);
         local_path_vec_.insert(begin(local_path_vec_), pt_float_global);
+
+        // if it is not blocked between robot and the planned path-point, then skip all the points before it
+        if (!checkIfLineBlocked(map_local_, Point2DWithFloat({0, 0}), pt_float, map_local_.GetMap().front().info.resolution))
+        {
+          return;
+        }
       }
       return;
     }

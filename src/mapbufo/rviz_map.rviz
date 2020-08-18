@@ -133,7 +133,15 @@ Visualization Manager:
     - Class: rviz/Marker
       Enabled: true
       Marker Topic: /planned_path
-      Name: planned_path
+      Name: global_path
+      Namespaces:
+        path: true
+      Queue Size: 100
+      Value: true
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /planned_local_path
+      Name: local_path
       Namespaces:
         path: true
       Queue Size: 100
@@ -143,7 +151,7 @@ Visualization Manager:
       Marker Topic: /possible_targets
       Name: MarkerArray
       Namespaces:
-        possible_targets: true
+        {}
       Queue Size: 100
       Value: true
   Enabled: true
@@ -171,16 +179,16 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 11.7729692
+      Distance: 4.23396635
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 1.14891815
-        Y: -0.94076097
-        Z: 3.2520051
+        X: -0.25406608
+        Y: -3.00564551
+        Z: 2.51395249
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.0500000007
       Invert Z Axis: false
@@ -209,5 +217,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1920
-  X: -3
-  Y: 19
+  X: 237
+  Y: 1
