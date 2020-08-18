@@ -190,4 +190,5 @@ Point2DWithFloat TransformFromLocalToGlobal(float robot_x, float robot_y, float 
 
   return Point2DWithFloat(global_x, global_y);
 }
+
 #endif  // !COMMON_H

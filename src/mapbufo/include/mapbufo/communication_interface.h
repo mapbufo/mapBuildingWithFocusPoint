@@ -89,8 +89,8 @@ public:
   void setPath(const Map &map);
   void setLocalPath(const Map &map_local);
 
-  bool checkIfPathBlocked(Map map);
-
+  bool checkIfPathBlocked(Map &map);
+  bool checkIfLineBlocked(Map &map, Point2DWithFloat first_path_pt, Point2DWithFloat second_path_pt, float resolution);
   /**
    * publish the planned path
    * @param input std::vector<Point2DWithFloat> path: planned path
