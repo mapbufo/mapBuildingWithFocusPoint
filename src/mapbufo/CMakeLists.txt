@@ -19,6 +19,8 @@ find_package(catkin REQUIRED COMPONENTS
   visualization_msgs
 )
 
+find_package(Eigen3 REQUIRED)
+
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES mapbufo
@@ -29,6 +31,7 @@ catkin_package(
 include_directories(
   ${PROJECT_SOURCE_DIR}/include/mapbufo
   ${catkin_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIR}
 )
 
 # add_library( lidar_sim src/simulator/lidar_sim.cpp )

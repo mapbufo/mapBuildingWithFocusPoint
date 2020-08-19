@@ -1,6 +1,7 @@
 #ifndef COMMON_H
 #define COMMON_H
 #include <math.h>
+#include <Eigen/Dense>
 #include <algorithm>
 #include <boost/unordered_map.hpp>
 #include <iostream>
@@ -9,12 +10,12 @@
 
 namespace status
 {
-  enum status
-  {
-    Error = 0,
-    Ok = 1,
-    Undifined = 2
-  };
+enum status
+{
+  Error = 0,
+  Ok = 1,
+  Undifined = 2
+};
 }
 
 enum CellOccupied
@@ -89,7 +90,7 @@ std::vector<Point2D> GetLineLow(int x0, int y0, int x1, int y1)
   int x = x0;
   int y = y0;
   std::vector<Point2D> res;
-  Point2D curr({x, y});
+  Point2D curr({ x, y });
   while (x < x1)
   {
     if (D > 0)
@@ -127,7 +128,7 @@ std::vector<Point2D> GetLineHigh(int x0, int y0, int x1, int y1)
   int x = x0;
   int y = y0;
   std::vector<Point2D> res;
-  Point2D curr({x, y});
+  Point2D curr({ x, y });
   while (y < y1)
   {
     if (D > 0)
@@ -167,4 +168,27 @@ std::vector<Point2D> GetLine(int x0, int y0, int x1, int y1)
   }
   return GetLineHigh(x0, y0, x1, y1);
 }
-#endif // !COMMON_H
+
+Point2DWithFloat TransformFromGlobalToLocal(float robot_x, float robot_y, float target_x, float target_y, float yaw)
+{
+  Eigen::Matrix2f transform_matrix;
+  transform_matrix << cos(yaw), -sin(yaw), sin(yaw), cos(yaw);
+  Eigen::Vector2f global_point_vec(target_x, target_y);
+  Eigen::Vector2f local_coord_vec(robot_x, robot_y);
+  Eigen::Vector2f local_point_vec;
+
+  // calculate the point_pos in local coordinate
+  local_point_vec = transform_matrix.inverse() * (global_point_vec - local_coord_vec);
+
+  return Point2DWithFloat(local_point_vec[0], local_point_vec[1]);
+}
+
+Point2DWithFloat TransformFromLocalToGlobal(float robot_x, float robot_y, float target_x, float target_y, float yaw)
+{
+  float global_x = target_x * std::cos(yaw) - target_y * std::sin(yaw) + robot_x;
+  float global_y = target_x * std::sin(yaw) + target_y * std::cos(yaw) + robot_y;
+
+  return Point2DWithFloat(global_x, global_y);
+}
+
+#endif  // !COMMON_H

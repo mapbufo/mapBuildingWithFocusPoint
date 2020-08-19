@@ -16,6 +16,7 @@
 #include <sensor_msgs/LaserScan.h>
 #include <sensor_msgs/PointCloud.h>
 #include <visualization_msgs/Marker.h>
+#include <visualization_msgs/MarkerArray.h>
 
 #include <boost/bind.hpp>
 #include "common.h"
@@ -48,6 +49,8 @@ private:
   // planned path
   ros::Publisher pub_path_;
 
+  ros::Publisher pub_local_path_;
+
   message_filters::Subscriber<sensor_msgs::LaserScan> scan_sub;
   message_filters::Subscriber<nav_msgs::Odometry> odom_sub;
   message_filters::TimeSynchronizer<sensor_msgs::LaserScan, nav_msgs::Odometry> sync;
@@ -67,23 +70,34 @@ private:
 
   Point2DWithFloat final_goal_;
   std::vector<Point2DWithFloat> planned_path_vec_;
+
   bool new_goal_updated_;
 
+  std::vector<Point2DWithFloat> local_path_vec_;
+
   visualization_msgs::Marker path_line_;
+  visualization_msgs::Marker local_path_line_;
+
+  // check ros time
+  ros::Time begin_;
+  ros::Time end_;
 
 public:
   CommunicationInterface(ros::NodeHandle &nh);
 
   void setGoalCallback(const geometry_msgs::PoseStamped::ConstPtr &goal);
-  void setPath(const Map map);
+  void setPath(const Map &map);
+  void setLocalPath(const Map &map_local);
 
-  bool checkIfPathBlocked(Map map);
-
+  bool checkIfPathBlocked(Map &map);
+  bool checkIfLineBlocked(Map &map, Point2DWithFloat first_path_pt, Point2DWithFloat second_path_pt, float resolution);
   /**
    * publish the planned path
    * @param input std::vector<Point2DWithFloat> path: planned path
    */
   void publishPlannedPath(std::vector<Point2DWithFloat> path);
+
+  void publishPlannedLocalPath(std::vector<Point2DWithFloat> path);
 
   /**
    * save the received messages(laserscan and odometry)
@@ -130,4 +144,4 @@ public:
    */
   void cycle(Map &map);
 };
-#endif  // COMMUNICATION_INTERFACE_H
+#endif // COMMUNICATION_INTERFACE_H
