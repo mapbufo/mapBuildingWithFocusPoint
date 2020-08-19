@@ -163,9 +163,19 @@ namespace PathPlanning
     parents[start_pos] = {-666, -666};
 
     Point2D current;
+    int iterate_limit = static_cast<int>(map.GetMapConst().front().info.width * 10);
+    int iterate_count = 0;
     // iterate through all points in frontier
     while (!frontier.empty())
     {
+      if (!global)
+      {
+        if (iterate_count > iterate_limit)
+        {
+          break;
+        }
+        iterate_count++;
+      }
       // sort the frontier with priority descending
       std::sort(begin(frontier), end(frontier), [](Point2DWithFloat a, Point2DWithFloat b) { return a.value > b.value; });
       // choose the point with best priority as current point

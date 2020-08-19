@@ -38,6 +38,12 @@ public:
   std::vector<nav_msgs::OccupancyGrid> &GetMap() { return maps_; }
 
   /**
+   * return the 4 quadrants maps as vector
+   * @return std::vector, nav_msgs::OccupancyGrid map
+   */
+  const std::vector<nav_msgs::OccupancyGrid> &GetMapConst() const { return maps_; }
+
+  /**
    * get the cell status
    * @param input int x, int y: position of this cell
    * @return CellOccupied: status of this cell
