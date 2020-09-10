@@ -221,7 +221,10 @@ namespace PathPlanning
     }
 
     // optimize the path
-    OptimizePath(path, start_pos);
+    if (path.size() > 1)
+    {
+      OptimizePath(path, start_pos);
+    }
     return path;
   }
 } // namespace PathPlanning

@@ -617,7 +617,7 @@ void CommunicationInterface::setLocalPath(const Map &map_local)
     // try to find a local path, start from the fartherst target
     // transform the points into local-coordinate and local-index
     // start_pos is the robot_Pos, which is always at the center of local map
-    Point2D start_pos(2, 0);
+    Point2D start_pos(0, 0);
     tf::Quaternion q(input_odom_.pose.pose.orientation.x, input_odom_.pose.pose.orientation.y,
                      input_odom_.pose.pose.orientation.z, input_odom_.pose.pose.orientation.w);
     tf::Matrix3x3 m(q);
