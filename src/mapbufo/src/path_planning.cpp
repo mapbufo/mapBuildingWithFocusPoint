@@ -181,7 +181,7 @@ namespace PathPlanning
       for (auto next : neighbors)
       {
         // caculate the cost so far for this point
-        float next_cost = explored_points[current] + CalculateCostSoFar(start_pos, next);
+        float next_cost = explored_points[current] + CalculateCostSoFar(current, next);
         // if this point is already explored and has higher cost than before, then
         // skip this point
         if (explored_points.count(next) == 1)
