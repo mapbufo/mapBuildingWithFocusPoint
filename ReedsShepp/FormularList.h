@@ -3,6 +3,8 @@
 #include <math.h>
 #include <utility>
 #include <vector>
+
+#include <iostream>
 float mod2pi(float x)
 {
     float v = x;
@@ -90,8 +92,7 @@ bool LpRmL(float x, float y, float phi, float &t, float &u, float &v)
     float xi = x - sin(phi);
     float eta = y - 1 + cos(phi);
     float theta, u1;
-    cart2pol(xi, theta, theta, u1);
-
+    cart2pol(xi, eta, theta, u1);
     if (u1 <= 4)
     {
         u = -2 * std::asin(u1 / 4.0);
@@ -114,12 +115,14 @@ bool LpRupLumRm(float x, float y, float phi, float &t, float &u, float &v)
     float xi = x + sin(phi);
     float eta = y - 1 - cos(phi);
     float rho = (2 + std::sqrt(xi * xi + eta * eta)) / 4.0;
+
     if (rho <= 1)
     {
         u = std::acos(rho);
         tauOmega(u, -u, xi, eta, phi, t, v);
         if (t >= 0 && v <= 0)
         {
+
             return true;
         }
     }

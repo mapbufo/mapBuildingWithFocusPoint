@@ -109,6 +109,8 @@ utility
 -
 vector
 -
+iostream
+-
 
 /home/yu/mapBuFo/ReedsShepp/PathFunction.h
 cmath
@@ -121,6 +123,10 @@ RSPath.h
 /home/yu/mapBuFo/ReedsShepp/RSPath.h
 RSPathElem.h
 /home/yu/mapBuFo/ReedsShepp/RSPathElem.h
+iostream
+-
+fstream
+-
 
 /home/yu/mapBuFo/ReedsShepp/RSPath.h
 cmath

@@ -16,6 +16,8 @@ bool CCC(float x, float y, float phi, RSPath &path)
     bool isOk = false;
     // normal
     isOk = LpRmL(x, y, phi, t, u, v);
+    // std::cerr << t << " " << u << " " << v << " " << 0 << " " << 0 << " " << std::endl;
+
     if (isOk)
     {
         float L = std::fabs(t) + std::fabs(u) + std::fabs(v);
@@ -28,6 +30,8 @@ bool CCC(float x, float y, float phi, RSPath &path)
 
     // timeflip
     isOk = LpRmL(-x, y, -phi, t, u, v);
+    // std::cerr << t << " " << u << " " << v << " " << 0 << " " << 0 << " " << std::endl;
+
     if (isOk)
     {
         float L = std::fabs(t) + std::fabs(u) + std::fabs(v);
@@ -40,6 +44,8 @@ bool CCC(float x, float y, float phi, RSPath &path)
 
     // reflect
     isOk = LpRmL(x, -y, -phi, t, u, v);
+    // std::cerr << t << " " << u << " " << v << " " << 0 << " " << 0 << " " << std::endl;
+
     if (isOk)
     {
         float L = std::fabs(t) + std::fabs(u) + std::fabs(v);
@@ -52,6 +58,8 @@ bool CCC(float x, float y, float phi, RSPath &path)
 
     // timeflip + reflect
     isOk = LpRmL(-x, -y, phi, t, u, v);
+    // std::cerr << t << " " << u << " " << v << " " << 0 << " " << 0 << " " << std::endl;
+
     if (isOk)
     {
         float L = std::fabs(t) + std::fabs(u) + std::fabs(v);
@@ -69,6 +77,8 @@ bool CCC(float x, float y, float phi, RSPath &path)
     float yb = x * sin(phi) - y * cos(phi);
 
     isOk = LpRmL(xb, yb, phi, t, u, v);
+    // std::cerr << t << " " << u << " " << v << " " << 0 << " " << 0 << " " << std::endl;
+
     if (isOk)
     {
         float L = std::fabs(t) + std::fabs(u) + std::fabs(v);
@@ -80,6 +90,8 @@ bool CCC(float x, float y, float phi, RSPath &path)
     }
     // timeflip
     isOk = LpRmL(-xb, yb, -phi, t, u, v);
+    // std::cerr << t << " " << u << " " << v << " " << 0 << " " << 0 << " " << std::endl;
+
     if (isOk)
     {
         float L = std::fabs(t) + std::fabs(u) + std::fabs(v);
@@ -91,6 +103,8 @@ bool CCC(float x, float y, float phi, RSPath &path)
     }
     // reflect
     isOk = LpRmL(xb, -yb, -phi, t, u, v);
+    // std::cerr << t << " " << u << " " << v << " " << 0 << " " << 0 << " " << std::endl;
+
     if (isOk)
     {
         float L = std::fabs(t) + std::fabs(u) + std::fabs(v);
@@ -103,13 +117,15 @@ bool CCC(float x, float y, float phi, RSPath &path)
 
     // timeflip + reflect
     isOk = LpRmL(-xb, -yb, phi, t, u, v);
+    // std::cerr << t << " " << u << " " << v << " " << 0 << " " << 0 << " " << std::endl;
+
     if (isOk)
     {
         float L = std::fabs(t) + std::fabs(u) + std::fabs(v);
         if (Lmin > L)
         {
             Lmin = L;
-            path.update(RSPathType["Type01"], -v, -u, -t, 0, 0);
+            path.update(RSPathType["Type02"], -v, -u, -t, 0, 0);
         }
     }
 
