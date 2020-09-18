@@ -34,6 +34,7 @@
 # Folders
 /build
 /devel
+/ReedsShepp/build
 
 # vs code
 ./vscode
