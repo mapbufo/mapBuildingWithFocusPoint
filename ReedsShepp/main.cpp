@@ -4,14 +4,14 @@
 void TestGridAStar();
 
 int main(int argc, char **argv)
-{
+{ /*
   // find rs path
   RSPath path = FindRSPath(2.5, -1.7, M_PI / 3.0);
 
   // plot path
   exportPath(path);
-
-  //TestGridAStar();
+*/
+  TestGridAStar();
   return 0;
 }
 
@@ -52,17 +52,31 @@ void TestGridAStar()
     tmp.push_back(i);
   }
   obstlist.push_back(tmp);
+  /*
+  std::cerr << "the created obstmap: " << std::endl;
   int gres = 2;
   int minx = INT32_MAX;
   int miny = INT32_MAX;
   vector<vector<int>> obmap = CalcObstMap(obstlist, gres, minx, miny);
-
-  std::cerr << "the created obstmap: " << std::endl;
   for (auto a : obmap)
   {
     for (auto b : a)
     {
       std::cerr << b << " ";
+    }
+    std::cerr << std::endl;
+  }
+  */
+
+  //std::cerr << "cost from (5, 5) to (3, 8) is: " << AStarSearch({5, 5}, {3, 8}, obmap) << std::endl;
+
+  vector<vector<float>> costmap = GridAStar(obstlist, {10, 5}, 2);
+  std::cerr << "the calculated costmap: " << std::endl;
+  for (auto a : costmap)
+  {
+    for (auto b : a)
+    {
+      std::cerr << b << "\t";
     }
     std::cerr << std::endl;
   }
