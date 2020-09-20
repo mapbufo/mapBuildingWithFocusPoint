@@ -1,7 +1,10 @@
 #include "PathFunction.h"
 #include "GridAStar.h"
 #include "VehicleCollisionCheck.h"
+
 void TestGridAStar();
+
+void testCollisionCheck();
 
 int main(int argc, char **argv)
 { /*
