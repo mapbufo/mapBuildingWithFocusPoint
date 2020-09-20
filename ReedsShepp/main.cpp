@@ -1,6 +1,6 @@
 #include "PathFunction.h"
 #include "GridAStar.h"
-
+#include "VehicleCollisionCheck.h"
 void TestGridAStar();
 
 int main(int argc, char **argv)
@@ -16,7 +16,7 @@ int main(int argc, char **argv)
   return 0;
 }
 
-void testCollisionCheck( )
+void testCollisionCheck()
 {
 
   // // find rs path
@@ -113,7 +113,6 @@ void testCollisionCheck( )
   output_file << Cornerrl.first << " " << Cornerrl.second << std::endl;
   output_file << Cornerfl.first << " " << Cornerfl.second << std::endl;
   output_file.close();
-
 }
 
 void TestGridAStar()
