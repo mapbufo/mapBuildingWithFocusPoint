@@ -4,16 +4,8 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
-
-#include <Eigen/Geometry>
-#include <Eigen/Core>
-#include <Eigen/SVD>
-#include <Eigen/Dense>
-#include <Eigen/Eigenvalues>
-
+#include <common.h>
 #include <Vehicle.h>
-
-typedef std::pair<double, double> Point2D;
 
 // https://blog.csdn.net/HelloZEX/article/details/80880385
 bool collisionCheck(std::vector<std::pair<Point2D, Point2D>> Object, std::pair<Point2D, Point2D> Line)

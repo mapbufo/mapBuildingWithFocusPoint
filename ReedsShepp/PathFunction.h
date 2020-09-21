@@ -6,8 +6,8 @@
 #include "RSPathElem.h"
 #include <iostream>
 #include <fstream>
-
-RSPath FindRSPath(float x, float y, float phi)
+#include <Vehicle.h>
+RSPath FindRSPath(float x, float y, float phi, Vehicle veh)
 {
     float rmin = 5.0; // minimum turning radius
     x = x / rmin;
