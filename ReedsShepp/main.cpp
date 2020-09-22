@@ -87,8 +87,8 @@ int main(int argc, char **argv)
   Eigen::Vector3d end_point(7, 13, -M_PI / 2.0);
 
   // 6. find path
-  // std::vector<std::vector<int>> ObstMap = GridAStar(config.ObstList, {end_point[0], end_point[1]}, config.XY_GRID_RESOLUTION);
-  std::vector<std::vector<double>> ObstMap;
+  std::vector<std::vector<double>> ObstMap = GridAStar(config.ObstList, {end_point[0], end_point[1]}, config.XY_GRID_RESOLUTION, minx, miny, maxx, maxy);
+  //std::vector<std::vector<double>> ObstMap;
   config.ObstMap = ObstMap;
 
   std::vector<double> x_vec;
@@ -104,7 +104,7 @@ int main(int argc, char **argv)
   }
   else
   {
-    }
+  }
   return 0;
 }
 
@@ -207,69 +207,62 @@ void testCollisionCheck()
   output_file.close();
 }
 
-// void TestGridAStar()
-// {
-//   // create an obstlist
-//   vector<vector<int>> obstlist;
-//   vector<int> tmp;
-//   tmp.push_back(30);
-//   for (int i = -25; i < 26; i++)
-//   {
-//     tmp.push_back(i);
-//   }
-//   obstlist.push_back(tmp);
-//   tmp.clear();
-//   tmp.push_back(5);
-//   for (int i = -25; i < -9; i++)
-//   {
-//     tmp.push_back(i);
-//   }
-//   for (int i = 10; i < 26; i++)
-//   {
-//     tmp.push_back(i);
-//   }
-//   obstlist.push_back(tmp);
-//   for (int i = 4; i > 0; i--)
-//   {
-//     tmp.clear();
-//     tmp.push_back(i);
-//     tmp.push_back(-10);
-//     tmp.push_back(10);
-//     obstlist.push_back(tmp);
-//   }
-//   tmp.clear();
-//   tmp.push_back(0);
-//   for (int i = -10; i < 11; i++)
-//   {
-//     tmp.push_back(i);
-//   }
-//   obstlist.push_back(tmp);
-//   /*
-//   std::cerr << "the created obstmap: " << std::endl;
-//   int gres = 2;
-//   int minx = INT32_MAX;
-//   int miny = INT32_MAX;
-//   vector<vector<int>> obmap = CalcObstMap(obstlist, gres, minx, miny);
-//   for (auto a : obmap)
-//   {
-//     for (auto b : a)
-//     {
-//       std::cerr << b << " ";
-//     }
-//     std::cerr << std::endl;
-//   }
-//   */
+void TestGridAStar()
+{
+  std::vector<Point2D> ObstList;
+  for (int i = -25; i <= 25; ++i)
+  {
+    ObstList.push_back(Point2D(i, 30));
+  }
+  for (int i = -10; i <= 10; ++i)
+  {
+    ObstList.push_back(Point2D(i, 0));
+  }
+  for (int i = -25; i <= -10; ++i)
+  {
+    ObstList.push_back(Point2D(i, 5));
+  }
+  for (int i = 10; i <= 25; ++i)
+  {
+    ObstList.push_back(Point2D(i, 5));
+  }
+  for (int i = 0; i <= 5; ++i)
+  {
+    ObstList.push_back(Point2D(10, i));
+  }
+  for (int i = 0; i <= 5; ++i)
+  {
+    ObstList.push_back(Point2D(-10, i));
+  }
+  double minx = std::numeric_limits<double>::max();
+  double maxx = 0;
+  double miny = std::numeric_limits<double>::max();
+  double maxy = 0;
 
-//   //std::cerr << "cost from (5, 5) to (3, 8) is: " << AStarSearch({5, 5}, {3, 8}, obmap) << std::endl;
-
-//   vector<vector<float>> costmap = GridAStar(obstlist, {10, 5}, 2);
-//   std::cerr << "the calculated costmap: " << std::endl;
-//   for (auto a : costmap)
-//   {
-//     for (auto b : a)
-//     {
-//       std::cerr << b << "\t";
-//     }
-//     std::cerr << std::endl;
-//   }
-// }
+  for (auto elem : ObstList)
+  {
+    minx = std::min(minx, elem.first);
+    maxx = std::max(maxx, elem.first);
+    miny = std::min(miny, elem.second);
+    maxy = std::max(maxy, elem.second);
+  }
+  // std::vector<std::vector<int>> obmap = CalcObstMap(ObstList, 2, minx, miny, maxx, maxy);
+  // for (auto a : obmap)
+  // {
+  //   for (auto b : a)
+  //   {
+  //     std::cerr << b << " ";
+  //   }
+  //   std::cerr << std::endl;
+  // }
+  vector<vector<double>> costmap = GridAStar(ObstList, {10, 5}, 2, minx, miny, maxx, maxy);
+  std::cerr << "the calculated costmap: " << std::endl;
+  for (auto a : costmap)
+  {
+    for (auto b : a)
+    {
+      std::cerr << b << "\t";
+    }
+    std::cerr << std::endl;
+  }
+}
