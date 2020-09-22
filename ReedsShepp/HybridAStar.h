@@ -64,7 +64,7 @@ void VehicleDynamic(double &x, double &y, double &theta, double D, double delta,
     theta = mod2pi(theta);
 }
 
-bool AnalysticExpansion(Eigen::Vector3d Start, Eigen::Vector3d End, Vehicle veh, Configuration cfg, std::vector<Point2D> &path)
+bool AnalysticExpansion(Eigen::Vector3d Start, Eigen::Vector3d End, Vehicle veh, Configuration cfg, RSPath &rspath)
 {
     bool isok = true;
     bool isCollision = false;
@@ -88,7 +88,7 @@ bool AnalysticExpansion(Eigen::Vector3d Start, Eigen::Vector3d End, Vehicle veh,
     double mres = cfg.MOTION_RESOLUTION;
     std::vector<std::pair<Point2D, Point2D>> obstline = cfg.ObstLine;
 
-    RSPath rspath = FindRSPath(pos_x, pos_y, pvec[2], veh);
+    rspath = FindRSPath(pos_x, pos_y, pvec[2], veh);
 
     std::vector<int> types = rspath.type_;
     double t = rmin * rspath.t_;
@@ -97,10 +97,10 @@ bool AnalysticExpansion(Eigen::Vector3d Start, Eigen::Vector3d End, Vehicle veh,
     double w = rmin * rspath.w_;
     double x = rmin * rspath.x_;
     std::vector<double> segs = {t, u, v, w, x};
-    pvec[0]  =Start[0];
-    pvec[1]  =Start[1];
-    pvec[2]  =Start[2];
-    
+    pvec[0] = Start[0];
+    pvec[1] = Start[1];
+    pvec[2] = Start[2];
+
     for (int i = 0; i < 5; ++i)
     {
         if (segs[i] == 0)
@@ -194,8 +194,75 @@ Node PopNode(std::vector<Node> nodes, Configuration cfg)
     return wknode;
 }
 
-bool CalcNextNode(Node wknode, double D, double delta, double veh, Configuration cfg, Node &tnode)
+bool CalcNextNode(Node wknode, double D, double delta, Vehicle veh, Configuration cfg, Node &tnode)
 {
+    bool isok = true;
+    bool isCollision = false;
+    double px = wknode.X;
+    double py = wknode.Y;
+    double pth = wknode.Theta;
+    double gres = cfg.XY_GRID_RESOLUTION;
+    std::vector<std::pair<Point2D, Point2D>> obstline = cfg.ObstLine;
+
+    int nlist = std::floor(gres * 1.5 / cfg.MOTION_RESOLUTION) + 1;
+    std::vector<double> pos_x(nlist + 1, 0);
+    std::vector<double> pos_y(nlist + 1, 0);
+    std::vector<double> pos_th(nlist + 1, 0);
+    pos_x[0] = px;
+    pos_y[0] = py;
+    pos_th[0] = pth;
+
+    for (int idx = 0; idx < nlist; ++idx)
+    {
+        VehicleDynamic(px, py, pth, D, delta, veh.WB);
+        pos_x[idx + 1] = px;
+        pos_y[idx + 1] = py;
+        pos_th[idx + 1] = pth;
+        if (idx % 5 == 0)
+        {
+            Eigen::Vector3d tvec(px, py, pth);
+            isCollision = VehicleCollisionCheck(tvec, obstline, veh);
+            if (isCollision)
+                break;
+        }
+    }
+
+    tnode.update(wknode);
+    if (isCollision)
+    {
+        isok = false;
+        return isok;
+    }
+    else
+    {
+        int xidx, yidx, thidx;
+        isok = CalcIdx(px, py, pth, cfg, xidx, yidx, thidx);
+        if (!isok)
+        {
+            return isok;
+        }
+        else
+        {
+            double cost = wknode.Cost;
+            if (D > 0)
+            {
+                cost += gres * 1.5;
+            }
+            else
+            {
+                cost += cfg.BACK_COST * gres * 1.5;
+            }
+            if (D != wknode.D)
+            {
+                cost += cfg.SB_COST;
+            }
+            cost += cfg.STEER_COST * std::fabs(delta);
+            cost += cfg.STEER_CHANGE_COST * std::fabs(delta - wknode.Delta);
+            Node tempNode(xidx, yidx, thidx, D, delta, px, py, pth, Eigen::Vector3d(wknode.xIdx, wknode.yIdx, wknode.yawIdx), cost);
+            tnode.update(tempNode);
+        }
+    }
+
     return true;
 }
 
@@ -221,10 +288,201 @@ void Update(Node wknode, std::vector<Node> &Open, std::vector<Node> &Close, Vehi
     double mres = cfg.MOTION_RESOLUTION;
     double smax = veh.MAX_STEER;
     double sres = smax * 1.0 / cfg.N_STEER;
+
+    std::vector<double> mres_vec = {-mres, mres};
+    std::vector<double> sres_vec;
+    double cur_sres = -smax;
+    do
+    {
+        sres_vec.push_back(cur_sres);
+        cur_sres += sres;
+    } while (cur_sres <= smax);
+
+    for (auto D : mres_vec)
+    {
+        for (auto delta : sres_vec)
+        {
+            Node tnode;
+            bool isok1 = CalcNextNode(wknode, D, delta, veh, cfg, tnode);
+            if (!isok1)
+            {
+                continue;
+            }
+            int idx2 = -1;
+            bool isok2 = inNodes(tnode, Close, idx2);
+            if (isok2)
+            {
+                continue;
+            }
+
+            int idx3 = -1;
+            bool isok3 = inNodes(tnode, Open, idx3);
+            if (isok3)
+            {
+                double tcost = TotalCost(tnode, cfg);
+                Node ttnode;
+                ttnode.update(Open[idx3]);
+                double ttcost = TotalCost(ttnode, cfg);
+                if (tcost < ttcost)
+                {
+                    Open[idx3].update(tnode);
+                }
+            }
+            else
+            {
+                Open.push_back(tnode);
+            }
+        }
+    }
 }
 //getFinalPath
-void getFinalPath(std::vector<Point2D> path, std::vector<Node> Close, Vehicle veh, Configuration cfg, std::vector<double> &x, std::vector<double> &y, std::vector<double> &theta, std::vector<double> &D, std::vector<double> &delta)
+void getFinalPath(RSPath rspath, std::vector<Node> Close, Vehicle veh, Configuration cfg, std::vector<double> &x_vec, std::vector<double> &y_vec, std::vector<double> &th_vec, std::vector<double> &D_vec, std::vector<double> &delta_vec)
 {
+    Node wknode;
+    wknode.update(Close[Close.size() - 1]);
+    Close.erase(Close.end() - 1);
+    std::vector<Node> nodes = {wknode};
+
+    while (!Close.empty())
+    {
+        size_t n = Close.size();
+        Eigen::Vector3d parent = wknode.Parent;
+
+        for (size_t i = n - 1; i >= 0; --i)
+        {
+            Node tnode;
+            tnode.update(Close[i]);
+            if (tnode.xIdx == parent[0] || tnode.yIdx == parent[1] || tnode.yawIdx == parent[2])
+            {
+                nodes.push_back(tnode);
+                wknode.update(tnode);
+                Close.erase(Close.begin() + i);
+                break;
+            }
+        }
+    }
+    double rmin = veh.MIN_CIRCLE;
+    double smax = veh.MAX_STEER;
+    double mres = cfg.MOTION_RESOLUTION;
+    double gres = cfg.XY_GRID_RESOLUTION;
+
+    double nlist = std::floor(gres * 1.5 / cfg.MOTION_RESOLUTION) + 1;
+
+    int flag = 0;
+
+    if (nodes.size() >= 2)
+    {
+        for (int i = nodes.size() - 1; i >= 1; --i)
+        {
+            Node tnode;
+            tnode.update(nodes[i]);
+            Node ttnode;
+            ttnode.update(nodes[i - 1]);
+
+            double px = tnode.X;
+            double py = tnode.Y;
+            double pth = tnode.Theta;
+
+            x_vec.push_back(px);
+            y_vec.push_back(py);
+            th_vec.push_back(pth);
+            D_vec.push_back(ttnode.D);
+            delta_vec.push_back(ttnode.Delta);
+
+            for (int idx = 0; idx < nlist; ++idx)
+            {
+                VehicleDynamic(px, py, pth, ttnode.D, ttnode.Delta, veh.WB);
+                x_vec.push_back(px);
+                y_vec.push_back(py);
+                th_vec.push_back(pth);
+                D_vec.push_back(ttnode.D);
+                delta_vec.push_back(ttnode.Delta);
+            }
+
+            if (i != 1)
+            {
+                x_vec.erase(x_vec.end() - 1);
+                y_vec.erase(y_vec.end() - 1);
+                th_vec.erase(th_vec.end() - 1);
+                D_vec.erase(D_vec.end() - 1);
+                delta_vec.erase(delta_vec.end() - 1);
+            }
+        }
+    }
+    else
+    {
+        flag = 1;
+        Node tnode;
+        tnode.update(nodes[0]);
+        double px = tnode.X;
+        double py = tnode.Y;
+        double pth = tnode.Theta;
+        x_vec.push_back(px);
+        y_vec.push_back(py);
+        th_vec.push_back(pth);
+    }
+
+    std::vector<int> types = rspath.type_;
+    double t = rmin * rspath.t_;
+    double u = rmin * rspath.u_;
+    double v = rmin * rspath.v_;
+    double w = rmin * rspath.w_;
+    double x = rmin * rspath.x_;
+
+    std::vector<double> segs = {t, u, v, w, rmin * rspath.x_};
+
+    for (int i = 0; i < 5; ++i)
+    {
+        if (segs[i] == 0)
+            continue;
+
+        double direction = 0;
+        if (segs[i] > 0)
+        {
+            direction = 1;
+        }
+        else if (segs[i] < 0)
+        {
+            direction = -1;
+        }
+        double tdelta;
+        if (types[i] == RS_STRAIGHT)
+        {
+            tdelta = 0;
+        }
+        else if (types[i] == RS_LEFT)
+        {
+            tdelta = smax;
+        }
+        else if (types[i] == RS_RIGHT)
+        {
+            tdelta = -smax;
+        }
+        else
+        {
+            // do nothing
+        }
+        if (flag == 1)
+        {
+            D_vec.push_back(direction * mres);
+            delta_vec.push_back(tdelta);
+            flag = 0;
+        }
+        for (int idx = 0; idx < std::round(std::fabs(segs[i]) / mres); ++idx)
+        {
+            double px, py, pth;
+            px = x_vec[x_vec.size() - 1];
+            py = y_vec[y_vec.size() - 1];
+            pth = th_vec[th_vec.size() - 1];
+
+            VehicleDynamic(px, py, pth, direction * mres, tdelta, veh.WB);
+            x_vec.push_back(px);
+            y_vec.push_back(py);
+            th_vec.push_back(pth);
+            D_vec.push_back(direction * mres);
+            delta_vec.push_back(tdelta);
+        }
+    }
 }
 void HybridAStar(Eigen::Vector3d Start, Eigen::Vector3d End, Vehicle veh, Configuration cfg, std::vector<Eigen::Vector3d> &posVec, std::vector<double> &D, std::vector<double> &delta)
 {
@@ -261,7 +519,7 @@ void HybridAStar(Eigen::Vector3d Start, Eigen::Vector3d End, Vehicle veh, Config
         {
             Close.push_back(wknode);
         }
-        std::vector<Point2D> rspath;
+        RSPath rspath;
         bool isok2 = AnalysticExpansion(Eigen::Vector3d(wknode.X, wknode.Y, wknode.Theta), End, veh, cfg, rspath);
         if (isok2)
         {
