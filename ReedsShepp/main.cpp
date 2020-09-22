@@ -104,6 +104,33 @@ int main(int argc, char **argv)
   }
   else
   {
+    // export path
+
+    // export to file
+
+    std::ofstream output_file;
+
+    output_file.open("obstacleLine.txt");
+
+    // set points
+    for (int i = 0; i < ObstLine.size(); i++)
+    {
+
+      output_file << ObstLine[i].first.first << " " << ObstLine[i].first.second
+                  << " " << ObstLine[i].second.first << " " << ObstLine[i].second.second << std::endl;
+    }
+    output_file.close();
+
+    output_file.open("exportedPath.txt");
+
+    // set points
+    for (int i = 0; i < x_vec.size(); i++)
+    {
+
+      output_file << x_vec[i] << " " << y_vec[i]
+                  << std::endl;
+    }
+    output_file.close();
   }
   return 0;
 }
