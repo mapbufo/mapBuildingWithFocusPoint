@@ -29,6 +29,30 @@ public:
     double STEER_COST;
     double H_COST;
 
+    Configuration()
+    {
+
+        MOTION_RESOLUTION = 0.1;
+        N_STEER = 20.0;
+        EXTEND_AREA = 0;
+        XY_GRID_RESOLUTION = 2.0;
+        YAW_GRID_RESOLUTION = 15.0 * M_PI / 180.0;
+
+        MINX = EXTEND_AREA;
+        MAXX = EXTEND_AREA;
+        MINY = EXTEND_AREA;
+        MAXY = EXTEND_AREA;
+
+        MINYAW = -M_PI;
+        MAXYAW = M_PI;
+
+        SB_COST = 0;
+        BACK_COST = 1.5;
+        STEER_CHANGE_COST = 1.5;
+        STEER_COST = 1.5;
+        H_COST = 10;
+    }
+
     Configuration(std::vector<Point2D> obstList, std::vector<std::pair<Point2D, Point2D>> obstLine)
     {
         ObstList = obstList;

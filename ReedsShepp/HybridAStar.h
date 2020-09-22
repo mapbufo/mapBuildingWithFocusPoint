@@ -484,7 +484,7 @@ void getFinalPath(RSPath rspath, std::vector<Node> Close, Vehicle veh, Configura
         }
     }
 }
-void HybridAStar(Eigen::Vector3d Start, Eigen::Vector3d End, Vehicle veh, Configuration cfg, std::vector<Eigen::Vector3d> &posVec, std::vector<double> &D, std::vector<double> &delta)
+void HybridAStar(Eigen::Vector3d Start, Eigen::Vector3d End, Vehicle veh, Configuration cfg, std::vector<double> &x_vec, std::vector<double> &y_vec, std::vector<double> &th_vec, std::vector<double> &D_vec, std::vector<double> &delta_vec)
 {
     float mres = cfg.MOTION_RESOLUTION;
 
@@ -501,9 +501,6 @@ void HybridAStar(Eigen::Vector3d Start, Eigen::Vector3d End, Vehicle veh, Config
     std::vector<Node> Open;
     Open.push_back(tnode);
     std::vector<Node> Close;
-    std::vector<double> x;
-    std::vector<double> y;
-    std::vector<double> th;
 
     while (!Open.empty())
     {
@@ -528,7 +525,7 @@ void HybridAStar(Eigen::Vector3d Start, Eigen::Vector3d End, Vehicle veh, Config
             Close.push_back(wknode);
             Close.erase(Close.begin() + idx2);
 
-            getFinalPath(rspath, Close, veh, cfg, x, y, th, D, delta);
+            getFinalPath(rspath, Close, veh, cfg, x_vec, y_vec, th_vec, D_vec, delta_vec);
             break;
         }
         Update(wknode, Open, Close, veh, cfg);

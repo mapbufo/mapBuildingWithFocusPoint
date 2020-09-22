@@ -49,14 +49,62 @@ int main(int argc, char **argv)
   Vehicle veh(3.7, 2.6, 4.5, 1.0, 0.6);
 
   // 4. config
-  // ...
+  Configuration config;
+  config.MOTION_RESOLUTION = 0.1;
+  config.N_STEER = 20.0;
+  config.EXTEND_AREA = 0;
+  config.XY_GRID_RESOLUTION = 2.0;
+  config.YAW_GRID_RESOLUTION = 15.0 * M_PI / 180.0;
+
+  double minx = std::numeric_limits<double>::max();
+  double maxx = 0;
+  double miny = std::numeric_limits<double>::max();
+  double maxy = 0;
+
+  for (auto elem : ObstList)
+  {
+    minx = std::min(minx, elem.first);
+    maxx = std::max(maxx, elem.first);
+    miny = std::min(miny, elem.second);
+    maxy = std::max(maxy, elem.second);
+  }
+  config.MINX = minx - config.EXTEND_AREA;
+  config.MAXX = maxx + config.EXTEND_AREA;
+  config.MINY = miny - config.EXTEND_AREA;
+  config.MAXY = maxy - config.EXTEND_AREA;
+
+  config.MINYAW = -M_PI;
+  config.MAXYAW = M_PI;
+
+  config.SB_COST = 0;
+  config.BACK_COST = 1.5;
+  config.STEER_CHANGE_COST = 1.5;
+  config.STEER_COST = 1.5;
+  config.H_COST = 10.0;
 
   // 5. set start and end point
   Eigen::Vector3d start_point(22, 12, M_PI);
   Eigen::Vector3d end_point(7, 13, -M_PI / 2.0);
 
   // 6. find path
-  // ...
+  // std::vector<std::vector<int>> ObstMap = GridAStar(config.ObstList, {end_point[0], end_point[1]}, config.XY_GRID_RESOLUTION);
+  std::vector<std::vector<double>> ObstMap;
+  config.ObstMap = ObstMap;
+
+  std::vector<double> x_vec;
+  std::vector<double> y_vec;
+  std::vector<double> th_vec;
+  std::vector<double> D_vec;
+  std::vector<double> delta_vec;
+
+  HybridAStar(start_point, end_point, veh, config, x_vec, y_vec, th_vec, D_vec, delta_vec);
+  if (x_vec.empty())
+  {
+    std::cerr << "Failed to find path!" << std::endl;
+  }
+  else
+  {
+    }
   return 0;
 }
 
