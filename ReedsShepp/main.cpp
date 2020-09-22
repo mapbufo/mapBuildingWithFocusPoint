@@ -1,5 +1,5 @@
 #include "PathFunction.h"
-// #include "GridAStar.h"
+#include "GridAStar.h"
 #include "VehicleCollisionCheck.h"
 #include "HybridAStar.h"
 void TestGridAStar();
