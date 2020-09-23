@@ -33,6 +33,7 @@ double mod2pi(double x)
 
 bool CalcIdx(double x, double y, double theta, Configuration cfg, int &xidx, int &yidx, int &thidx)
 {
+
     double gres = cfg.XY_GRID_RESOLUTION;
     double yawres = cfg.YAW_GRID_RESOLUTION;
     xidx = std::ceil((x - cfg.MINX) / gres);
@@ -40,6 +41,7 @@ bool CalcIdx(double x, double y, double theta, Configuration cfg, int &xidx, int
     theta = mod2pi(theta);
     thidx = std::ceil((theta - cfg.MINYAW) / yawres);
     bool isok = true;
+    std::cerr << xidx << " " << yidx << std::endl;
     if (xidx <= 0 || xidx > std::ceil((cfg.MAXX - cfg.MINX) / gres))
     {
         isok = false;
@@ -53,6 +55,7 @@ bool CalcIdx(double x, double y, double theta, Configuration cfg, int &xidx, int
     {
         isok = false;
     }
+
     return isok;
 }
 
@@ -89,7 +92,7 @@ bool AnalysticExpansion(Eigen::Vector3d Start, Eigen::Vector3d End, Vehicle veh,
     std::vector<std::pair<Point2D, Point2D>> obstline = cfg.ObstLine;
 
     rspath = FindRSPath(pos_x, pos_y, pvec[2], veh);
-
+    exportPath(rspath, veh, Start);
     std::vector<int> types = rspath.type_;
     double t = rmin * rspath.t_;
     double u = rmin * rspath.u_;
@@ -142,6 +145,7 @@ bool AnalysticExpansion(Eigen::Vector3d Start, Eigen::Vector3d End, Vehicle veh,
             if (idx % 5 == 0)
             {
                 Eigen::Vector3d tvec(px, py, pth);
+                // std::cerr << px << " " << py << " " << std::endl;
                 isCollision = VehicleCollisionCheck(tvec, obstline, veh);
                 if (isCollision)
                 {
@@ -492,6 +496,7 @@ void HybridAStar(Eigen::Vector3d Start, Eigen::Vector3d End, Vehicle veh, Config
     xidx = yidx = thidx = 0;
 
     bool isok = CalcIdx(Start[0], Start[1], Start[2], cfg, xidx, yidx, thidx);
+
     Node tnode;
     if (isok)
     {
@@ -520,6 +525,7 @@ void HybridAStar(Eigen::Vector3d Start, Eigen::Vector3d End, Vehicle veh, Config
         bool isok2 = AnalysticExpansion(Eigen::Vector3d(wknode.X, wknode.Y, wknode.Theta), End, veh, cfg, rspath);
         if (isok2)
         {
+            std::cerr << "rs path " << std::endl;
             int idx2 = -1;
             inNodes(wknode, Close, idx2);
             Close.push_back(wknode);
@@ -528,6 +534,7 @@ void HybridAStar(Eigen::Vector3d Start, Eigen::Vector3d End, Vehicle veh, Config
             getFinalPath(rspath, Close, veh, cfg, x_vec, y_vec, th_vec, D_vec, delta_vec);
             break;
         }
+        std::cerr << "not rs path " << std::endl;
         Update(wknode, Open, Close, veh, cfg);
     }
 }

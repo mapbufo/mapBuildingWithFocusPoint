@@ -7,43 +7,58 @@ void TestGridAStar();
 void testCollisionCheck();
 
 int main(int argc, char **argv)
-{ // 1. add obstacle list
+{
+  // testCollisionCheck();
+  // return 0;
+
+  // 1. add obstacle list
   std::vector<Point2D> ObstList;
-  for (int i = -25; i <= 25; ++i)
+
+  for (int i = -30; i <= 30; ++i)
   {
     ObstList.push_back(Point2D(i, 30));
   }
-  for (int i = -10; i <= 10; ++i)
+  for (int i = -30; i <= 30; ++i)
   {
-    ObstList.push_back(Point2D(i, 0));
+    ObstList.push_back(Point2D(30, i));
   }
-  for (int i = -25; i <= -10; ++i)
+  for (int i = -30; i <= 30; ++i)
   {
-    ObstList.push_back(Point2D(i, 5));
+    ObstList.push_back(Point2D(i, -30));
   }
-  for (int i = 10; i <= 25; ++i)
+  for (int i = -30; i <= 30; ++i)
   {
-    ObstList.push_back(Point2D(i, 5));
+    ObstList.push_back(Point2D(-30, i));
   }
-  for (int i = 0; i <= 5; ++i)
+
+  for (int i = 10; i <= 20; ++i)
+  {
+    ObstList.push_back(Point2D(i, 10));
+  }
+  for (int i = 10; i <= 20; ++i)
+  {
+    ObstList.push_back(Point2D(20, i));
+  }
+  for (int i = 10; i <= 20; ++i)
+  {
+    ObstList.push_back(Point2D(i, 20));
+  }
+  for (int i = 10; i <= 20; ++i)
   {
     ObstList.push_back(Point2D(10, i));
-  }
-  for (int i = 0; i <= 5; ++i)
-  {
-    ObstList.push_back(Point2D(-10, i));
   }
 
   // 2. add obstacle lines
   std::vector<std::pair<Point2D, Point2D>> ObstLine;
-  ObstLine.push_back({{-25, 30}, {25, 30}});
-  ObstLine.push_back({{-25, 5}, {-10, 5}});
-  ObstLine.push_back({{-10, 5}, {-10, 0}});
-  ObstLine.push_back({{-10, 0}, {10, 0}});
-  ObstLine.push_back({{10, 0}, {10, 5}});
-  ObstLine.push_back({{10, 5}, {25, 5}});
-  ObstLine.push_back({{-25, 5}, {-25, 30}});
-  ObstLine.push_back({{25, 5}, {25, 30}});
+  ObstLine.push_back({{-30, -30}, {-30, 30}});
+  ObstLine.push_back({{-30, 30}, {30, 30}});
+  ObstLine.push_back({{30, 30}, {30, -30}});
+  ObstLine.push_back({{30, -30}, {-30, -30}});
+
+  ObstLine.push_back({{10, 10}, {20, 10}});
+  ObstLine.push_back({{20, 10}, {20, 20}});
+  ObstLine.push_back({{20, 20}, {10, 20}});
+  ObstLine.push_back({{10, 20}, {10, 10}});
 
   // 3. create vehicle object
   Vehicle veh(3.7, 2.6, 4.5, 1.0, 0.6);
@@ -71,7 +86,7 @@ int main(int argc, char **argv)
   config.MINX = minx - config.EXTEND_AREA;
   config.MAXX = maxx + config.EXTEND_AREA;
   config.MINY = miny - config.EXTEND_AREA;
-  config.MAXY = maxy - config.EXTEND_AREA;
+  config.MAXY = maxy + config.EXTEND_AREA;
 
   config.MINYAW = -M_PI;
   config.MAXYAW = M_PI;
@@ -83,8 +98,8 @@ int main(int argc, char **argv)
   config.H_COST = 10.0;
 
   // 5. set start and end point
-  Eigen::Vector3d start_point(22, 12, M_PI);
-  Eigen::Vector3d end_point(7, 13, -M_PI / 2.0);
+  Eigen::Vector3d start_point(0, 15, 0);
+  Eigen::Vector3d end_point(35, 15, 0);
 
   // 6. find path
   std::vector<std::vector<double>> ObstMap = GridAStar(config.ObstList, {end_point[0], end_point[1]}, config.XY_GRID_RESOLUTION, minx, miny, maxx, maxy);
@@ -144,17 +159,33 @@ void testCollisionCheck()
   // // plot path
   // exportPath(path);
 
-  Eigen::Vector3d pVec(-10, 15, -M_PI / 1.5);
-  std::vector<std::pair<Point2D, Point2D>> ObstLine;
-  ObstLine.push_back({{-25, 30}, {25, 30}});
-  ObstLine.push_back({{-25, 5}, {-10, 5}});
-  ObstLine.push_back({{-10, 5}, {-10, 0}});
-  ObstLine.push_back({{-10, 0}, {10, 0}});
-  ObstLine.push_back({{10, 0}, {10, 5}});
-  ObstLine.push_back({{10, 5}, {25, 5}});
-  ObstLine.push_back({{-25, 5}, {-25, 30}});
-  ObstLine.push_back({{25, 5}, {25, 30}});
+  Eigen::Vector3d pVec(0, 0, -M_PI / 4.0);
 
+  // 1. add obstacle list
+  std::vector<Point2D> ObstList;
+  for (int i = 10; i <= 20; ++i)
+  {
+    ObstList.push_back(Point2D(i, 10));
+  }
+  for (int i = 10; i <= 20; ++i)
+  {
+    ObstList.push_back(Point2D(20, i));
+  }
+  for (int i = 10; i <= 20; ++i)
+  {
+    ObstList.push_back(Point2D(i, 20));
+  }
+  for (int i = 10; i <= 20; ++i)
+  {
+    ObstList.push_back(Point2D(10, i));
+  }
+
+  // 2. add obstacle lines
+  std::vector<std::pair<Point2D, Point2D>> ObstLine;
+  ObstLine.push_back({{10, 10}, {20, 10}});
+  ObstLine.push_back({{20, 10}, {20, 20}});
+  ObstLine.push_back({{20, 20}, {10, 20}});
+  ObstLine.push_back({{10, 20}, {10, 10}});
   // ObstLine.push_back({{-10, -10}, {10, 10}});
   // ObstLine.push_back({{10, 10}, {-8, 8}});
   // ObstLine.push_back({{-8, 8}, {-10, -10}});

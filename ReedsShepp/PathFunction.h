@@ -7,9 +7,10 @@
 #include <iostream>
 #include <fstream>
 #include <Vehicle.h>
-RSPath FindRSPath(float x, float y, float phi, Vehicle veh)
+#include <common.h>
+RSPath FindRSPath(double x, double y, double phi, Vehicle veh)
 {
-    float rmin = 5.0; // minimum turning radius
+    double rmin = veh.MIN_CIRCLE; // minimum turning radius
     x = x / rmin;
     y = y / rmin;
     std::vector<int> type = {RS_NOP, RS_NOP, RS_NOP, RS_NOP, RS_NOP};
@@ -31,7 +32,7 @@ RSPath FindRSPath(float x, float y, float phi, Vehicle veh)
     std::vector<RSPath> RSPathVec = {path1, path2, path3, path4, path5};
     // std::cerr << isOk1 << " " << isOk2 << " " << isOk3 << " " << isOk4 << " " << isOk5 << " " << std::endl;
     // std::cerr << path1.totalLength_ << " " << path2.totalLength_ << " " << path3.totalLength_ << " " << path4.totalLength_ << " " << path5.totalLength_ << " " << std::endl;
-    float Lmin = std::numeric_limits<float>::max();
+    double Lmin = std::numeric_limits<float>::max();
 
     for (int i = 0; i < 5; i++)
     {
@@ -57,12 +58,12 @@ enum RS
     LEFT = 1,
     RIGHT = 3
 };
-std::vector<float> linspace(float start, float end, int size = 100)
+std::vector<float> linspace(double start, double end, int size = 100)
 {
     // std::cerr << start << " " << end << std::endl;
     std::vector<float> res;
-    float diff = end - start;
-    float step = diff / (1.0 * size);
+    double diff = end - start;
+    double step = diff / (1.0 * size);
 
     for (int i = 0; i < size; i++)
     {
@@ -70,7 +71,7 @@ std::vector<float> linspace(float start, float end, int size = 100)
     }
     return res;
 }
-void exportPath(RSPath path)
+void exportPath(RSPath path, Vehicle veh, Eigen::Vector3d start_point)
 {
 
     std::vector<int> type = path.type_;
@@ -79,8 +80,8 @@ void exportPath(RSPath path)
     {
         // std::cerr << s << std::endl;
     }
-    std::vector<float> pvec = {0.0, 0.0, 0.0};
-    float rmin = 5.0; // minimum turning radius
+    std::vector<double> pvec = {start_point[0], start_point[1], start_point[2]};
+    double rmin = veh.MIN_CIRCLE; // minimum turning radius
 
     const int const_straight = RS_STRAIGHT;
     const int const_left = RS_LEFT;
@@ -94,8 +95,8 @@ void exportPath(RSPath path)
         case RS::STRAIGHT:
         {
 
-            float theta = pvec[2];
-            float dl = rmin * seg[i];
+            double theta = pvec[2];
+            double dl = rmin * seg[i];
             std::vector<float> dvec_x = linspace(pvec[0], pvec[0] + dl * cos(theta));
             std::vector<float> dvec_y = linspace(pvec[1], pvec[1] + dl * sin(theta));
 
@@ -120,11 +121,11 @@ void exportPath(RSPath path)
         case RS::LEFT:
         {
 
-            float theta = pvec[2];
-            float dtheta = seg[i];
+            double theta = pvec[2];
+            double dtheta = seg[i];
 
-            float cenx = pvec[0] - rmin * sin(theta);
-            float ceny = pvec[1] + rmin * cos(theta);
+            double cenx = pvec[0] - rmin * sin(theta);
+            double ceny = pvec[1] + rmin * cos(theta);
 
             std::vector<float> tvec = linspace(theta - M_PI / 2.0, theta - M_PI / 2.0 + dtheta);
 
@@ -141,7 +142,7 @@ void exportPath(RSPath path)
             pvec[1] = *(dvec_y.end() - 1);
             pvec[2] += dtheta;
 
-            float dl = dtheta;
+            double dl = dtheta;
             if (dl > 0)
             {
                 full_path_direction[i] = 1;
@@ -156,11 +157,11 @@ void exportPath(RSPath path)
 
         case RS::RIGHT:
         {
-            float theta = pvec[2];
-            float dtheta = -seg[i];
+            double theta = pvec[2];
+            double dtheta = -seg[i];
 
-            float cenx = pvec[0] + rmin * sin(theta);
-            float ceny = pvec[1] - rmin * cos(theta);
+            double cenx = pvec[0] + rmin * sin(theta);
+            double ceny = pvec[1] - rmin * cos(theta);
 
             std::vector<float> tvec = linspace(theta + M_PI / 2.0, theta + M_PI / 2.0 + dtheta);
 
@@ -177,7 +178,7 @@ void exportPath(RSPath path)
             pvec[1] = *(dvec_y.end() - 1);
             pvec[2] += dtheta;
 
-            float dl = -dtheta;
+            double dl = -dtheta;
 
             if (dl > 0)
             {
