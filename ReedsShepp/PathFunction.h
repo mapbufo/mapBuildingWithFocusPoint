@@ -10,6 +10,7 @@
 #include <common.h>
 RSPath FindRSPath(double x, double y, double phi, Vehicle veh)
 {
+    // std::cerr << x << " " << y
     double rmin = veh.MIN_CIRCLE; // minimum turning radius
     x = x / rmin;
     y = y / rmin;

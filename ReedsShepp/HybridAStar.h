@@ -15,6 +15,7 @@
 
 double mod2pi(double x)
 {
+
     double v = x;
     while (std::fabs(v) >= 2 * M_PI)
     {
@@ -23,9 +24,10 @@ double mod2pi(double x)
         else
             v += 2 * M_PI;
     }
+
     if (v < -M_PI)
         v += 2 * M_PI;
-    else
+    else if (v > M_PI)
         v -= 2 * M_PI;
 
     return v;
@@ -71,18 +73,35 @@ bool AnalysticExpansion(Eigen::Vector3d Start, Eigen::Vector3d End, Vehicle veh,
 {
     bool isok = true;
     bool isCollision = false;
-
+    // 将起点转换到原点计算轨迹，变换坐标系了
     Eigen::Vector3d pvec(End - Start);
     double pos_x = pvec[0];
     double pos_y = pvec[1];
     double pos_phi = Start[2];
     pos_phi = mod2pi(pos_phi);
-    Eigen::Matrix3d dcm;
-    dcm << cos(pos_phi), -sin(pos_phi), 0,
-        sin(pos_phi), cos(pos_phi), 0,
-        0, 0, 1;
 
-    Eigen::Vector3d tvec = dcm * Eigen::Vector3d(pos_x, pos_y, 0);
+    /* 
+    replaced angle2dcm in matlab: (pos_phi, 0, 0)
+
+        dcm(1,1,:) = cang(:,2).*cang(:,1); -> cos(r1)
+        dcm(1,2,:) = cang(:,2).*sang(:,1); -> sin(r1)
+        dcm(1,3,:) = -sang(:,2); -> 0
+        dcm(2,1,:) = sang(:,3).*sang(:,2).*cang(:,1) - cang(:,3).*sang(:,1); -> -sin(r1)
+        dcm(2,2,:) = sang(:,3).*sang(:,2).*sang(:,1) + cang(:,3).*cang(:,1); -> cos(r1)
+        dcm(2,3,:) = sang(:,3).*cang(:,2); -> 0
+        dcm(3,1,:) = cang(:,3).*sang(:,2).*cang(:,1) + sang(:,3).*sang(:,1); -> 0
+        dcm(3,2,:) = cang(:,3).*sang(:,2).*sang(:,1) - sang(:,3).*cang(:,1); -> 0
+        dcm(3,3,:) = cang(:,3).*cang(:,2); -> 1
+    
+    * note: this is different from the normal roration matrix -> [[cos, -sin, 0], [sin, cos, 0], [0, 0, 1]]
+    */
+
+    Eigen::Matrix3d dcm; // 起点start坐标系在基坐标系下的方向余弦矩阵
+    dcm << cos(pos_phi), sin(pos_phi), 0,
+        -sin(pos_phi), cos(pos_phi), 0,
+        0, 0, 1;
+    // dcm*x 表示将基坐标中的x表示到旋转后的坐标系中，即计算坐标旋转后各向量在新坐标中的表示
+    Eigen::Vector3d tvec = dcm * Eigen::Vector3d(pos_x, pos_y, 0); // 计算坐标旋转后各向量在起点start坐标中的表示
     pos_x = tvec[0];
     pos_y = tvec[1];
 
@@ -92,8 +111,9 @@ bool AnalysticExpansion(Eigen::Vector3d Start, Eigen::Vector3d End, Vehicle veh,
     std::vector<std::pair<Point2D, Point2D>> obstline = cfg.ObstLine;
 
     rspath = FindRSPath(pos_x, pos_y, pvec[2], veh);
-    exportPath(rspath, veh, Start);
-    std::vector<int> types = rspath.type_;
+
+    std::vector<int>
+        types = rspath.type_;
     double t = rmin * rspath.t_;
     double u = rmin * rspath.u_;
     double v = rmin * rspath.v_;
@@ -145,7 +165,7 @@ bool AnalysticExpansion(Eigen::Vector3d Start, Eigen::Vector3d End, Vehicle veh,
             if (idx % 5 == 0)
             {
                 Eigen::Vector3d tvec(px, py, pth);
-                // std::cerr << px << " " << py << " " << std::endl;
+
                 isCollision = VehicleCollisionCheck(tvec, obstline, veh);
                 if (isCollision)
                 {
@@ -488,7 +508,7 @@ void getFinalPath(RSPath rspath, std::vector<Node> Close, Vehicle veh, Configura
         }
     }
 }
-void HybridAStar(Eigen::Vector3d Start, Eigen::Vector3d End, Vehicle veh, Configuration cfg, std::vector<double> &x_vec, std::vector<double> &y_vec, std::vector<double> &th_vec, std::vector<double> &D_vec, std::vector<double> &delta_vec)
+void HybridAStar(Eigen::Vector3d &Start, Eigen::Vector3d &End, Vehicle &veh, Configuration &cfg, std::vector<double> &x_vec, std::vector<double> &y_vec, std::vector<double> &th_vec, std::vector<double> &D_vec, std::vector<double> &delta_vec)
 {
     float mres = cfg.MOTION_RESOLUTION;
 
@@ -509,6 +529,7 @@ void HybridAStar(Eigen::Vector3d Start, Eigen::Vector3d End, Vehicle veh, Config
 
     while (!Open.empty())
     {
+        std::cerr << Close.size() << std::endl;
         Node wknode;
         wknode.update(PopNode(Open, cfg));
         int idx1 = -1;

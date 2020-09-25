@@ -98,8 +98,8 @@ int main(int argc, char **argv)
   config.H_COST = 10.0;
 
   // 5. set start and end point
-  Eigen::Vector3d start_point(0, 15, 0);
-  Eigen::Vector3d end_point(35, 15, 0);
+  Eigen::Vector3d start_point(2, 5, M_PI / -4.0);
+  Eigen::Vector3d end_point(25, 15, M_PI / 4.0);
 
   // 6. find path
   std::vector<std::vector<double>> ObstMap = GridAStar(config.ObstList, {end_point[0], end_point[1]}, config.XY_GRID_RESOLUTION, minx, miny, maxx, maxy);
