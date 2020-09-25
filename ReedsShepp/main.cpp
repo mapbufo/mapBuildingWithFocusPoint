@@ -14,22 +14,22 @@ int main(int argc, char **argv)
   // 1. add obstacle list
   std::vector<Point2D> ObstList;
 
-  for (int i = -30; i <= 30; ++i)
-  {
-    ObstList.push_back(Point2D(i, 30));
-  }
-  for (int i = -30; i <= 30; ++i)
-  {
-    ObstList.push_back(Point2D(30, i));
-  }
-  for (int i = -30; i <= 30; ++i)
-  {
-    ObstList.push_back(Point2D(i, -30));
-  }
-  for (int i = -30; i <= 30; ++i)
-  {
-    ObstList.push_back(Point2D(-30, i));
-  }
+  // for (int i = -30; i <= 30; ++i)
+  // {
+  //   ObstList.push_back(Point2D(i, 30));
+  // }
+  // for (int i = -30; i <= 30; ++i)
+  // {
+  //   ObstList.push_back(Point2D(30, i));
+  // }
+  // for (int i = -30; i <= 30; ++i)
+  // {
+  //   ObstList.push_back(Point2D(i, -30));
+  // }
+  // for (int i = -30; i <= 30; ++i)
+  // {
+  //   ObstList.push_back(Point2D(-30, i));
+  // }
 
   for (int i = 10; i <= 20; ++i)
   {
@@ -50,10 +50,10 @@ int main(int argc, char **argv)
 
   // 2. add obstacle lines
   std::vector<std::pair<Point2D, Point2D>> ObstLine;
-  ObstLine.push_back({{-30, -30}, {-30, 30}});
-  ObstLine.push_back({{-30, 30}, {30, 30}});
-  ObstLine.push_back({{30, 30}, {30, -30}});
-  ObstLine.push_back({{30, -30}, {-30, -30}});
+  // ObstLine.push_back({{-30, -30}, {-30, 30}});
+  // ObstLine.push_back({{-30, 30}, {30, 30}});
+  // ObstLine.push_back({{30, 30}, {30, -30}});
+  // ObstLine.push_back({{30, -30}, {-30, -30}});
 
   ObstLine.push_back({{10, 10}, {20, 10}});
   ObstLine.push_back({{20, 10}, {20, 20}});
@@ -71,18 +71,23 @@ int main(int argc, char **argv)
   config.XY_GRID_RESOLUTION = 2.0;
   config.YAW_GRID_RESOLUTION = 15.0 * M_PI / 180.0;
 
-  double minx = std::numeric_limits<double>::max();
-  double maxx = 0;
-  double miny = std::numeric_limits<double>::max();
-  double maxy = 0;
+  double minx = -31;
+  double maxx = 31;
+  double miny = -31;
+  double maxy = 31;
 
-  for (auto elem : ObstList)
-  {
-    minx = std::min(minx, elem.first);
-    maxx = std::max(maxx, elem.first);
-    miny = std::min(miny, elem.second);
-    maxy = std::max(maxy, elem.second);
-  }
+  // double minx = std::numeric_limits<double>::max();
+  // double maxx = 0;
+  // double miny = std::numeric_limits<double>::max();
+  // double maxy = 0;
+
+  // for (auto elem : ObstList)
+  // {
+  //   minx = std::min(minx, elem.first);
+  //   maxx = std::max(maxx, elem.first);
+  //   miny = std::min(miny, elem.second);
+  //   maxy = std::max(maxy, elem.second);
+  // }
   config.MINX = minx - config.EXTEND_AREA;
   config.MAXX = maxx + config.EXTEND_AREA;
   config.MINY = miny - config.EXTEND_AREA;
@@ -97,15 +102,30 @@ int main(int argc, char **argv)
   config.STEER_COST = 1.5;
   config.H_COST = 10.0;
 
+  config.ObstLine.clear();
+  for (auto obst : ObstLine)
+  {
+    config.ObstLine.push_back(obst);
+  }
+  config.ObstList.clear();
+  for (auto obst : ObstList)
+  {
+    config.ObstList.push_back(obst);
+  }
+
   // 5. set start and end point
-  Eigen::Vector3d start_point(2, 5, M_PI / -4.0);
-  Eigen::Vector3d end_point(25, 15, M_PI / 4.0);
+  Eigen::Vector3d start_point(0, 15, 0);
+  Eigen::Vector3d end_point(26, 15, 0);
 
   // 6. find path
   std::vector<std::vector<double>> ObstMap = GridAStar(config.ObstList, {end_point[0], end_point[1]}, config.XY_GRID_RESOLUTION, minx, miny, maxx, maxy);
   //std::vector<std::vector<double>> ObstMap;
-  config.ObstMap = ObstMap;
 
+  config.ObstMap.clear();
+  for (auto obst : ObstMap)
+  {
+    config.ObstMap.push_back(obst);
+  }
   std::vector<double> x_vec;
   std::vector<double> y_vec;
   std::vector<double> th_vec;
@@ -113,12 +133,14 @@ int main(int argc, char **argv)
   std::vector<double> delta_vec;
 
   HybridAStar(start_point, end_point, veh, config, x_vec, y_vec, th_vec, D_vec, delta_vec);
+
   if (x_vec.empty())
   {
     std::cerr << "Failed to find path!" << std::endl;
   }
   else
   {
+
     // export path
 
     // export to file

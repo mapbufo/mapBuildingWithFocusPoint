@@ -29,7 +29,6 @@ vector<vector<double>> GridAStar(vector<Point2D> &obstlist,
                                  Point2D goal, double gres, double minx, double miny, double maxx, double maxy)
 {
     vector<vector<int>> obmap = CalcObstMap(obstlist, gres, minx, miny, maxx, maxy);
-
     double goal_col = goal.first;
     double goal_row = goal.second;
 
@@ -38,6 +37,7 @@ vector<vector<double>> GridAStar(vector<Point2D> &obstlist,
 
     int dim_x = obmap.front().size();
     int dim_y = obmap.size();
+
     vector<vector<double>> costmap(dim_y, vector<double>(dim_x, 0));
 
     for (int i = 0; i < dim_y; i++)
@@ -54,7 +54,9 @@ vector<vector<double>> GridAStar(vector<Point2D> &obstlist,
                 continue;
             }
             Point2D start = {j, i};
+
             double cost = AStarSearch(start, {goal_col, goal_row}, obmap);
+
             costmap[i][j] = cost;
         }
     }
@@ -74,7 +76,7 @@ vector<vector<int>> CalcObstMap(vector<Point2D> &obstlist, double gres,
     //need some tricks to connect the obstacles instead of using knnsearch
     for (auto point : obstlist)
     {
-        int row = ceil((maxy - point.second) / gres);
+        int row = ceil((point.second - miny) / gres);
         int column = floor((point.first - minx) / gres);
         obmap[row][column] = 1;
     }

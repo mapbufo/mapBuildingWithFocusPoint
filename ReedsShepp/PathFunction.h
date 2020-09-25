@@ -48,7 +48,7 @@ RSPath FindRSPath(double x, double y, double phi, Vehicle veh)
     }
     if (candidateId >= 0)
     {
-        std::cerr << candidateId << std::endl;
+        // std::cerr << candidateId << std::endl;
         return RSPathVec[candidateId];
     }
 }

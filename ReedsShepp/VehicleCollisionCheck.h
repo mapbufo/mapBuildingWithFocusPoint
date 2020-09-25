@@ -94,8 +94,7 @@ bool VehicleCollisionCheck(Eigen::Vector3d pVec, std::vector<std::pair<Point2D, 
     Cornerrr.first = tvecRR[0] + Pos.first;
     Cornerrr.second = tvecRR[1] + Pos.second;
 
-    std::vector<std::pair<Point2D, Point2D>>
-        Rect;
+    std::vector<std::pair<Point2D, Point2D>> Rect;
     Rect.push_back({Cornerfl, Cornerfr});
     Rect.push_back({Cornerfr, Cornerrr});
     Rect.push_back({Cornerrr, Cornerrl});
@@ -107,6 +106,7 @@ bool VehicleCollisionCheck(Eigen::Vector3d pVec, std::vector<std::pair<Point2D, 
     // std::cerr << Cornerrl.first << " " << Cornerrl.second << std::endl;
 
     bool isCollision = false;
+    // std::cerr << " obst line: " << ObstLine.size() << std::endl;
     for (size_t i; i < ObstLine.size(); ++i)
     {
 

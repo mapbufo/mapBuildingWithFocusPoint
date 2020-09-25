@@ -33,7 +33,7 @@ double mod2pi(double x)
     return v;
 }
 
-bool CalcIdx(double x, double y, double theta, Configuration cfg, int &xidx, int &yidx, int &thidx)
+bool CalcIdx(double x, double y, double theta, Configuration &cfg, int &xidx, int &yidx, int &thidx)
 {
 
     double gres = cfg.XY_GRID_RESOLUTION;
@@ -43,7 +43,7 @@ bool CalcIdx(double x, double y, double theta, Configuration cfg, int &xidx, int
     theta = mod2pi(theta);
     thidx = std::ceil((theta - cfg.MINYAW) / yawres);
     bool isok = true;
-    std::cerr << xidx << " " << yidx << std::endl;
+
     if (xidx <= 0 || xidx > std::ceil((cfg.MAXX - cfg.MINX) / gres))
     {
         isok = false;
@@ -61,15 +61,18 @@ bool CalcIdx(double x, double y, double theta, Configuration cfg, int &xidx, int
     return isok;
 }
 
+// 根据当前位姿和输入,计算下一位置的位姿
 void VehicleDynamic(double &x, double &y, double &theta, double D, double delta, double L)
 {
+    // 运动学公式： x_dot = v_x * cos(theta); x_dot * t = v_x * t * cos(theta),
+    // 在采样时间t内,则有x = x + v_x * t * cos(theta)，其中v_x * t=D
     x += D * std::cos(theta);
     y += D * std::sin(theta);
-    theta += D * 1.0 / L * std::tan(delta);
+    theta += D * 1.0 / L * std::tan(delta); // L是轴距,航向变化,theta_dot=v/R,R=L/tan(delta)
     theta = mod2pi(theta);
 }
 
-bool AnalysticExpansion(Eigen::Vector3d Start, Eigen::Vector3d End, Vehicle veh, Configuration cfg, RSPath &rspath)
+bool AnalysticExpansion(Eigen::Vector3d Start, Eigen::Vector3d End, Vehicle &veh, Configuration &cfg, RSPath &rspath)
 {
     bool isok = true;
     bool isCollision = false;
@@ -109,11 +112,13 @@ bool AnalysticExpansion(Eigen::Vector3d Start, Eigen::Vector3d End, Vehicle veh,
     double smax = veh.MAX_STEER;
     double mres = cfg.MOTION_RESOLUTION;
     std::vector<std::pair<Point2D, Point2D>> obstline = cfg.ObstLine;
+    // 看是否从当前点到目标点存在无碰撞的Reeds-Shepp轨迹，前面pvec=End-Start;的意义就在这里，注意！这里的x,y,prev(3)是把起点转换成以start为原点坐标系下的坐标
 
     rspath = FindRSPath(pos_x, pos_y, pvec[2], veh);
 
-    std::vector<int>
-        types = rspath.type_;
+    // 以下是根据路径点和车辆运动学模型计算位置，检测是否会产生碰撞，返回isok的值。对每段路径从起点到终点按顺序进行处理，这一个线段的终点pvec是下一个线段的起点px,py,pth，
+
+    std::vector<int> types = rspath.type_;
     double t = rmin * rspath.t_;
     double u = rmin * rspath.u_;
     double v = rmin * rspath.v_;
@@ -132,7 +137,7 @@ bool AnalysticExpansion(Eigen::Vector3d Start, Eigen::Vector3d End, Vehicle veh,
         double py = pvec[1];
         double pth = pvec[2];
 
-        int direction = 0; // 1: forward, -1: backward
+        int direction = 0; // 1: forward, -1: backward 判断此段运动方向是前进还是后退
         if (segs[i] > 0)
         {
             direction = 1;
@@ -141,6 +146,7 @@ bool AnalysticExpansion(Eigen::Vector3d Start, Eigen::Vector3d End, Vehicle veh,
         {
             direction = -1;
         }
+        // 根据车辆的2*3种运动类型(前后2种，转向3种)，设置D和delta
         double D = direction * mres;
         double delta = 0;
         if (types[i] == RS_STRAIGHT) // straight
@@ -158,17 +164,19 @@ bool AnalysticExpansion(Eigen::Vector3d Start, Eigen::Vector3d End, Vehicle veh,
         else
         {
         }
-
+        // 把此段的路径离散成为路点，即栅格索引,然后为路点，然后检测是否存在障碍物碰撞问题
         for (int idx = 0; idx < round(fabs(segs[i]) / mres); ++idx)
         {
+            // D和delta是固定，说明转弯的时候是按固定半径的圆转弯
             VehicleDynamic(px, py, pth, D, delta, veh.WB);
-            if (idx % 5 == 0)
+            if (idx % 5 == 0) // 每5个点，即0.5m检查下是否碰撞
             {
                 Eigen::Vector3d tvec(px, py, pth);
-                std::cerr << "in check" << std::endl;
+
                 isCollision = VehicleCollisionCheck(tvec, obstline, veh);
                 if (isCollision)
                 {
+                    std::cerr << "collide!" << std::endl;
                     isok = false;
                     break;
                 }
@@ -185,7 +193,7 @@ bool AnalysticExpansion(Eigen::Vector3d Start, Eigen::Vector3d End, Vehicle veh,
     return isok;
 }
 
-double TotalCost(Node wknode, Configuration cfg)
+double TotalCost(Node wknode, Configuration &cfg)
 {
     double gres = cfg.XY_GRID_RESOLUTION;
     std::vector<std::vector<double>> costmap = cfg.ObstMap;
@@ -198,7 +206,7 @@ double TotalCost(Node wknode, Configuration cfg)
     return cost;
 }
 
-Node PopNode(std::vector<Node> nodes, Configuration cfg)
+void PopNode(std::vector<Node> &nodes, Configuration &cfg, Node &wknode)
 {
     double mincost = std::numeric_limits<double>::max();
     int minidx = 0;
@@ -212,13 +220,12 @@ Node PopNode(std::vector<Node> nodes, Configuration cfg)
             minidx = idx;
         }
     }
-    Node wknode;
+
     wknode.update(nodes[minidx]);
     nodes.erase(nodes.begin() + minidx);
-    return wknode;
 }
 
-bool CalcNextNode(Node wknode, double D, double delta, Vehicle veh, Configuration cfg, Node &tnode)
+bool CalcNextNode(Node wknode, double D, double delta, Vehicle &veh, Configuration &cfg, Node &tnode)
 {
     bool isok = true;
     bool isCollision = false;
@@ -307,7 +314,7 @@ bool inNodes(Node node, std::vector<Node> &nodes, int &idx)
     return false;
 }
 // update
-void Update(Node wknode, std::vector<Node> &Open, std::vector<Node> &Close, Vehicle veh, Configuration cfg)
+void Update(Node wknode, std::vector<Node> &Open, std::vector<Node> &Close, Vehicle &veh, Configuration &cfg)
 {
     double mres = cfg.MOTION_RESOLUTION;
     double smax = veh.MAX_STEER;
@@ -351,6 +358,9 @@ void Update(Node wknode, std::vector<Node> &Open, std::vector<Node> &Close, Vehi
                 {
                     Open[idx3].update(tnode);
                 }
+                else
+                {
+                }
             }
             else
             {
@@ -360,31 +370,52 @@ void Update(Node wknode, std::vector<Node> &Open, std::vector<Node> &Close, Vehi
     }
 }
 //getFinalPath
-void getFinalPath(RSPath rspath, std::vector<Node> Close, Vehicle veh, Configuration cfg, std::vector<double> &x_vec, std::vector<double> &y_vec, std::vector<double> &th_vec, std::vector<double> &D_vec, std::vector<double> &delta_vec)
+void getFinalPath(RSPath rspath, std::vector<Node> &Close, Vehicle &veh, Configuration &cfg, std::vector<double> &x_vec, std::vector<double> &y_vec, std::vector<double> &th_vec, std::vector<double> &D_vec, std::vector<double> &delta_vec)
 {
     Node wknode;
+
     wknode.update(Close[Close.size() - 1]);
     Close.erase(Close.end() - 1);
     std::vector<Node> nodes = {wknode};
+    std::cerr << "haha 1" << std::endl;
 
-    while (!Close.empty())
+    // int id = 0;
+    // for (auto node : Close)
+    // {
+    //     std::cerr << id << std::endl;
+    //     id++;
+    //     std::cerr << node.xIdx << " " << node.yIdx << " " << node.yawIdx << std::endl;
+    //     std::cerr << node.X << " " << node.Y << " " << node.Theta << std::endl;
+    //     std::cerr << node.Parent[0] << " " << node.Parent[1] << " " << node.Parent[2] << std::endl;
+    // }
+
+        while (!Close.empty())
     {
-        size_t n = Close.size();
-        Eigen::Vector3d parent = wknode.Parent;
 
-        for (size_t i = n - 1; i >= 0; --i)
+        size_t n = Close.size();
+        std::cerr << n << std::endl;
+        Eigen::Vector3d parent(wknode.Parent);
+        // std::cerr << "parent: " << parent[0] << " " << parent[1] << " " << parent[2] << " " << std::endl;
+        size_t i = n - 1;
+        for (; i >= 0; --i)
         {
             Node tnode;
             tnode.update(Close[i]);
-            if (tnode.xIdx == parent[0] || tnode.yIdx == parent[1] || tnode.yawIdx == parent[2])
+            // std::cerr << std::endl;
+            // std::cerr << "tnode: " << Close[i].xIdx << " " << Close[i].yIdx << " " << Close[i].yawIdx << " " << std::endl;
+            // std::cerr << "parent: " << parent[0] << " " << parent[1] << " " << parent[2] << " " << std::endl;
+            // std::cerr << "to be deleted: " << (Close.begin() + i)->xIdx << " " << (Close.begin() + i)->yIdx << " " << (Close.begin() + i)->yawIdx << std::endl;
+            if (tnode.xIdx == parent[0] && tnode.yIdx == parent[1] && tnode.yawIdx == parent[2])
             {
                 nodes.push_back(tnode);
                 wknode.update(tnode);
-                Close.erase(Close.begin() + i);
+
                 break;
             }
         }
+        Close.erase(Close.begin() + i);
     }
+    std::cerr << "haha 2" << std::endl;
     double rmin = veh.MIN_CIRCLE;
     double smax = veh.MAX_STEER;
     double mres = cfg.MOTION_RESOLUTION;
@@ -396,6 +427,7 @@ void getFinalPath(RSPath rspath, std::vector<Node> Close, Vehicle veh, Configura
 
     if (nodes.size() >= 2)
     {
+        std::cerr << "haha 3" << std::endl;
         for (int i = nodes.size() - 1; i >= 1; --i)
         {
             Node tnode;
@@ -435,6 +467,7 @@ void getFinalPath(RSPath rspath, std::vector<Node> Close, Vehicle veh, Configura
     }
     else
     {
+        std::cerr << "haha 4" << std::endl;
         flag = 1;
         Node tnode;
         tnode.update(nodes[0]);
@@ -445,7 +478,7 @@ void getFinalPath(RSPath rspath, std::vector<Node> Close, Vehicle veh, Configura
         y_vec.push_back(py);
         th_vec.push_back(pth);
     }
-
+    std::cerr << "haha 5" << std::endl;
     std::vector<int> types = rspath.type_;
     double t = rmin * rspath.t_;
     double u = rmin * rspath.u_;
@@ -520,7 +553,7 @@ void HybridAStar(Eigen::Vector3d &Start, Eigen::Vector3d &End, Vehicle &veh, Con
     Node tnode;
     if (isok)
     {
-        tnode = Node(xidx, yidx, thidx, mres, 0, Start[0], Start[1], Start[2], Eigen::Vector3d(xidx, yidx, thidx), 0);
+        tnode.update(Node(xidx, yidx, thidx, mres, 0, Start[0], Start[1], Start[2], Eigen::Vector3d(xidx, yidx, thidx), 0));
     }
 
     std::vector<Node> Open;
@@ -529,13 +562,17 @@ void HybridAStar(Eigen::Vector3d &Start, Eigen::Vector3d &End, Vehicle &veh, Con
 
     while (!Open.empty())
     {
-        std::cerr << Close.size() << std::endl;
+
         Node wknode;
-        wknode.update(PopNode(Open, cfg));
+        PopNode(Open, cfg, wknode);
+        std::cerr << "wknode: " << wknode.X << " " << wknode.Y << " " << wknode.Theta << std::endl;
+        std::cerr << "updated close: " << wknode.xIdx << " " << wknode.yIdx << " " << wknode.yawIdx << std::endl;
+
         int idx1 = -1;
         bool isok = inNodes(wknode, Close, idx1);
         if (isok)
         {
+
             Close[idx1].update(wknode);
         }
         else
@@ -549,10 +586,12 @@ void HybridAStar(Eigen::Vector3d &Start, Eigen::Vector3d &End, Vehicle &veh, Con
             std::cerr << "rs path " << std::endl;
             int idx2 = -1;
             inNodes(wknode, Close, idx2);
+
             Close.push_back(wknode);
             Close.erase(Close.begin() + idx2);
-
+            std::cerr << "here!!! " << std::endl;
             getFinalPath(rspath, Close, veh, cfg, x_vec, y_vec, th_vec, D_vec, delta_vec);
+            std::cerr << "here!!!!!!! " << std::endl;
             break;
         }
         std::cerr << "not rs path " << std::endl;
