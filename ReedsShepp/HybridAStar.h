@@ -165,7 +165,7 @@ bool AnalysticExpansion(Eigen::Vector3d Start, Eigen::Vector3d End, Vehicle veh,
             if (idx % 5 == 0)
             {
                 Eigen::Vector3d tvec(px, py, pth);
-
+                std::cerr << "in check" << std::endl;
                 isCollision = VehicleCollisionCheck(tvec, obstline, veh);
                 if (isCollision)
                 {
