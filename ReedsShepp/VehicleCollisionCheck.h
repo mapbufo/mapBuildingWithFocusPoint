@@ -10,7 +10,7 @@
 // https://blog.csdn.net/HelloZEX/article/details/80880385
 bool collisionCheck(std::vector<std::pair<Point2D, Point2D>> Object, std::pair<Point2D, Point2D> Line)
 {
-    for (size_t idx = 0; idx < Object.size(); ++idx)
+    for (int idx = 0; idx < Object.size(); ++idx)
     {
         // A
         Point2D A = Object[idx].first;
@@ -107,7 +107,7 @@ bool VehicleCollisionCheck(Eigen::Vector3d pVec, std::vector<std::pair<Point2D, 
 
     bool isCollision = false;
     // std::cerr << " obst line: " << ObstLine.size() << std::endl;
-    for (size_t i; i < ObstLine.size(); ++i)
+    for (int i; i < ObstLine.size(); ++i)
     {
 
         isCollision = collisionCheck(Rect, ObstLine[i]);

@@ -372,35 +372,22 @@ void Update(Node wknode, std::vector<Node> &Open, std::vector<Node> &Close, Vehi
 //getFinalPath
 void getFinalPath(RSPath rspath, std::vector<Node> &Close, Vehicle &veh, Configuration &cfg, std::vector<double> &x_vec, std::vector<double> &y_vec, std::vector<double> &th_vec, std::vector<double> &D_vec, std::vector<double> &delta_vec)
 {
+
     Node wknode;
 
     wknode.update(Close[Close.size() - 1]);
     Close.erase(Close.end() - 1);
     std::vector<Node> nodes = {wknode};
-    std::cerr << "haha 1" << std::endl;
 
-    // int id = 0;
-    // for (auto node : Close)
-    // {
-    //     std::cerr << id << std::endl;
-    //     id++;
-    //     std::cerr << node.xIdx << " " << node.yIdx << " " << node.yawIdx << std::endl;
-    //     std::cerr << node.X << " " << node.Y << " " << node.Theta << std::endl;
-    //     std::cerr << node.Parent[0] << " " << node.Parent[1] << " " << node.Parent[2] << std::endl;
-    // }
-
-        while (!Close.empty())
+    while (!Close.empty())
     {
 
-        size_t n = Close.size();
-        std::cerr << n << std::endl;
         Eigen::Vector3d parent(wknode.Parent);
-        // std::cerr << "parent: " << parent[0] << " " << parent[1] << " " << parent[2] << " " << std::endl;
-        size_t i = n - 1;
-        for (; i >= 0; --i)
+        auto iter = Close.begin();
+        for (; iter != Close.end(); iter++)
         {
             Node tnode;
-            tnode.update(Close[i]);
+            tnode.update(*iter);
             // std::cerr << std::endl;
             // std::cerr << "tnode: " << Close[i].xIdx << " " << Close[i].yIdx << " " << Close[i].yawIdx << " " << std::endl;
             // std::cerr << "parent: " << parent[0] << " " << parent[1] << " " << parent[2] << " " << std::endl;
@@ -409,25 +396,25 @@ void getFinalPath(RSPath rspath, std::vector<Node> &Close, Vehicle &veh, Configu
             {
                 nodes.push_back(tnode);
                 wknode.update(tnode);
-
                 break;
             }
         }
-        Close.erase(Close.begin() + i);
+
+        Close.erase(iter);
     }
-    std::cerr << "haha 2" << std::endl;
+
     double rmin = veh.MIN_CIRCLE;
     double smax = veh.MAX_STEER;
     double mres = cfg.MOTION_RESOLUTION;
     double gres = cfg.XY_GRID_RESOLUTION;
 
-    double nlist = std::floor(gres * 1.5 / cfg.MOTION_RESOLUTION) + 1;
+    int nlist = std::floor(gres * 1.5 / cfg.MOTION_RESOLUTION) + 1;
 
     int flag = 0;
 
     if (nodes.size() >= 2)
     {
-        std::cerr << "haha 3" << std::endl;
+
         for (int i = nodes.size() - 1; i >= 1; --i)
         {
             Node tnode;
@@ -543,6 +530,7 @@ void getFinalPath(RSPath rspath, std::vector<Node> &Close, Vehicle &veh, Configu
 }
 void HybridAStar(Eigen::Vector3d &Start, Eigen::Vector3d &End, Vehicle &veh, Configuration &cfg, std::vector<double> &x_vec, std::vector<double> &y_vec, std::vector<double> &th_vec, std::vector<double> &D_vec, std::vector<double> &delta_vec)
 {
+
     float mres = cfg.MOTION_RESOLUTION;
 
     int xidx, yidx, thidx;
@@ -565,8 +553,6 @@ void HybridAStar(Eigen::Vector3d &Start, Eigen::Vector3d &End, Vehicle &veh, Con
 
         Node wknode;
         PopNode(Open, cfg, wknode);
-        std::cerr << "wknode: " << wknode.X << " " << wknode.Y << " " << wknode.Theta << std::endl;
-        std::cerr << "updated close: " << wknode.xIdx << " " << wknode.yIdx << " " << wknode.yawIdx << std::endl;
 
         int idx1 = -1;
         bool isok = inNodes(wknode, Close, idx1);
@@ -590,6 +576,7 @@ void HybridAStar(Eigen::Vector3d &Start, Eigen::Vector3d &End, Vehicle &veh, Con
             Close.push_back(wknode);
             Close.erase(Close.begin() + idx2);
             std::cerr << "here!!! " << std::endl;
+
             getFinalPath(rspath, Close, veh, cfg, x_vec, y_vec, th_vec, D_vec, delta_vec);
             std::cerr << "here!!!!!!! " << std::endl;
             break;
