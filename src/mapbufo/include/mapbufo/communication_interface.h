@@ -1,6 +1,4 @@
-#ifndef COMMUNICATION_INTERFACE_H
-#define COMMUNICATION_INTERFACE_H
-
+#pragma once
 #include <message_filters/subscriber.h>
 #include <message_filters/sync_policies/approximate_time.h>
 #include <message_filters/time_synchronizer.h>
@@ -144,4 +142,3 @@ public:
    */
   void cycle(Map &map);
 };
-#endif // COMMUNICATION_INTERFACE_H
