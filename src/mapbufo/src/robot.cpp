@@ -1,8 +1,12 @@
 #include "robot.h"
 
-// find the best position based on the input scan
-/// 1. if only interested in empty points, then only empty points are considered
-/// 2. if interested in the overall best point, all points are then considered
+/*
+* find the best next target point for movement based on the input scan. The best point is defined as
+* 1) the farthest point in range and
+* 2) lies near the lidar heading and
+* 3) if necessary, unoccupied
+*/
+
 void Robot::findBestPos(ScanData scan, Point2D candidate_pt, Point2D &best_pos, float &best_heading, bool only_empty)
 {
   bool init = false;
@@ -10,6 +14,7 @@ void Robot::findBestPos(ScanData scan, Point2D candidate_pt, Point2D &best_pos, 
   int pt_x = candidate_pt.first;
   int pt_y = candidate_pt.second;
   std::set<CellOccupied> interested_status_list;
+
   if (only_empty)
   {
     interested_status_list.insert(CellOccupied::empty);
@@ -24,6 +29,7 @@ void Robot::findBestPos(ScanData scan, Point2D candidate_pt, Point2D &best_pos, 
     interested_status_list.insert(CellOccupied::robot_pos);
   }
 
+  // if this point is valid / in the scan
   if (scan.find({ pt_x, pt_y }) != scan.end())
   {
     // if this point is not occupied
@@ -38,7 +44,6 @@ void Robot::findBestPos(ScanData scan, Point2D candidate_pt, Point2D &best_pos, 
         best_pos.first = pt_x;
         best_pos.second = pt_y;
         init = true;
-
       }
       else if (cur_heading_diff < best_heading_diff)
       {  // choose the one with
@@ -48,7 +53,6 @@ void Robot::findBestPos(ScanData scan, Point2D candidate_pt, Point2D &best_pos, 
         best_heading_diff = cur_heading_diff;
         best_pos.first = pt_x;
         best_pos.second = pt_y;
-
       }
       else if (cur_heading_diff == best_heading_diff)  // choose the farther point
                                                        // when angle differences
@@ -74,8 +78,8 @@ void Robot::findBestPos(ScanData scan, Point2D candidate_pt, Point2D &best_pos, 
  * |
  * |
  * |
- * | far but wrong
- * |              actual best direction
+ * | far but wrong      actual best direction
+ * |    $                   $
  * |    |                   |
  * |    |                 | | |
  * |  | | |             | | | | #
@@ -89,6 +93,7 @@ void Robot::findBestPos(ScanData scan, Point2D candidate_pt, Point2D &best_pos, 
  *                             heading (middle of the range)
  *
  * #: --> here in this function, this point is selected as the next move.
+ * $: --> to be improved
  */
 
 Point2D Robot::estimateNextStep(ScanData scan, Point2D end_pos, float max_dist, bool &call_help)
@@ -106,8 +111,8 @@ Point2D Robot::estimateNextStep(ScanData scan, Point2D end_pos, float max_dist, 
   // --> find the farthest, empty scan point in that direction
   Point2D farthest_pos;
   float farthest_pos_heading;
-  Point2D best_pos(-100, -100); // initialization
-  float best_heading;           // init with some big number
+  Point2D best_pos(-100, -100);  // initialization
+  float best_heading;            // init with some big number
 
   // find points near the line with ratio ~= heading
   float ratio = 0.0;
@@ -121,7 +126,7 @@ Point2D Robot::estimateNextStep(ScanData scan, Point2D end_pos, float max_dist, 
   }
 
   int grid_size = 1;
-  int num_steps = int(max_dist / grid_size); // value on x axis
+  int num_steps = int(max_dist / grid_size);  // value on x axis
 
   std::set<std::pair<int, int>> line_point_vec;
   // go in x / y direction
@@ -191,7 +196,6 @@ Point2D Robot::estimateNextStep(ScanData scan, Point2D end_pos, float max_dist, 
         {
           y = float(y_ - i);
           x = (y - y_) / ratio + float(x_);
-
 
           line_point_vec.insert({ floor(x), y });
           line_point_vec.insert({ ceil(x), y });
