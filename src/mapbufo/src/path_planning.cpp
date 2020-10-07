@@ -108,7 +108,7 @@ namespace PathPlanning
   // if both ratio are the same, then it means the 3 points are in a same straight
   // line, then delete the middle point.
   // at the end only keeping the turning points in path
-  void OptimizePath(std::vector<Point2D> &path, Point2D start_pos)
+  void OptimizePath(std::vector<Point2D> &path)
   {
     for (int i = 0; i < path.size() - 2; i++)
     {
@@ -223,7 +223,7 @@ namespace PathPlanning
     // optimize the path
     if (path.size() > 1)
     {
-      OptimizePath(path, start_pos);
+      OptimizePath(path);
     }
     return path;
   }
