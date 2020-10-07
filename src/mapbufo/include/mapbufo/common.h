@@ -40,7 +40,7 @@ void transformPoint2DToPoint2DWithFloat(Point2D point2D, Point2DWithFloat &point
 }
 
 /**
- * transform the position from float real position to int grid position
+ * @brief transform the position from float real position to int grid position
  * @param input float x, float y: position of robot(real data)
  * @param input float res: resolution
  * @param return  Point2D: position of robot(grid position)
@@ -90,7 +90,7 @@ std::vector<Point2D> GetLineLow(int x0, int y0, int x1, int y1)
   int x = x0;
   int y = y0;
   std::vector<Point2D> res;
-  Point2D curr({ x, y });
+  Point2D curr({x, y});
   while (x < x1)
   {
     if (D > 0)
@@ -128,7 +128,7 @@ std::vector<Point2D> GetLineHigh(int x0, int y0, int x1, int y1)
   int x = x0;
   int y = y0;
   std::vector<Point2D> res;
-  Point2D curr({ x, y });
+  Point2D curr({x, y});
   while (y < y1)
   {
     if (D > 0)
@@ -191,4 +191,4 @@ Point2DWithFloat TransformFromLocalToGlobal(float robot_x, float robot_y, float 
   return Point2DWithFloat(global_x, global_y);
 }
 
-#endif  // !COMMON_H
+#endif // !COMMON_H

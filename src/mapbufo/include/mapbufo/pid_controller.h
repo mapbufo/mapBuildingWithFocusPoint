@@ -29,15 +29,15 @@ public:
   }
 
   /**
-   * compute correction value
-   * @param error: input error
+   * @brief compute correction value
+   * @param input error: input error
    * @return control value: value used for correction
    */
   double Control(double error);
 
   /**
-   * update P, I, D error
-   * @param error: input error
+   * @brief update P, I, D error
+   * @param input error: input error
    */
   void updateError(double error);
 };

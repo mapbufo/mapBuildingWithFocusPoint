@@ -98,7 +98,7 @@ bool AnalysticExpansion(Eigen::Vector3d Start, Eigen::Vector3d End, Vehicle &veh
 
   * note: this is different from the normal roration matrix -> [[cos, -sin, 0], [sin, cos, 0], [0, 0, 1]]
   */
-  Eigen::Matrix3d dcm;  // rotation matrix
+  Eigen::Matrix3d dcm; // rotation matrix
   dcm << cos(pos_phi), sin(pos_phi), 0, -sin(pos_phi), cos(pos_phi), 0, 0, 0, 1;
   // adjust the heading vector to the start pose coordinate system
   Eigen::Vector3d tvec = dcm * Eigen::Vector3d(pos_x, pos_y, 0);
@@ -121,7 +121,7 @@ bool AnalysticExpansion(Eigen::Vector3d Start, Eigen::Vector3d End, Vehicle &veh
   double v = rmin * rspath.v_;
   double w = rmin * rspath.w_;
   double x = rmin * rspath.x_;
-  std::vector<double> segs = { t, u, v, w, x };
+  std::vector<double> segs = {t, u, v, w, x};
   pvec[0] = Start[0];
   pvec[1] = Start[1];
   pvec[2] = Start[2];
@@ -134,7 +134,7 @@ bool AnalysticExpansion(Eigen::Vector3d Start, Eigen::Vector3d End, Vehicle &veh
     double py = pvec[1];
     double pth = pvec[2];
 
-    int direction = 0;  // 1: forward, -1: backward
+    int direction = 0; // 1: forward, -1: backward
     if (segs[i] > 0)
     {
       direction = 1;
@@ -146,7 +146,7 @@ bool AnalysticExpansion(Eigen::Vector3d Start, Eigen::Vector3d End, Vehicle &veh
 
     double D = direction * mres;
     double delta = 0;
-    if (types[i] == RS_STRAIGHT)  // straight
+    if (types[i] == RS_STRAIGHT) // straight
     {
       delta = 0;
     }
@@ -166,14 +166,14 @@ bool AnalysticExpansion(Eigen::Vector3d Start, Eigen::Vector3d End, Vehicle &veh
     {
       // fixed turning radius (D, delta)
       VehicleDynamic(px, py, pth, D, delta, veh.WB);
-      if (idx % 5 == 0)  // check every 5 segments
+      if (idx % 5 == 0) // check every 5 segments
       {
         Eigen::Vector3d tvec(px, py, pth);
 
         isCollision = VehicleCollisionCheck(tvec, obstline, veh);
         if (isCollision)
         {
-          isok = false;  // return if path blocked
+          isok = false; // return if path blocked
           break;
         }
       }
@@ -182,7 +182,7 @@ bool AnalysticExpansion(Eigen::Vector3d Start, Eigen::Vector3d End, Vehicle &veh
     pvec[1] = py;
     pvec[2] = pth;
   }
-  if (mod2pi(pvec[2]) - End[2] > 5.0 * M_PI / 180.0)  // if the end pose heading does not match the planned heading
+  if (mod2pi(pvec[2]) - End[2] > 5.0 * M_PI / 180.0) // if the end pose heading does not match the planned heading
   {
     isok = false;
   }
@@ -244,13 +244,13 @@ bool CalcNextNode(Node wknode, double D, double delta, Vehicle &veh, Configurati
 
   for (int idx = 0; idx < nlist; ++idx)
   {
-    VehicleDynamic(px, py, pth, D, delta, veh.WB);  // compute the next pose based on the last one
+    VehicleDynamic(px, py, pth, D, delta, veh.WB); // compute the next pose based on the last one
     pos_x[idx + 1] = px;
     pos_y[idx + 1] = py;
     pos_th[idx + 1] = pth;
     if (idx % 5 == 0)
     {
-      Eigen::Vector3d tvec(px, py, pth);  // collision check
+      Eigen::Vector3d tvec(px, py, pth); // collision check
       isCollision = VehicleCollisionCheck(tvec, obstline, veh);
       if (isCollision)
         break;
@@ -258,7 +258,7 @@ bool CalcNextNode(Node wknode, double D, double delta, Vehicle &veh, Configurati
   }
 
   tnode.update(wknode);
-  if (isCollision)  // if blocked then return
+  if (isCollision) // if blocked then return
   {
     isok = false;
     return isok;
@@ -266,7 +266,7 @@ bool CalcNextNode(Node wknode, double D, double delta, Vehicle &veh, Configurati
   else
   {
     int xidx, yidx, thidx;
-    isok = CalcIdx(px, py, pth, cfg, xidx, yidx, thidx);  // transform the pose into grid cell index
+    isok = CalcIdx(px, py, pth, cfg, xidx, yidx, thidx); // transform the pose into grid cell index
     if (!isok)
     {
       return isok;
@@ -318,7 +318,7 @@ void Update(Node wknode, std::vector<Node> &Open, std::vector<Node> &Close, Vehi
   double smax = veh.MAX_STEER;
   double sres = smax * 1.0 / cfg.N_STEER;
 
-  std::vector<double> mres_vec = { -mres, mres };
+  std::vector<double> mres_vec = {-mres, mres};
   std::vector<double> sres_vec;
   double cur_sres = -smax;
   do
@@ -372,11 +372,11 @@ void getFinalPath(RSPath rspath, std::vector<Node> &Close, Vehicle &veh, Configu
                   std::vector<double> &y_vec, std::vector<double> &th_vec, std::vector<double> &D_vec,
                   std::vector<double> &delta_vec)
 {
-  Node wknode;  // The last element of the RS-Trajectory is the target (end) point
+  Node wknode; // The last element of the RS-Trajectory is the target (end) point
 
   wknode.update(Close[Close.size() - 1]);
   Close.erase(Close.end() - 1);
-  std::vector<Node> nodes = { wknode };
+  std::vector<Node> nodes = {wknode};
 
   // get the full trajectory backwards using the parent nodes
   while (!Close.empty())
@@ -466,7 +466,7 @@ void getFinalPath(RSPath rspath, std::vector<Node> &Close, Vehicle &veh, Configu
   double w = rmin * rspath.w_;
   double x = rmin * rspath.x_;
 
-  std::vector<double> segs = { t, u, v, w, rmin * rspath.x_ };
+  std::vector<double> segs = {t, u, v, w, rmin * rspath.x_};
 
   for (int i = 0; i < 5; ++i)
   {
@@ -538,14 +538,14 @@ void HybridAStar(Eigen::Vector3d &Start, Eigen::Vector3d &End, Vehicle &veh, Con
     tnode.update(Node(xidx, yidx, thidx, mres, 0, Start[0], Start[1], Start[2], Eigen::Vector3d(xidx, yidx, thidx), 0));
   }
 
-  std::vector<Node> Open;  // open nodes, neighbouring points to be inspected
+  std::vector<Node> Open; // open nodes, neighbouring points to be inspected
   Open.push_back(tnode);
-  std::vector<Node> Close;  // close nodes, points already inspected
+  std::vector<Node> Close; // close nodes, points already inspected
 
   while (!Open.empty())
   {
     Node wknode;
-    PopNode(Open, cfg, wknode);  // get the node from open nodes with the least cost
+    PopNode(Open, cfg, wknode); // get the node from open nodes with the least cost
 
     int idx1 = -1;
 
@@ -564,7 +564,7 @@ void HybridAStar(Eigen::Vector3d &Start, Eigen::Vector3d &End, Vehicle &veh, Con
     RSPath rspath;
     bool isok2 = AnalysticExpansion(Eigen::Vector3d(wknode.X, wknode.Y, wknode.Theta), End, veh, cfg, rspath);
 
-    if (isok2)  // if not blocked
+    if (isok2) // if not blocked
     {
       int idx2 = -1;
       inNodes(wknode, Close, idx2);
