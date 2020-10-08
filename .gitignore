@@ -34,10 +34,11 @@
 # Folders
 /build
 /devel
-/ReedsShepp/build
+/HybridAStar/build
 
 # vs code
-./vscode
+.vscode
+
 
 # catkin workspace
 .catkin_workspace
