@@ -10,12 +10,12 @@
 
 namespace status
 {
-enum status
-{
-  Error = 0,
-  Ok = 1,
-  Undifined = 2
-};
+  enum status
+  {
+    Error = 0,
+    Ok = 1,
+    Undifined = 2
+  };
 }
 
 enum CellOccupied
@@ -33,6 +33,11 @@ typedef std::pair<float, float> Point2DWithFloat;
 typedef boost::unordered_map<Point2D, CellOccupied> ScanData;
 typedef boost::unordered_map<Point2DWithFloat, int> ScanPointsFloatWithUpdateValue;
 
+/**
+ * @brief transform the point2d from int to float
+ * @param input Point2D point2D: point2d in int
+ * @param output Point2DWithFloat &point2DWithFloat: point2d in float
+ */
 void transformPoint2DToPoint2DWithFloat(Point2D point2D, Point2DWithFloat &point2DWithFloat)
 {
   point2DWithFloat.first = (float)(point2D.first);
@@ -40,7 +45,7 @@ void transformPoint2DToPoint2DWithFloat(Point2D point2D, Point2DWithFloat &point
 }
 
 /**
- * transform the position from float real position to int grid position
+ * @brief transform the position from float real position to int grid position
  * @param input float x, float y: position of robot(real data)
  * @param input float res: resolution
  * @param return  Point2D: position of robot(grid position)
@@ -62,6 +67,12 @@ Point2D TransformIndex(float x, float y, float res)
   return pos;
 }
 
+/**
+ * @brief transform the position from int grid position to float real position
+ * @param input int x, int y: position of robot(grid position)
+ * @param input float res: resolution
+ * @param return  Point2DWithFloat: position of robot(real data)
+ */
 Point2DWithFloat ReverseIndex(int x, int y, float res)
 {
   Point2DWithFloat pos;
@@ -71,7 +82,7 @@ Point2DWithFloat ReverseIndex(int x, int y, float res)
 }
 
 /**
-   * get the line-points with gradient between 0 and 1
+   * @brief get the line-points with gradient between 0 and 1
    * @param input int x0, int y0: position of robot
    * @param input int x1, int y1: position of target point
    * @return vector<Point2D>: all the passed points in the line
@@ -90,7 +101,7 @@ std::vector<Point2D> GetLineLow(int x0, int y0, int x1, int y1)
   int x = x0;
   int y = y0;
   std::vector<Point2D> res;
-  Point2D curr({ x, y });
+  Point2D curr({x, y});
   while (x < x1)
   {
     if (D > 0)
@@ -109,7 +120,7 @@ std::vector<Point2D> GetLineLow(int x0, int y0, int x1, int y1)
 }
 
 /**
-   * get the line-points with gradient greater than 1
+   * @brief get the line-points with gradient greater than 1
    * @param input int x0, int y0: position of robot
    * @param input int x1, int y1: position of target point
    * @return vector<Point2D>: all the passed points in the line
@@ -128,7 +139,7 @@ std::vector<Point2D> GetLineHigh(int x0, int y0, int x1, int y1)
   int x = x0;
   int y = y0;
   std::vector<Point2D> res;
-  Point2D curr({ x, y });
+  Point2D curr({x, y});
   while (y < y1)
   {
     if (D > 0)
@@ -147,7 +158,7 @@ std::vector<Point2D> GetLineHigh(int x0, int y0, int x1, int y1)
 }
 
 /**
-  * get the line-points between robot and target point
+  * @brief get the line-points between robot and target point
   * @param input int x0, int y0: position of robot
   * @param input int x1, int y1: position of target point
   * @return vector<Point2D>: all the passed points in the line
@@ -169,6 +180,13 @@ std::vector<Point2D> GetLine(int x0, int y0, int x1, int y1)
   return GetLineHigh(x0, y0, x1, y1);
 }
 
+/**
+  * @brief transform the point_pos from global coordinate into local coordinate
+  * @param input float robot_x, float robot_y: position of robot
+  * @param input float target_x, float target_y: position of target point
+  * @param input float yaw: angle between the robot-heading and x-axis
+  * @return Point2DWithFloat: transformed point in local coordinate
+  */
 Point2DWithFloat TransformFromGlobalToLocal(float robot_x, float robot_y, float target_x, float target_y, float yaw)
 {
   Eigen::Matrix2f transform_matrix;
@@ -183,6 +201,13 @@ Point2DWithFloat TransformFromGlobalToLocal(float robot_x, float robot_y, float 
   return Point2DWithFloat(local_point_vec[0], local_point_vec[1]);
 }
 
+/**
+  * @brief transform the point_pos from local coordinate into global coordinate
+  * @param input float robot_x, float robot_y: position of robot
+  * @param input float target_x, float target_y: position of target point
+  * @param input float yaw: angle between the robot-heading and x-axis
+  * @return Point2DWithFloat: transformed point in global coordinate
+  */
 Point2DWithFloat TransformFromLocalToGlobal(float robot_x, float robot_y, float target_x, float target_y, float yaw)
 {
   float global_x = target_x * std::cos(yaw) - target_y * std::sin(yaw) + robot_x;
@@ -191,4 +216,4 @@ Point2DWithFloat TransformFromLocalToGlobal(float robot_x, float robot_y, float 
   return Point2DWithFloat(global_x, global_y);
 }
 
-#endif  // !COMMON_H
+#endif // !COMMON_H
