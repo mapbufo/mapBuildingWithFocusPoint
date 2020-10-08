@@ -1,17 +1,16 @@
-#ifndef PID_H
-#define PID_H
+#pragma once
 
 #include "common.h"
 class PIDController
 {
 private:
-  bool init_;
-  double kp_;
-  double ki_;
-  double kd_;
-  double p_error_;
-  double i_error_;
-  double d_error_;
+  bool init_;       // check if the pid controller is initialized
+  double kp_;       // P factor
+  double ki_;       // Integration factor
+  double kd_;       // Differentiation factor
+  double p_error_;  // P error
+  double i_error_;  // accumulated integration error
+  double d_error_;  // differential error
 
 public:
   PIDController(double kp, double ki, double kd)
@@ -29,8 +28,16 @@ public:
   {
   }
 
+  /**
+   * @brief compute correction value
+   * @param input error: input error
+   * @return control value: value used for correction
+   */
   double Control(double error);
+
+  /**
+   * @brief update P, I, D error
+   * @param input error: input error
+   */
   void updateError(double error);
 };
-
-#endif // PID_H

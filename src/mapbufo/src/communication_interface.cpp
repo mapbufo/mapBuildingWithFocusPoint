@@ -1,7 +1,7 @@
 #include "communication_interface.h"
 
 CommunicationInterface::CommunicationInterface(ros::NodeHandle &nh)
-    : sync(scan_sub, odom_sub, 10), map_local_(nh, 0.05, 20, 20)
+  : sync(scan_sub, odom_sub, 10), map_local_(nh, 0.05, 20, 20)
 {
   // input: laserscan, robot_position
   scan_sub.subscribe(nh, "/scan", 10);
@@ -120,7 +120,7 @@ void CommunicationInterface::processScan()
   curr_scan_.clear();
   curr_local_scan_.clear();
   int counter = 0;
-  int resolution = 10; // pick only every ten points outside the interested area
+  int resolution = 10;  // pick only every ten points outside the interested area
   for (int i = 0; i < number_of_laser; i++)
   {
     float laser_angle = angle_min + i * angle_increment;
@@ -138,9 +138,9 @@ void CommunicationInterface::processScan()
     double robot_heading = yaw;
     if (laser_angle > -priority_angle_range_rad && laser_angle < priority_angle_range_rad)
     {
-      if (std::isnan(input_scan_.ranges[i])) // if a point is nan, then the 10
-                                             // points before and after must be nan
-                                             // so that it can be considered empty
+      if (std::isnan(input_scan_.ranges[i]))  // if a point is nan, then the 10
+                                              // points before and after must be nan
+                                              // so that it can be considered empty
       {
         // check the +- 10 points
         if ((priority_angle_range_rad - abs(laser_angle)) / angle_increment < 10)
@@ -165,10 +165,10 @@ void CommunicationInterface::processScan()
         }
         float x = range_max * std::cos(laser_angle);
         float y = range_max * std::sin(laser_angle);
-        curr_local_scan_[{x, y}] = -20;
+        curr_local_scan_[{ x, y }] = -20;
         float global_x = x * std::cos(yaw) - y * std::sin(yaw) + pos_x;
         float global_y = x * std::sin(yaw) + y * std::cos(yaw) + pos_y;
-        curr_scan_[{global_x, global_y}] = -20;
+        curr_scan_[{ global_x, global_y }] = -20;
         if (range_max > max_dist)
         {
           next_pos.first = range_max * std::cos(laser_angle);
@@ -182,8 +182,8 @@ void CommunicationInterface::processScan()
       float global_y = x * std::sin(yaw) + y * std::cos(yaw) + pos_y;
       if (!std::isnan(global_x) && !std::isnan(global_y))
       {
-        curr_local_scan_[{x, y}] = 20;
-        curr_scan_[{global_x, global_y}] = 20;
+        curr_local_scan_[{ x, y }] = 20;
+        curr_scan_[{ global_x, global_y }] = 20;
       }
       geometry_msgs::Point32 pt;
       pt.x = x;
@@ -212,8 +212,8 @@ void CommunicationInterface::processScan()
         float y = range_max * std::sin(laser_angle);
         float global_x = x * std::cos(yaw) - y * std::sin(yaw) + pos_x;
         float global_y = x * std::sin(yaw) + y * std::cos(yaw) + pos_y;
-        curr_local_scan_[{x, y}] = -6;
-        curr_scan_[{global_x, global_y}] = -6;
+        curr_local_scan_[{ x, y }] = -6;
+        curr_scan_[{ global_x, global_y }] = -6;
 
         continue;
       }
@@ -221,8 +221,8 @@ void CommunicationInterface::processScan()
       float global_y = x * std::sin(yaw) + y * std::cos(yaw) + pos_y;
       if (!std::isnan(global_x) && !std::isnan(global_y))
       {
-        curr_local_scan_[{x, y}] = 6;
-        curr_scan_[{global_x, global_y}] = 6;
+        curr_local_scan_[{ x, y }] = 6;
+        curr_scan_[{ global_x, global_y }] = 6;
       }
       geometry_msgs::Point32 pt;
       pt.x = x;
@@ -338,12 +338,11 @@ void CommunicationInterface::processOdom()
 
   if (fabs(curr_robot_pos_.first - goal_.first) > 1e-1 || fabs(curr_robot_pos_.second - goal_.second) > 1e-1)
   {
-    std::cerr << "not reached yet" << std::endl;
+    // the target point is not reached yet
   }
   else
   {
-    std::cerr << "reached" << std::endl;
-
+    // the planned target point (not necessarily the final goal) is reached, stay put
     output_twist_.linear.x = 0;
 
     output_twist_.linear.y = 0.0;
@@ -444,7 +443,7 @@ void CommunicationInterface::cycle(Map &map)
   ros::Time t3 = ros::Time::now();
   std::cerr << "t3 - t2: " << t3 - t2 << std::endl;
 
-  map_local_.UpdateLocalMapWithScanPoints({0, 0}, curr_local_scan_);
+  map_local_.UpdateLocalMapWithScanPoints({ 0, 0 }, curr_local_scan_);
   ros::Time t4 = ros::Time::now();
   std::cerr << "t4 - t3: " << t4 - t3 << std::endl;
 
@@ -479,7 +478,6 @@ void CommunicationInterface::cycle(Map &map)
   ros::Time t7 = ros::Time::now();
   std::cerr << "t7 - t6: " << t7 - t6 << std::endl;
 
-  std::cerr << "goal: " << goal_.first << " " << goal_.second << std::endl;
   if (fabs(curr_robot_pos_.first - goal_.first) < 1e-1 && fabs(curr_robot_pos_.second - goal_.second) < 1e-1)
   {
     reached_pos_ = true;
@@ -493,7 +491,7 @@ void CommunicationInterface::cycle(Map &map)
   {
     if (!local_path_vec_.empty())
     {
-      local_path_vec_.erase(begin(local_path_vec_)); // remove the reached pos from path
+      local_path_vec_.erase(begin(local_path_vec_));  // remove the reached pos from path
       reached_pos_ = false;
       if (!local_path_vec_.empty())
       {
@@ -510,7 +508,7 @@ void CommunicationInterface::cycle(Map &map)
     }
     else if (!planned_path_vec_.empty())
     {
-      planned_path_vec_.erase(begin(planned_path_vec_)); // remove the reached pos from path
+      planned_path_vec_.erase(begin(planned_path_vec_));  // remove the reached pos from path
       reached_pos_ = false;
       if (!planned_path_vec_.empty())
       {
@@ -657,7 +655,8 @@ void CommunicationInterface::setLocalPath(const Map &map_local)
         local_path_vec_.insert(begin(local_path_vec_), pt_float_global);
 
         // if it is not blocked between robot and the planned path-point, then skip all the points before it
-        if (!checkIfLineBlocked(map_local_, Point2DWithFloat({0, 0}), pt_float, map_local_.GetMap().front().info.resolution))
+        if (!checkIfLineBlocked(map_local_, Point2DWithFloat({ 0, 0 }), pt_float,
+                                map_local_.GetMap().front().info.resolution))
         {
           return;
         }
@@ -679,14 +678,14 @@ bool CommunicationInterface::checkIfPathBlocked(Map &map)
     // if out of sight, return
     if (dist > 8)
     {
-      return false; // not blocked
+      return false;  // not blocked
     }
 
     // secondly, get points between two planned path points and check if they are blocked
-    Point2DWithFloat first_path_pt = curr_robot_pos_; // initialization with the current robot pos
+    Point2DWithFloat first_path_pt = curr_robot_pos_;  // initialization with the current robot pos
     Point2DWithFloat second_path_pt = curr_robot_pos_;
 
-    if (idx == 0) // The first line is from the current robot position to the first planned path point
+    if (idx == 0)  // The first line is from the current robot position to the first planned path point
     {
       first_path_pt = curr_robot_pos_;
       second_path_pt = planned_path_vec_[idx];
@@ -763,7 +762,7 @@ bool CommunicationInterface::checkIfLineBlocked(Map &map, Point2DWithFloat first
   // transform float, "exact" positions into integer, "map coord." points for the getLine() function
   Point2D firstPosInMap = TransformIndex(first_path_pt.first, first_path_pt.second, resolution);
   Point2D secondPosInMap = TransformIndex(second_path_pt.first, second_path_pt.second, resolution);
-  if (firstPosInMap == secondPosInMap) // function getLine needs two different positions
+  if (firstPosInMap == secondPosInMap)  // function getLine needs two different positions
   {
     return false;
   }
@@ -781,7 +780,7 @@ bool CommunicationInterface::checkIfLineBlocked(Map &map, Point2DWithFloat first
     {
       if (map.GetCell(Point2D(pt.first - 4, pt.second + i)) == CellOccupied::occupied)
       {
-        return true; // blocked!
+        return true;  // blocked!
       }
     }
 
@@ -791,7 +790,7 @@ bool CommunicationInterface::checkIfLineBlocked(Map &map, Point2DWithFloat first
     {
       if (map.GetCell(Point2D(pt.first + 4, pt.second + i)) == CellOccupied::occupied)
       {
-        return true; // blocked!
+        return true;  // blocked!
       }
     }
 
@@ -800,7 +799,7 @@ bool CommunicationInterface::checkIfLineBlocked(Map &map, Point2DWithFloat first
     {
       if (map.GetCell(Point2D(pt.first + i, pt.second - 4)) == CellOccupied::occupied)
       {
-        return true; // blocked!
+        return true;  // blocked!
       }
     }
 
@@ -809,7 +808,7 @@ bool CommunicationInterface::checkIfLineBlocked(Map &map, Point2DWithFloat first
     {
       if (map.GetCell(Point2D(pt.first + i, pt.second + 4)) == CellOccupied::occupied)
       {
-        return true; // blocked!
+        return true;  // blocked!
       }
     }
   }

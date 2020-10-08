@@ -56,7 +56,8 @@
         "csignal": "cpp",
         "condition_variable": "cpp",
         "mutex": "cpp",
-        "string": "cpp"
+        "string": "cpp",
+        "valarray": "cpp"
     },
     "python.autoComplete.extraPaths": [
         "/usr/lib/python2.7/dist-packages"
