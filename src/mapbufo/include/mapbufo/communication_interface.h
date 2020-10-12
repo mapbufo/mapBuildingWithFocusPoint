@@ -25,7 +25,7 @@
 class CommunicationInterface
 {
 private:
-  ros::Subscriber scan_subscriber_;
+  ros::Subscriber scan_sub_scriber_;
   ros::Subscriber goal_subscriber_;
   ros::Subscriber odom_subscriber_;
   ros::Publisher pos_publisher_;
@@ -49,9 +49,9 @@ private:
 
   ros::Publisher pub_local_path_;
 
-  message_filters::Subscriber<sensor_msgs::LaserScan> scan_sub;
-  message_filters::Subscriber<nav_msgs::Odometry> odom_sub;
-  message_filters::TimeSynchronizer<sensor_msgs::LaserScan, nav_msgs::Odometry> sync;
+  message_filters::Subscriber<sensor_msgs::LaserScan> scan_sub_;
+  message_filters::Subscriber<nav_msgs::Odometry> odom_sub_;
+  message_filters::TimeSynchronizer<sensor_msgs::LaserScan, nav_msgs::Odometry> sync_;
 
   ScanPointsFloatWithUpdateValue curr_scan_;
   ScanPointsFloatWithUpdateValue curr_local_scan_;
@@ -60,7 +60,7 @@ private:
   Point2DWithFloat curr_robot_pos_;
   Point2DWithFloat estimated_pos_;
   Point2DWithFloat goal_;
-  bool angle_setted = false;
+  bool angle_setted_ = false;
   nav_msgs::Odometry input_odom_;
   nav_msgs::Odometry input_odom_at_scan_;
   sensor_msgs::LaserScan input_scan_;
