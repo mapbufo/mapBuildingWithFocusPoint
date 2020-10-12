@@ -37,4 +37,4 @@ The detailed motion is
 
 
 ## Result
-![result](result-show.gif)
+![result](result-show-02.gif)
