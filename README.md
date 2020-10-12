@@ -39,7 +39,11 @@ Motion of the robot is controlled by PID-Controllers for angular and linear spee
 #### Communication interface
 The communication among the project node, Gazebo and rviz is achieved in a source file called `communication_interface.cpp` where the subscribers and publishers are defined and functions e.g. for input processing are called. Below is an illustration of the structure. 
 
+![chart](chart.png)
+
+
 ## Result
+
 ![result](result-show-02.gif)
 
 
