@@ -9,11 +9,11 @@
 - [ ] summary for milestone 1:
 
 ### Milestone 2
-- [ ] create a simple scenario in Gazebo.
-- [ ] write a subscriber to subscribe the lidar scan ScanData.
-- [ ] create a global Map.
-- [ ] call path_planning.
-- [ ] move the robot
+- [x] create a simple scenario in Gazebo.
+- [x] write a subscriber to subscribe the lidar scan ScanData.
+- [x] create a global Map.
+- [x] call path_planning.
+- [x] move the robot
 - [ ] summary for milestone 2:
 
 ## Some features nice to have
