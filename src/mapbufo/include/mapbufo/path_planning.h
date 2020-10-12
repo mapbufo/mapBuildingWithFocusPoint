@@ -21,7 +21,7 @@ namespace PathPlanning
    * @param input global: flag for the type of the given map
    * @return vector<Point2D>: list of the available points
    */
-  std::vector<Point2D> GetNeighbors(Point2D current, Map map, bool global);
+  std::vector<Point2D> getNeighbors(Point2D current, Map map, bool global);
 
   /**
    * @brief use a simple way to calculate the cost from start-point to current
@@ -31,7 +31,7 @@ namespace PathPlanning
    * @param input current: position of the current point
    * @return float: the calculated cost between start-point and current-point
    */
-  float CalculateCostSoFar(Point2D start_pos, Point2D current);
+  float calculateCostSoFar(Point2D start_pos, Point2D current);
 
   /**
    * @brief use Euclidean distance as the estimated distance between the current
@@ -40,14 +40,14 @@ namespace PathPlanning
    * @param input end_pos: position of the end point
    * @return float: the estimated cost between next-point and end-point
    */
-  float HeuristicFunction(Point2D next, Point2D end_pos);
+  float heuristicFunction(Point2D next, Point2D end_pos);
 
   /**
    * @brief delete the unnecessary points in the straight line, only save the
    * points at the turning points
    * @param output path: list of the path-points
    */
-  void OptimizePath(std::vector<Point2D> &path);
+  void optimizePath(std::vector<Point2D> &path);
 
   //TODO(YiLuo) : the path in the empty-area has higher priority than in the
   // grey-area

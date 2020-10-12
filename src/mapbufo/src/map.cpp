@@ -50,7 +50,7 @@ Map::Map(ros::NodeHandle &nh) : nh_(nh)
   maps_.push_back(map_tmp);
 
   // prepare the parameter
-  GetParam();
+  getParam();
 }
 
 Map::Map(ros::NodeHandle &nh, float resolution, int width, int height) : nh_(nh)
@@ -103,10 +103,10 @@ Map::Map(ros::NodeHandle &nh, float resolution, int width, int height) : nh_(nh)
   maps_.push_back(map_tmp);
 
   // prepare the parameter
-  GetParam();
+  getParam();
 }
 
-void Map::ResetMapData()
+void Map::resetMapData()
 {
   for (auto &map : maps_)
   {
@@ -114,76 +114,76 @@ void Map::ResetMapData()
   }
 }
 
-CellOccupied Map::GetCell(int x, int y)
+CellOccupied Map::getCell(int x, int y)
 {
   int x_qua;
   int y_qua;
   int qua;
-  TransformPositionIntoQuadrant(x, y, x_qua, y_qua, qua);
-  return GetCellInSingleQuadrant(x_qua, y_qua, qua);
+  transformPositionIntoQuadrant(x, y, x_qua, y_qua, qua);
+  return getCellInSingleQuadrant(x_qua, y_qua, qua);
 }
 
-CellOccupied Map::GetCell(Point2D pos)
+CellOccupied Map::getCell(Point2D pos)
 {
-  return GetCell(pos.first, pos.second);
+  return getCell(pos.first, pos.second);
 }
 
-status::status Map::Update(int x, int y, int update_value, bool global)
+status::status Map::update(int x, int y, int update_value, bool global)
 {
   int x_qua, y_qua, qua;
-  TransformPositionIntoQuadrant(x, y, x_qua, y_qua, qua);
-  return UpdateCellInSingleQuadrant(x_qua, y_qua, qua, update_value, global);
+  transformPositionIntoQuadrant(x, y, x_qua, y_qua, qua);
+  return updateCellInSingleQuadrant(x_qua, y_qua, qua, update_value, global);
 }
 
-status::status Map::Update(Point2D pos, int update_value, bool global)
+status::status Map::update(Point2D pos, int update_value, bool global)
 {
-  return Update(pos.first, pos.second, update_value, global);
+  return update(pos.first, pos.second, update_value, global);
 }
 
-status::status Map::UpdateWithScanPoint(float x0, float y0, float x1, float y1,
+status::status Map::updateWithScanPoint(float x0, float y0, float x1, float y1,
                                         int update_value, bool global)
 {
-  Point2D robot_point = TransformIndex(x0, y0, maps_.front().info.resolution);
-  Point2D scan_point = TransformIndex(x1, y1, maps_.front().info.resolution);
-  Update(scan_point, update_value, global);
+  Point2D robot_point = transformIndex(x0, y0, maps_.front().info.resolution);
+  Point2D scan_point = transformIndex(x1, y1, maps_.front().info.resolution);
+  update(scan_point, update_value, global);
   if (x0 == x1 && y0 == y1)
   {
     return status::Ok;
   }
   std::vector<Point2D> scan_line =
-      GetLine(robot_point.first, robot_point.second, scan_point.first,
+      getLine(robot_point.first, robot_point.second, scan_point.first,
               scan_point.second);
   for (auto point : scan_line)
   {
-    Update(point, -abs(update_value), global);
+    update(point, -abs(update_value), global);
   }
   return status::Ok;
 }
 
-status::status Map::UpdateWithScanPoints(Point2DWithFloat robot_pos, ScanPointsFloatWithUpdateValue curr_scan)
+status::status Map::updateWithScanPoints(Point2DWithFloat robot_pos, ScanPointsFloatWithUpdateValue curr_scan)
 {
   for (auto point : curr_scan)
   {
-    UpdateWithScanPoint(robot_pos.first, robot_pos.second,
+    updateWithScanPoint(robot_pos.first, robot_pos.second,
                         point.first.first, point.first.second, point.second, true);
   }
   return status::Ok;
 }
 
-status::status Map::UpdateLocalMapWithScanPoints(Point2DWithFloat robot_pos,
+status::status Map::updateLocalMapWithScanPoints(Point2DWithFloat robot_pos,
                                                  ScanPointsFloatWithUpdateValue curr_scan)
 {
-  ResetMapData();
+  resetMapData();
 
   for (auto point : curr_scan)
   {
-    UpdateWithScanPoint(robot_pos.first, robot_pos.second,
+    updateWithScanPoint(robot_pos.first, robot_pos.second,
                         point.first.first, point.first.second, point.second, false);
   }
   return status::Ok;
 }
 
-void Map::TransformPositionIntoQuadrant(int x, int y, int &x_qua, int &y_qua,
+void Map::transformPositionIntoQuadrant(int x, int y, int &x_qua, int &y_qua,
                                         int &qua)
 {
 
@@ -224,7 +224,7 @@ void Map::TransformPositionIntoQuadrant(int x, int y, int &x_qua, int &y_qua,
   }
 }
 
-CellOccupied Map::GetCellInSingleQuadrant(int x, int y, int qua)
+CellOccupied Map::getCellInSingleQuadrant(int x, int y, int qua)
 {
   int index = y * maps_[qua].info.width + x;
   // if this point is not in the map
@@ -248,7 +248,7 @@ CellOccupied Map::GetCellInSingleQuadrant(int x, int y, int qua)
   return CellOccupied::grey;
 }
 
-status::status Map::UpdateCellInSingleQuadrant(int x, int y, int qua,
+status::status Map::updateCellInSingleQuadrant(int x, int y, int qua,
                                                int value, bool global)
 {
   // if this is local map, then skip all the points outside the map
@@ -295,7 +295,7 @@ status::status Map::UpdateCellInSingleQuadrant(int x, int y, int qua,
   return status::Ok;
 }
 
-void Map::GetParam()
+void Map::getParam()
 {
   nh_.getParam("/mapbufo_node/lidar_range", lidar_range_);
   nh_.getParam("/mapbufo_node/empty_bound", empty_bound_);

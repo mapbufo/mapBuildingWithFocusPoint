@@ -34,10 +34,7 @@ include_directories(
   ${EIGEN3_INCLUDE_DIR}
 )
 
-# add_library( lidar_sim src/simulator/lidar_sim.cpp )
-add_library( map_sim src/simulator/map_simulator.cpp)
 add_library( map src/map.cpp)
-add_library( librobot src/robot.cpp)
 add_library( pid_controller src/pid_controller.cpp)
 add_library( path_planning src/path_planning.cpp)
 add_library( communication_interface src/communication_interface.cpp)
@@ -49,10 +46,7 @@ add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catk
 
 target_link_libraries(${PROJECT_NAME}_node
   ${catkin_LIBRARIES}
-#  lidar_sim
-  map_sim
   map
-  librobot
   path_planning
   pid_controller
   communication_interface

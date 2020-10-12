@@ -2,7 +2,7 @@
 namespace PathPlanning
 {
   // 4 points in left, right, up and down
-  std::vector<Point2D> GetNeighbors(Point2D current, Map map, bool global)
+  std::vector<Point2D> getNeighbors(Point2D current, Map map, bool global)
   {
     std::vector<Point2D> neighbors;
     if (global)
@@ -11,7 +11,7 @@ namespace PathPlanning
       // left
       for (int i = -6; i < 7; i++)
       {
-        if (map.GetCell(Point2D(current.first - 6, current.second + i)) == CellOccupied::occupied)
+        if (map.getCell(Point2D(current.first - 6, current.second + i)) == CellOccupied::occupied)
         {
           none_occupied = false;
           break;
@@ -25,7 +25,7 @@ namespace PathPlanning
       none_occupied = true;
       for (int i = -6; i < 7; i++)
       {
-        if (map.GetCell(Point2D(current.first + 6, current.second + i)) == CellOccupied::occupied)
+        if (map.getCell(Point2D(current.first + 6, current.second + i)) == CellOccupied::occupied)
         {
           none_occupied = false;
           break;
@@ -39,7 +39,7 @@ namespace PathPlanning
       none_occupied = true;
       for (int i = -6; i < 7; i++)
       {
-        if (map.GetCell(Point2D(current.first + i, current.second - 6)) == CellOccupied::occupied)
+        if (map.getCell(Point2D(current.first + i, current.second - 6)) == CellOccupied::occupied)
         {
           none_occupied = false;
           break;
@@ -53,7 +53,7 @@ namespace PathPlanning
       none_occupied = true;
       for (int i = -6; i < 7; i++)
       {
-        if (map.GetCell(Point2D(current.first + i, current.second + 6)) == CellOccupied::occupied)
+        if (map.getCell(Point2D(current.first + i, current.second + 6)) == CellOccupied::occupied)
         {
           none_occupied = false;
           break;
@@ -67,22 +67,22 @@ namespace PathPlanning
     else // local
     {
       // left
-      if (map.GetCell(Point2D(current.first - 1, current.second)) == CellOccupied::empty)
+      if (map.getCell(Point2D(current.first - 1, current.second)) == CellOccupied::empty)
       {
         neighbors.push_back(Point2D(current.first - 1, current.second));
       }
       // right
-      if (map.GetCell(Point2D(current.first + 1, current.second)) == CellOccupied::empty)
+      if (map.getCell(Point2D(current.first + 1, current.second)) == CellOccupied::empty)
       {
         neighbors.push_back(Point2D(current.first + 1, current.second));
       }
       // down
-      if (map.GetCell(Point2D(current.first, current.second - 1)) == CellOccupied::empty)
+      if (map.getCell(Point2D(current.first, current.second - 1)) == CellOccupied::empty)
       {
         neighbors.push_back(Point2D(current.first, current.second - 1));
       }
       // up
-      if (map.GetCell(Point2D(current.first, current.second + 1)) == CellOccupied::empty)
+      if (map.getCell(Point2D(current.first, current.second + 1)) == CellOccupied::empty)
       {
         neighbors.push_back(Point2D(current.first, current.second + 1));
       }
@@ -91,13 +91,13 @@ namespace PathPlanning
   }
 
   // distance in x-achs plus distance in y-achs
-  float CalculateCostSoFar(Point2D start_pos, Point2D current)
+  float calculateCostSoFar(Point2D start_pos, Point2D current)
   {
     return (abs(current.first - start_pos.first) + abs(current.second - start_pos.second));
   }
 
   // use Euclidean distance
-  float HeuristicFunction(Point2D next, Point2D end_pos)
+  float heuristicFunction(Point2D next, Point2D end_pos)
   {
     float x_2 = pow(next.first - end_pos.first, 2);
     float y_2 = pow(next.second - end_pos.second, 2);
@@ -108,7 +108,7 @@ namespace PathPlanning
   // if both ratio are the same, then it means the 3 points are in a same straight
   // line, then delete the middle point.
   // at the end only keeping the turning points in path
-  void OptimizePath(std::vector<Point2D> &path)
+  void optimizePath(std::vector<Point2D> &path)
   {
     for (int i = 0; i < path.size() - 2; i++)
     {
@@ -176,12 +176,12 @@ namespace PathPlanning
         break;
       }
       // get the neighbor-points
-      std::vector<Point2D> neighbors = GetNeighbors(current, map, global);
+      std::vector<Point2D> neighbors = getNeighbors(current, map, global);
       // iterate through all the neighbors
       for (auto next : neighbors)
       {
         // caculate the cost so far for this point
-        float next_cost = explored_points[current] + CalculateCostSoFar(current, next);
+        float next_cost = explored_points[current] + calculateCostSoFar(current, next);
         // if this point is already explored and has higher cost than before, then
         // skip this point
         if (explored_points.count(next) == 1)
@@ -194,7 +194,7 @@ namespace PathPlanning
         // else if this point is not explored yet, or has lower cost than before,
         // then save this in explored_points
         explored_points[next] = next_cost;
-        float priority = next_cost + HeuristicFunction(next, end_pos);
+        float priority = next_cost + heuristicFunction(next, end_pos);
         // set current point as parent of this next point
         parents[next] = current;
         // also save this next point in frontier with it's priority
@@ -223,7 +223,7 @@ namespace PathPlanning
     // optimize the path
     if (path.size() > 1)
     {
-      OptimizePath(path);
+      optimizePath(path);
     }
     return path;
   }
