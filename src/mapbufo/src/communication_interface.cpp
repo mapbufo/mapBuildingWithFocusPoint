@@ -1,12 +1,12 @@
 #include "communication_interface.h"
 
 CommunicationInterface::CommunicationInterface(ros::NodeHandle &nh)
-  : sync(scan_sub, odom_sub, 10), map_local_(nh, 0.05, 20, 20)
+  : sync_(scan_sub_, odom_sub_, 10), map_local_(nh, 0.05, 20, 20)
 {
   // input: laserscan, robot_position
-  scan_sub.subscribe(nh, "/scan", 10);
-  odom_sub.subscribe(nh, "/odom", 10);
-  sync.registerCallback(boost::bind(&CommunicationInterface::scanOdomCallback, this, _1, _2));
+  scan_sub_.subscribe(nh, "/scan", 10);
+  odom_sub_.subscribe(nh, "/odom", 10);
+  sync_.registerCallback(boost::bind(&CommunicationInterface::scanOdomCallback, this, _1, _2));
   odom_subscriber_ = nh.subscribe("/odom", 1, &CommunicationInterface::robotPositionCallback, this);
 
   goal_subscriber_ = nh.subscribe("/move_base_simple/goal", 1, &CommunicationInterface::setGoalCallback, this);
@@ -278,21 +278,21 @@ void CommunicationInterface::processOdom()
   double update_angle = pid_angle.Control(diff_angle);
   if (fabs(diff_angle) < 1 * M_PI / 180.0)
   {
-    if (!angle_setted)
+    if (!angle_setted_)
     {
-      angle_setted = true;
+      angle_setted_ = true;
     }
   }
   if (fabs(diff_angle) < 5 * M_PI / 180.0)
   {
-    if (angle_setted)
+    if (angle_setted_)
     {
       update_angle = 0;
     }
   }
   else
   {
-    angle_setted = false;
+    angle_setted_ = false;
   }
 
   double diff_x = goal_.first - pos_x;
@@ -322,7 +322,7 @@ void CommunicationInterface::processOdom()
     set_speed = std::max(speed, -0.1);
   }
 
-  if (angle_setted)
+  if (angle_setted_)
   {
     output_twist_.linear.x = set_speed;
   }
