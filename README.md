@@ -43,9 +43,9 @@ The communication among the project node, Gazebo and rviz is achieved in a sourc
 
 
 ## Result
-
 ![result](result.gif)
 
+![result](result.gif)
 
 ## To do
 As next step, this system might be able to
