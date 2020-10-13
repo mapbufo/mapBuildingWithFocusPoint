@@ -50,7 +50,7 @@ void transformPoint2DToPoint2DWithFloat(Point2D point2D, Point2DWithFloat &point
  * @param input float res: resolution
  * @param return  Point2D: position of robot(grid position)
  */
-Point2D TransformIndex(float x, float y, float res)
+Point2D transformIndex(float x, float y, float res)
 {
   float factor = 1 / res;
   Point2D pos;
@@ -73,7 +73,7 @@ Point2D TransformIndex(float x, float y, float res)
  * @param input float res: resolution
  * @param return  Point2DWithFloat: position of robot(real data)
  */
-Point2DWithFloat ReverseIndex(int x, int y, float res)
+Point2DWithFloat reverseIndex(int x, int y, float res)
 {
   Point2DWithFloat pos;
   pos.first = static_cast<float>(x * res);
@@ -87,7 +87,7 @@ Point2DWithFloat ReverseIndex(int x, int y, float res)
    * @param input int x1, int y1: position of target point
    * @return vector<Point2D>: all the passed points in the line
    */
-std::vector<Point2D> GetLineLow(int x0, int y0, int x1, int y1)
+std::vector<Point2D> getLineLow(int x0, int y0, int x1, int y1)
 {
   int d_x = x1 - x0;
   int d_y = y1 - y0;
@@ -125,7 +125,7 @@ std::vector<Point2D> GetLineLow(int x0, int y0, int x1, int y1)
    * @param input int x1, int y1: position of target point
    * @return vector<Point2D>: all the passed points in the line
    */
-std::vector<Point2D> GetLineHigh(int x0, int y0, int x1, int y1)
+std::vector<Point2D> getLineHigh(int x0, int y0, int x1, int y1)
 {
   int d_x = x1 - x0;
   int d_y = y1 - y0;
@@ -163,21 +163,21 @@ std::vector<Point2D> GetLineHigh(int x0, int y0, int x1, int y1)
   * @param input int x1, int y1: position of target point
   * @return vector<Point2D>: all the passed points in the line
   */
-std::vector<Point2D> GetLine(int x0, int y0, int x1, int y1)
+std::vector<Point2D> getLine(int x0, int y0, int x1, int y1)
 {
   if (abs(y1 - y0) < abs(x1 - x0))
   {
     if (x0 > x1)
     {
-      return GetLineLow(x1, y1, x0, y0);
+      return getLineLow(x1, y1, x0, y0);
     }
-    return GetLineLow(x0, y0, x1, y1);
+    return getLineLow(x0, y0, x1, y1);
   }
   if (y0 > y1)
   {
-    return GetLineHigh(x1, y1, x0, y0);
+    return getLineHigh(x1, y1, x0, y0);
   }
-  return GetLineHigh(x0, y0, x1, y1);
+  return getLineHigh(x0, y0, x1, y1);
 }
 
 /**
@@ -187,7 +187,7 @@ std::vector<Point2D> GetLine(int x0, int y0, int x1, int y1)
   * @param input float yaw: angle between the robot-heading and x-axis
   * @return Point2DWithFloat: transformed point in local coordinate
   */
-Point2DWithFloat TransformFromGlobalToLocal(float robot_x, float robot_y, float target_x, float target_y, float yaw)
+Point2DWithFloat transformFromGlobalToLocal(float robot_x, float robot_y, float target_x, float target_y, float yaw)
 {
   Eigen::Matrix2f transform_matrix;
   transform_matrix << cos(yaw), -sin(yaw), sin(yaw), cos(yaw);
@@ -208,7 +208,7 @@ Point2DWithFloat TransformFromGlobalToLocal(float robot_x, float robot_y, float 
   * @param input float yaw: angle between the robot-heading and x-axis
   * @return Point2DWithFloat: transformed point in global coordinate
   */
-Point2DWithFloat TransformFromLocalToGlobal(float robot_x, float robot_y, float target_x, float target_y, float yaw)
+Point2DWithFloat transformFromLocalToGlobal(float robot_x, float robot_y, float target_x, float target_y, float yaw)
 {
   float global_x = target_x * std::cos(yaw) - target_y * std::sin(yaw) + robot_x;
   float global_y = target_x * std::sin(yaw) + target_y * std::cos(yaw) + robot_y;

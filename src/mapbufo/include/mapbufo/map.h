@@ -22,34 +22,34 @@ public:
   /**
    * @brief reset all the map data to -1
    */
-  void ResetMapData();
+  void resetMapData();
 
   /**
    * @brief overload the [] function to simplify getting the cell status
    * @param input pos: position of this cell
    * @return CellOccupied: status of this cell
    */
-  CellOccupied operator[](Point2D point) { return GetCell(point); };
+  CellOccupied operator[](Point2D point) { return getCell(point); };
 
   /**
    * @brief return the 4 quadrants maps as vector
    * @return std::vector, nav_msgs::OccupancyGrid map
    */
-  std::vector<nav_msgs::OccupancyGrid> &GetMap() { return maps_; }
+  std::vector<nav_msgs::OccupancyGrid> &getMap() { return maps_; }
 
   /**
    * @brief get the cell status
    * @param input x, y: position of this cell
    * @return CellOccupied: status of this cell
    */
-  CellOccupied GetCell(int x, int y);
+  CellOccupied getCell(int x, int y);
 
   /**
    * @brief get the cell status
    * @param input pos: position of this cell
    * @return CellOccupied: status of this cell
    */
-  CellOccupied GetCell(Point2D pos);
+  CellOccupied getCell(Point2D pos);
 
   /**
    * @brief update the occupied probability of the cell
@@ -57,7 +57,7 @@ public:
    * @param input value: update probability
    * @param input global: if this is local map, then call the local update
    */
-  status::status Update(int x, int y, int update_value, bool global);
+  status::status update(int x, int y, int update_value, bool global);
 
   /**
    * @brief update the occupied probability of the cell
@@ -65,7 +65,7 @@ public:
    * @param input value: update probability
    * @param input global: if this is local map, then call the local update
    */
-  status::status Update(Point2D pos, int update_value, bool global);
+  status::status update(Point2D pos, int update_value, bool global);
 
   /**
    * @brief update the probability of the points, which are in the line between the
@@ -75,7 +75,7 @@ public:
    * @param input update_value: the should be added probability
    * @param input global: if this is local map, then call the local update
    */
-  status::status UpdateWithScanPoint(float x0, float y0, float x1, float y1,
+  status::status updateWithScanPoint(float x0, float y0, float x1, float y1,
                                      int update_value, bool global);
 
   /**
@@ -84,7 +84,7 @@ public:
    * @param input curr_scan: current scan points
    *              with the cooresponding update value
    */
-  status::status UpdateWithScanPoints(Point2DWithFloat robot_pos,
+  status::status updateWithScanPoints(Point2DWithFloat robot_pos,
                                       ScanPointsFloatWithUpdateValue curr_scan);
 
   /**
@@ -95,7 +95,7 @@ public:
    * @param input curr_scan: current scan points
    *              with the cooresponding update value
    */
-  status::status UpdateLocalMapWithScanPoints(Point2DWithFloat robot_pos,
+  status::status updateLocalMapWithScanPoints(Point2DWithFloat robot_pos,
                                               ScanPointsFloatWithUpdateValue curr_scan);
 
 private:
@@ -124,7 +124,7 @@ private:
    * @param output qua: number of quadrant
    * @return CellOccupied: status of this cell
    */
-  void TransformPositionIntoQuadrant(int x, int y, int &x_qua, int &y_qua,
+  void transformPositionIntoQuadrant(int x, int y, int &x_qua, int &y_qua,
                                      int &qua);
 
   /**
@@ -133,7 +133,7 @@ private:
    * @param input qua: number of quadrant
    * @return CellOccupied: status of this cell
    */
-  CellOccupied GetCellInSingleQuadrant(int x, int y, int qua);
+  CellOccupied getCellInSingleQuadrant(int x, int y, int qua);
 
   /**
    * @brief update the occupied probability of the cell from the selected single
@@ -144,10 +144,10 @@ private:
    * @param input global: if this is local map, then do not extend the map size
    * @return CellOccupied: status of this cell
    */
-  status::status UpdateCellInSingleQuadrant(int x, int y, int qua, int value, bool global);
+  status::status updateCellInSingleQuadrant(int x, int y, int qua, int value, bool global);
 
   /**
    * @brief get the needed parameter from file /param/parameter.yaml
    */
-  void GetParam();
+  void getParam();
 };
