@@ -33,6 +33,19 @@
 
 # Folders
 /build
+/devel
+/HybridAStar/build
+
+# vs code
+.vscode
+
+
+# catkin workspace
+.catkin_workspace
 
 # qtcreator
 CMakeLists.txt.user
+
+# Doxygen files
+**/html
+**/latex

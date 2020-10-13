@@ -52,6 +52,15 @@
         "cinttypes": "cpp",
         "utility": "cpp",
         "typeindex": "cpp",
-        "typeinfo": "cpp"
-    }
+        "typeinfo": "cpp",
+        "csignal": "cpp",
+        "condition_variable": "cpp",
+        "mutex": "cpp",
+        "string": "cpp",
+        "valarray": "cpp"
+    },
+    "python.autoComplete.extraPaths": [
+        "/usr/lib/python2.7/dist-packages"
+    ],
+    "ros.distro": "kinetic"
 }
