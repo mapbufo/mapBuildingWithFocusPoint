@@ -45,8 +45,6 @@ The communication among the project node, Gazebo and rviz is achieved in a sourc
 ## Result
 ![result](result.gif)
 
-![result](result.gif)
-
 ## To do
 As next step, this system might be able to
 1. incorporate simple maps (e.g. semantic map) as extra information to enhance its performance in navigation
